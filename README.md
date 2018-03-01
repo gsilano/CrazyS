@@ -38,7 +38,7 @@ Installation Instructions - Ubuntu 14.04 with ROS Indigo
 
  ```
  $ cd ~/catkin_ws/src
- $ git clone git@github.com/gsilano/CrazyS.git
+ $ git clone git@github.com:gsilano/CrazyS.git
  $ git clone git@github.com:ethz-asl/mav_comm.git
  ```
   > **Note** On OS X you need to install yaml-cpp using Homebrew `brew install yaml-cpp`.
