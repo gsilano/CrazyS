@@ -1,3 +1,5 @@
+https://travis-ci.org/gsilano/CrazyS.svg?branch=master
+
 CrazyS
 ===============
 
