@@ -21,9 +21,6 @@
 # There are two variables you may want to change:
 #   - ROS_DISTRO (default is indigo). Note that packages must be available for
 #     ubuntu 14.04 trusty.
-#   - ROSINSTALL_FILE (default is dependencies.rosinstall inside the repo
-#     root). This should list all necessary repositories in wstool format (see
-#     the ros wiki). If the file does not exists then nothing happens.
 #
 # See the README.md for more information.
 #
@@ -49,6 +46,9 @@ language:
   - generic
 cache:
   - apt
+  
+notifications:
+  email: false
 
 # Configuration variables. All variables are global now, but this can be used to
 # trigger a build matrix for different ROS distributions if desired.
@@ -87,8 +87,8 @@ install:
   # Create the devel/setup.bash (run catkin_make with an empty workspace) and
   # source it to set the path variables.
   - cd ~/catkin_ws
-  - git clone https://github.com/gsilano/CrazyS.git
-  - git clone https://github.com/ethz-asl/mav_comm.git
+  - git: local-name: CrazyS uri: https://github.com/gsilano/CrazyS.git
+  - git: local-name: mav_com uri: https://github.com/ethz-asl/mav_comm.git
   - catkin build
   - source devel/setup.bash
   # Add the package under integration to the workspace using a symlink.
