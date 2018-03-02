@@ -83,10 +83,9 @@ install:
   - catkin_init_workspace
   # Create the devel/setup.bash (run catkin_make with an empty workspace) and
   # source it to set the path variables.
-  - cd ~/catkin_ws
   - git clone https://github.com/gsilano/CrazyS.git
-  - ls
   - git clone https://github.com/ethz-asl/mav_comm.git
+  - cd ~/catkin_ws
   - catkin build
   - source devel/setup.bash
   # Add the package under integration to the workspace using a symlink.
