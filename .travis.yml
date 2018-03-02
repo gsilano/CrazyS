@@ -68,8 +68,8 @@ before_install:
   - sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu `lsb_release -sc` main" > /etc/apt/sources.list.d/ros-latest.list'
   - wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
   - sudo apt-get update
-  - sudo apt-get install -y python-catkin-pkg python-rosdep python-wstool ros-$ROS_DISTRO-catkin
-  - sudo apt-get install ros-$ROS_DISTRO-joy ros-$ROS_DISTRO-octomap-ros python-catkin-tools protobuf-compiler libgoogle-glog-dev
+  - sudo apt-get install ros-$ROS_DISTRO-desktop-full ros-$ROS_DISTRO-joy ros-$ROS_DISTRO-octomap-ros python-wstool python-catkin-tools
+  - sudo apt-get install protobuf-compiler libgoogle-glog-dev
   # Prepare rosdep to install dependencies.
   - sudo rosdep init
   - rosdep update
