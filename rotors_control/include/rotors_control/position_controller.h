@@ -48,7 +48,7 @@ static const double kIDefaultYawController = 1;
 
 static const double kPDefaultHoveringController = 14000;
 static const double kIDefaultHoveringController = 15000;
-static const double kDDefaultHoveringController = -20000;
+static const double kDDefaultHoveringController = 20000;
 
 
 class PositionControllerParameters {
