@@ -40,7 +40,7 @@ static const Eigen::Vector2d kIDefaultXYController = Eigen::Vector2d(1, -1);
 static const Eigen::Vector2d kPDefaultAttitudeController = Eigen::Vector2d(3.5, 3.5);
 static const Eigen::Vector2d kIDefaultAttitudeController = Eigen::Vector2d(2, 2);
 
-static const Eigen::Vector3d kPDefaultRateController = Eigen::Vector3d(70, 70, 70);
+static const Eigen::Vector3d kPDefaultRateController = Eigen::Vector3d(110, 110, 110);
 static const Eigen::Vector3d kIDefaultRateController = Eigen::Vector3d(0, 0, 16.7);
 
 static const double kPDefaultYawController = 3;
