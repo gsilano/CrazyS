@@ -14,6 +14,18 @@ The code is released under Apache license, thus making it available for scientif
 
 Below we provide the instructions necessary for getting started. See CrazyS' wiki for more instructions and examples (https://github.com/gsilano/CrazyS/wiki).
 
+If you are using this simulator within the research for your publication, please cite:
+```bibtex
+@INPROCEEDINGS{Silano2018,
+author = {G. Silano and E. Aucone and L. Iannelli},
+booktitle = {2018 26th Mediterranean Conference on Control and Automation (MED)}, 
+title = {CrazyS: a software-in-the-loop platform for the Crazyflie 2.0 nano-quadcopter},
+year = {2018}, 
+volume = {}, 
+number = {}, 
+month = {June},
+}
+```
 Installation Instructions - Ubuntu 14.04 with ROS Indigo
 --------------------------------------------------------
 
