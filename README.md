@@ -117,4 +117,4 @@ YouTube videos
 
 In such section a video proving the effectiveness of the platform is reported. Further videos can be found in the related YouTube channel. Have fun! :)
 
-[![CrazyS, an exntension of the ROS pakcage RotrS aimed to modeling, developing and integrating the Crazyflie 2.0 nano-quadcopter](https://img.youtube.com/vi/pda-tuULewM/0.jpg)](https://www.youtube.com/watch?v=pda-tuULewM "CrazyS, an exntension of the ROS pakcage RotrS aimed to modeling, developing and integrating the Crazyflie 2.0 nano-quadcopter")
+[![CrazyS, an exntension of the ROS pakcage RotrS aimed to modeling, developing and integrating the Crazyflie 2.0 nano-quadcopter](https://github.com/gsilano/CrazyS/wiki/img/img_YouTube_MED18.png)](https://www.youtube.com/watch?v=pda-tuULewM "CrazyS, an exntension of the ROS pakcage RotrS aimed to modeling, developing and integrating the Crazyflie 2.0 nano-quadcopter")
