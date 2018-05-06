@@ -45,15 +45,11 @@ matrix:
     - os: linux
       dist: trusty
       sudo: required
-      env:
-          global:
-            - ROS_DISTRO=indigo
+      env: ROS_DISTRO=indigo
     - os: linux
       dist: xenial
       sudo: required
-      env:
-          global:
-            - ROS_DISTRO=kinetic
+      env: ROS_DISTRO=kinetic
       
 language:
   - generic
