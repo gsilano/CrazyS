@@ -1,2 +1,2 @@
-- git: {local-name: mav_comm, uri: 'https://github.com/ethz-asl/mav_comm.git'}
+- git: {local-name: mav_comm, uri: 'https://github.com/gsilano/mav_comm.git'}
 - git: {local-name: crazy_simulator, uri: 'https://github.com/gsilano/CrazyS'}
