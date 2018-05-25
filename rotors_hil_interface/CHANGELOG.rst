@@ -2,6 +2,10 @@
 Changelog for package rotors_hil_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.2.2 (2018-05-25)
+* Fixed build issue in the Kinetic Kame version of ROS.
+* Contributors: Giuseppe Silano
+
 2.1.1 (2017-04-27)
 -----------
 * Update maintainers.
