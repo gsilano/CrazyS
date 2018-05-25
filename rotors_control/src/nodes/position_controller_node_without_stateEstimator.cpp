@@ -36,8 +36,6 @@ PositionControllerNode::PositionControllerNode() {
 
     ros::NodeHandle nh;
 
-    cmd_pose_sub_ = nh.subscribe(mav_msgs::default_topics::COMMAND_POSE, 1, &PositionControllerNode::CommandPoseCallback, this);
-
     cmd_multi_dof_joint_trajectory_sub_ = nh.subscribe(mav_msgs::default_topics::COMMAND_TRAJECTORY, 1,  &PositionControllerNode::MultiDofJointTrajectoryCallback, this);
 
     odometry_sub_ = nh.subscribe(mav_msgs::default_topics::ODOMETRY, 1, &PositionControllerNode::OdometryCallback, this);
@@ -45,9 +43,6 @@ PositionControllerNode::PositionControllerNode() {
     imu_sub_ = nh.subscribe(mav_msgs::default_topics::IMU, 1, &PositionControllerNode::IMUCallback, this);
 
     motor_velocity_reference_pub_ = nh.advertise<mav_msgs::Actuators>(mav_msgs::default_topics::COMMAND_ACTUATORS, 1);
-
-    command_timer_ = nh.createTimer(ros::Duration(0), &PositionControllerNode::TimedCommandCallback, this,
-                                  true, false);
 
 }
 
@@ -85,24 +80,6 @@ void PositionControllerNode::MultiDofJointTrajectoryCallback(const trajectory_ms
   commands_.pop_front();
 
   if (n_commands > 1) {
-    command_timer_.setPeriod(command_waiting_times_.front());
-    command_waiting_times_.pop_front();
-    command_timer_.start();
-  }
-}
-
-void PositionControllerNode::TimedCommandCallback(const ros::TimerEvent& e) {
-
-  if(commands_.empty()){
-    ROS_WARN("Commands empty, this should not happen here");
-    return;
-  }
-
-  const mav_msgs::EigenTrajectoryPoint eigen_reference = commands_.front();
-  position_controller_.SetTrajectoryPoint(commands_.front());
-  commands_.pop_front();
-  command_timer_.stop();
-  if(!command_waiting_times_.empty()){
     command_timer_.setPeriod(command_waiting_times_.front());
     command_waiting_times_.pop_front();
     command_timer_.start();
@@ -181,21 +158,6 @@ void PositionControllerNode::InitializeParams() {
 void PositionControllerNode::Publish(){
 }
 
-void PositionControllerNode::CommandPoseCallback(const geometry_msgs::PoseStampedConstPtr& pose_msg){
-
-    // Clear all pending commands.
-    command_timer_.stop();
-    commands_.clear();
-    command_waiting_times_.clear();
-
-    mav_msgs::EigenTrajectoryPoint eigen_reference;
-    mav_msgs::eigenTrajectoryPointFromPoseMsg(*pose_msg, &eigen_reference);
-    commands_.push_front(eigen_reference);
-
-    position_controller_.SetTrajectoryPoint(commands_.front());
-    commands_.pop_front();
-}
-
 void PositionControllerNode::IMUCallback(const sensor_msgs::ImuConstPtr& imu_msg) {
 
     ROS_INFO_ONCE("PositionController got first imu message.");
@@ -247,7 +209,7 @@ void PositionControllerNode::OdometryCallback(const nav_msgs::OdometryConstPtr& 
 }
 
 int main(int argc, char** argv){
-    ros::init(argc, argv, "position_controller_node");
+    ros::init(argc, argv, "position_controller_node_without_stateEstimator");
     
     ros::NodeHandle nh2;
     
