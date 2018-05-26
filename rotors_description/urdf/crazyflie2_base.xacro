@@ -31,8 +31,10 @@
     <xacro:default_mavlink_interface namespace="${namespace}" imu_sub_topic="imu" rotor_count="4" />
   </xacro:if>
 
-  <!-- Mount an MPU-9250 IMU. -->
-  <xacro:crazyflie2_imu namespace="${namespace}" parent_link="${namespace}/base_link" /> 
+  <!-- Mount an MPU-9250 IMU if the state estimator is actived, otherwise the virtua odometry sensor is used. -->
+  <xacro:if value="$(arg enable_state_estimator)">
+    <xacro:crazyflie2_imu namespace="${namespace}" parent_link="${namespace}/base_link" /> 
+  </xacro:if>
 
   <xacro:if value="$(arg enable_ground_truth)">
     <xacro:ground_truth_imu_and_odometry namespace="${namespace}" parent_link="${namespace}/base_link" />

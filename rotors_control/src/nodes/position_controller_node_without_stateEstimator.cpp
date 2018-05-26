@@ -20,18 +20,19 @@
 #include <ros/ros.h>
 #include <mav_msgs/default_topics.h>
 #include <ros/console.h> 
-#include <sensor_msgs/Imu.h>
 
-#include "position_controller_node.h"
+#include "position_controller_node_without_stateEstimator.h"
 
 #include "rotors_control/parameters_ros.h"
 #include "rotors_control/stabilizer_types.h"
-#include "rotors_control/complementary_filter_crazyflie2.h"
 
 
 namespace rotors_control {
 
 PositionControllerNode::PositionControllerNode() {
+
+    ROS_INFO_ONCE("Started position controller without state estimator");
+
     InitializeParams();
 
     ros::NodeHandle nh;
@@ -39,8 +40,6 @@ PositionControllerNode::PositionControllerNode() {
     cmd_multi_dof_joint_trajectory_sub_ = nh.subscribe(mav_msgs::default_topics::COMMAND_TRAJECTORY, 1,  &PositionControllerNode::MultiDofJointTrajectoryCallback, this);
 
     odometry_sub_ = nh.subscribe(mav_msgs::default_topics::ODOMETRY, 1, &PositionControllerNode::OdometryCallback, this);
-
-    imu_sub_ = nh.subscribe(mav_msgs::default_topics::IMU, 1, &PositionControllerNode::IMUCallback, this);
 
     motor_velocity_reference_pub_ = nh.advertise<mav_msgs::Actuators>(mav_msgs::default_topics::COMMAND_ACTUATORS, 1);
 
@@ -65,24 +64,13 @@ void PositionControllerNode::MultiDofJointTrajectoryCallback(const trajectory_ms
   mav_msgs::eigenTrajectoryPointFromMsg(msg->points.front(), &eigen_reference);
   commands_.push_front(eigen_reference);
 
-  for (size_t i = 1; i < n_commands; ++i) {
-    const trajectory_msgs::MultiDOFJointTrajectoryPoint& reference_before = msg->points[i-1];
-    const trajectory_msgs::MultiDOFJointTrajectoryPoint& current_reference = msg->points[i];
-
-    mav_msgs::eigenTrajectoryPointFromMsg(current_reference, &eigen_reference);
-
-    commands_.push_back(eigen_reference);
-    command_waiting_times_.push_back(current_reference.time_from_start - reference_before.time_from_start);
-  }
-
   // We can trigger the first command immediately.
-  position_controller_.SetTrajectoryPoint(commands_.front());
+  position_controller_.SetTrajectoryPoint(eigen_reference);
   commands_.pop_front();
 
-  if (n_commands > 1) {
-    command_timer_.setPeriod(command_waiting_times_.front());
-    command_waiting_times_.pop_front();
-    command_timer_.start();
+  if (n_commands >= 1) {
+    waypointHasBeenPublished_ = true;
+    ROS_INFO("PositionController got first MultiDOFJointTrajectory message.");
   }
 }
 
@@ -153,55 +141,41 @@ void PositionControllerNode::InitializeParams() {
                   position_controller_.controller_parameters_.hovering_gain_kd_,
                   &position_controller_.controller_parameters_.hovering_gain_kd_);
 
+  position_controller_.SetControllerGains();
+
 }
 
 void PositionControllerNode::Publish(){
-}
-
-void PositionControllerNode::IMUCallback(const sensor_msgs::ImuConstPtr& imu_msg) {
-
-    ROS_INFO_ONCE("PositionController got first imu message.");
-
-    sensorData_t sensors;
-    
-    //Angular velocities data
-    sensors.gyro.x = imu_msg->angular_velocity.x;
-    sensors.gyro.y = imu_msg->angular_velocity.y;
-    sensors.gyro.z = imu_msg->angular_velocity.z;
-    
-    //Linear acceleration data
-    sensors.acc.x = imu_msg->linear_acceleration.x;
-    sensors.acc.y = imu_msg->linear_acceleration.y;
-    sensors.acc.z = imu_msg->linear_acceleration.z;
-
-    position_controller_.SetSensorData(sensors);
-
 }
 
 void PositionControllerNode::OdometryCallback(const nav_msgs::OdometryConstPtr& odometry_msg) {
 
     ROS_INFO_ONCE("PositionController got first odometry message.");
 
-    //This functions allows us to put the odometry message into the odometry variable--> _position, _orientation,_velocit_body,
-    //_angular_velocity
-    EigenOdometry odometry;
-    eigenOdometryFromMsg(odometry_msg, &odometry);
-    position_controller_.SetOdometry(odometry);
+    if (waypointHasBeenPublished_){
 
-    Eigen::Vector4d ref_rotor_velocities;
-    position_controller_.CalculateRotorVelocities(&ref_rotor_velocities);
+	    //This functions allows us to put the odometry message into the odometry variable--> _position,
+ 	    //_orientation,_velocit_body,_angular_velocity
+	    EigenOdometry odometry;
+	    eigenOdometryFromMsg(odometry_msg, &odometry);
+	    position_controller_.SetOdometryWithoutStateEstimator(odometry);
 
-    //creating a new mav message. actuator_msg is used to send the velocities of the propellers.  
-    mav_msgs::ActuatorsPtr actuator_msg(new mav_msgs::Actuators);
+	    Eigen::Vector4d ref_rotor_velocities;
+	    position_controller_.CalculateRotorVelocities(&ref_rotor_velocities);
 
-    //we use clear because we later want to be sure that we used the previously calculated velocity.
-    actuator_msg->angular_velocities.clear();
-    //for all propellers, we put them into actuator_msg so they will later be used to control the crazyflie.
-    for (int i = 0; i < ref_rotor_velocities.size(); i++)
-       actuator_msg->angular_velocities.push_back(ref_rotor_velocities[i]);
-    actuator_msg->header.stamp = odometry_msg->header.stamp;
-    
-    motor_velocity_reference_pub_.publish(actuator_msg);
+	    //creating a new mav message. actuator_msg is used to send the velocities of the propellers.  
+	    mav_msgs::ActuatorsPtr actuator_msg(new mav_msgs::Actuators);
+
+	    //we use clear because we later want to be sure that we used the previously calculated velocity.
+	    actuator_msg->angular_velocities.clear();
+	    //for all propellers, we put them into actuator_msg so they will later be used to control the crazyflie.
+	    for (int i = 0; i < ref_rotor_velocities.size(); i++)
+	       actuator_msg->angular_velocities.push_back(ref_rotor_velocities[i]);
+	    actuator_msg->header.stamp = odometry_msg->header.stamp;
+	    
+	    motor_velocity_reference_pub_.publish(actuator_msg);
+
+    }	 
    
 }
 

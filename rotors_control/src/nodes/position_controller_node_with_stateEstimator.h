@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 
-#ifndef CRAYZFLIE_2_CONTROL_POSITION_CONTROLLER_NODE_H
-#define CRAYZFLIE_2_CONTROL_POSITION_CONTROLLER_NODE_H
+#ifndef CRAYZFLIE_2_POSITION_CONTROLLER_NODE_H
+#define CRAYZFLIE_2_POSITION_CONTROLLER_NODE_H
 
 #include <boost/bind.hpp>
 #include <Eigen/Eigen>
@@ -35,7 +35,7 @@
 #include <trajectory_msgs/MultiDOFJointTrajectory.h>
 
 #include "rotors_control/common.h"
-#include "rotors_control/position_controller_with_stateEstimator.h"
+#include "rotors_control/position_controller.h"
 #include "rotors_control/complementary_filter_crazyflie2.h"
 
 
@@ -65,6 +65,10 @@ namespace rotors_control {
             //publisher
             ros::Publisher motor_velocity_reference_pub_;
 
+            mav_msgs::EigenTrajectoryPointDeque commands_;
+            std::deque<ros::Duration> command_waiting_times_;
+            ros::Timer command_timer_;
+
             void MultiDofJointTrajectoryCallback(const trajectory_msgs::MultiDOFJointTrajectoryConstPtr& trajectory_reference_msg);
 
             void OdometryCallback(const nav_msgs::OdometryConstPtr& odometry_msg);
@@ -74,4 +78,4 @@ namespace rotors_control {
     };
 }
 
-#endif // CRAZYFLIE_2_CONTROL_POSITION_CONTROLLER_NODE_H
+#endif // CRAZYFLIE_2_POSITION_CONTROLLER_NODE_H

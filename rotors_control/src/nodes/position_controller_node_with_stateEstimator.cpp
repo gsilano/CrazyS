@@ -33,7 +33,7 @@ namespace rotors_control {
 
 PositionControllerNode::PositionControllerNode() {
 
-    ROS_INFO_ONCE("Started position controller");
+    ROS_INFO_ONCE("Started position controller with state estimator");
 
     InitializeParams();
 
@@ -69,10 +69,10 @@ void PositionControllerNode::MultiDofJointTrajectoryCallback(const trajectory_ms
   commands_.push_front(eigen_reference);
 
   // We can trigger the first command immediately.
-  position_controller_.SetTrajectoryPoint(commands_.front());
+  position_controller_.SetTrajectoryPoint(eigen_reference);
   commands_.pop_front();
 
-  if (n_commands > 1) {
+  if (n_commands >= 1) {
     waypointHasBeenPublished_ = true;
     ROS_INFO("PositionController got first MultiDOFJointTrajectory message.");
   }
@@ -145,10 +145,7 @@ void PositionControllerNode::InitializeParams() {
                   position_controller_.controller_parameters_.hovering_gain_kd_,
                   &position_controller_.controller_parameters_.hovering_gain_kd_);
 
-  GetVehicleParameters(pnh, &position_controller_.vehicle_parameters_);
-
   position_controller_.SetControllerGains();
-  position_controller_.SetVehicleParameters();
 
 }
 
@@ -185,7 +182,7 @@ void PositionControllerNode::OdometryCallback(const nav_msgs::OdometryConstPtr& 
  	    //_orientation,_velocit_body,_angular_velocity
 	    EigenOdometry odometry;
 	    eigenOdometryFromMsg(odometry_msg, &odometry);
-	    position_controller_.SetOdometry(odometry);
+	    position_controller_.SetOdometryWithStateEstimator(odometry);
 
 	    Eigen::Vector4d ref_rotor_velocities;
 	    position_controller_.CalculateRotorVelocities(&ref_rotor_velocities);

@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 
-#ifndef ROTORS_CONTROL_POSITION_CONTROLLER_NODE_H
-#define ROTORS_CONTROL_POSITION_CONTROLLER_NODE_H
+#ifndef CRAZYFLIE_2_POSITION_CONTROLLER_NODE_H
+#define CRAZYFLIE_2_POSITION_CONTROLLER_NODE_H
 
 #include <boost/bind.hpp>
 #include <Eigen/Eigen>
@@ -29,14 +29,12 @@
 #include <mav_msgs/AttitudeThrust.h>
 #include <mav_msgs/eigen_mav_msgs.h>
 #include <nav_msgs/Odometry.h>
-#include <sensor_msgs/Imu.h>
 #include <ros/callback_queue.h>
 #include <ros/ros.h>
 #include <trajectory_msgs/MultiDOFJointTrajectory.h>
 
 #include "rotors_control/common.h"
 #include "rotors_control/position_controller.h"
-#include "rotors_control/complementary_filter_crazyflie2.h"
 
 
 namespace rotors_control {
@@ -51,16 +49,15 @@ namespace rotors_control {
 
         private:
 
+            bool waypointHasBeenPublished_ = false;
+
             PositionController position_controller_;
 
             std::string namespace_;
 
             //subscribers
-            ros::Subscriber cmd_trajectory_sub_;
             ros::Subscriber cmd_multi_dof_joint_trajectory_sub_;
-            ros::Subscriber cmd_pose_sub_;
             ros::Subscriber odometry_sub_;
-            ros::Subscriber imu_sub_;
 
             //publisher
             ros::Publisher motor_velocity_reference_pub_;
@@ -69,17 +66,11 @@ namespace rotors_control {
             std::deque<ros::Duration> command_waiting_times_;
             ros::Timer command_timer_;
 
-            void TimedCommandCallback(const ros::TimerEvent& e);
-
             void MultiDofJointTrajectoryCallback(const trajectory_msgs::MultiDOFJointTrajectoryConstPtr& trajectory_reference_msg);
 
-            void CommandPoseCallback(const geometry_msgs::PoseStampedConstPtr& pose_msg);
-
             void OdometryCallback(const nav_msgs::OdometryConstPtr& odometry_msg);
-
-            void IMUCallback(const sensor_msgs::ImuConstPtr& imu_msg);
 
     };
 }
 
-#endif // ROTORS_CONTROL_POSITION_CONTROLLER_NODE_H
+#endif // CRAZYFLIE_2_POSITION_CONTROLLER_NODE_H

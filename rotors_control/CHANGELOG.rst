@@ -2,7 +2,7 @@
 Changelog for package rotors_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-2.2.0.1 (2018-02-23)
+0.0.3 (2018-02-23)
 -----------
 * bug fixing in the controller position node
 * the controller algorithm has been split into two parts: with and without state estimator

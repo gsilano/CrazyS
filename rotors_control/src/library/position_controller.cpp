@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-#include "rotors_control/position_controller_with_stateEstimator.h"
+#include "rotors_control/position_controller.h"
 #include "rotors_control/transform_datatypes.h"
 #include "rotors_control/Matrix3x3.h"
 #include "rotors_control/Quaternion.h" 
@@ -36,11 +36,11 @@
 #define ANGULAR_MOTOR_COEFFICIENT                0.2685 /* ANGULAR_MOTOR_COEFFICIENT */
 #define MOTORS_INTERCEPT                         4070.3*(M_PI/30) /* MOTORS_INTERCEPT [rad/s]*/
 #define MAX_PROPELLERS_ANGULAR_VELOCITY          2618 /* MAX PROPELLERS ANGULAR VELOCITY [rad/s]*/
-#define MAX_R_DESIDERED                          (200/180)*M_PI /* MAX R DESIDERED VALUE [rad/s]*/   
+#define MAX_R_DESIDERED                          200*(M_PI/180) /* MAX R DESIDERED VALUE [rad/s]*/   
 #define MAX_THETA_COMMAND                        M_PI/6 /* MAX THETA COMMMAND [rad]*/
 #define MAX_PHI_COMMAND                          M_PI/6 /* MAX PHI COMMAND [rad]*/
-#define MAX_POS_DELTA_OMEGA                      15000 /* MAX POSITIVE DELTA OMEGA [rad/s]*/
-#define MAX_NEG_DELTA_OMEGA                      20000 /* MAX NEGATIVE DELTA OMEGA [rad/s]*/
+#define MAX_POS_DELTA_OMEGA                      15000*(M_PI/30) /* MAX POSITIVE DELTA OMEGA [rad/s]*/
+#define MAX_NEG_DELTA_OMEGA                      20000*(M_PI/30) /* MAX NEGATIVE DELTA OMEGA [rad/s]*/
 
 namespace rotors_control{
 
@@ -58,10 +58,39 @@ PositionController::PositionController()
 
 PositionController::~PositionController() {}
 
-void PositionController::SetOdometry(const EigenOdometry& odometry) {
+void PositionController::SetOdometryWithStateEstimator(const EigenOdometry& odometry) {
     
     odometry_ = odometry;    
 }
+
+void PositionController::SetOdometryWithoutStateEstimator(const EigenOdometry& odometry) {
+    
+    odometry_ = odometry; 
+    //Such function is invoked when the ideal odometry sensor is taken into account	
+    SetSensorData();
+}
+
+void PositionController::SetSensorData() {
+    
+    // Only the position sensor is ideal, we don't have virtual sensor or systems to get it
+    state_.position.x = odometry_.position[0];
+    state_.position.y = odometry_.position[1];
+    state_.position.z = odometry_.position[2];
+
+    state_.linearVelocity.x = odometry_.velocity[0];
+    state_.linearVelocity.y = odometry_.velocity[1];
+    state_.linearVelocity.z = odometry_.velocity[2];
+
+    state_.attitudeQuaternion.x = odometry_.orientation.x();
+    state_.attitudeQuaternion.y = odometry_.orientation.y();
+    state_.attitudeQuaternion.z = odometry_.orientation.z();
+    state_.attitudeQuaternion.w = odometry_.orientation.w();
+
+    state_.angularVelocity.x = odometry_.angular_velocity[0];
+    state_.angularVelocity.y = odometry_.angular_velocity[1];
+    state_.angularVelocity.z = odometry_.angular_velocity[2];
+}
+
 
 void PositionController::SetOdometryEstimated() {
 
@@ -81,6 +110,26 @@ void PositionController::SetSensorData(const sensorData_t& sensors) {
     state_.linearVelocity.x = odometry_.velocity[0];
     state_.linearVelocity.y = odometry_.velocity[1];
     state_.linearVelocity.z = odometry_.velocity[2];
+}
+
+void PositionController::SetControllerGains(){
+
+      xy_gain_kp_ = Eigen::Vector2f(controller_parameters_.xy_gain_kp_.x(), controller_parameters_.xy_gain_kp_.y());
+      xy_gain_ki_ = Eigen::Vector2f(controller_parameters_.xy_gain_ki_.x(), controller_parameters_.xy_gain_ki_.y());
+  
+      attitude_gain_kp_ = Eigen::Vector2f(controller_parameters_.attitude_gain_kp_.x(), controller_parameters_.attitude_gain_kp_.y());
+      attitude_gain_ki_ = Eigen::Vector2f(controller_parameters_.attitude_gain_ki_.x(), controller_parameters_.attitude_gain_ki_.y());
+  
+      rate_gain_kp_ = Eigen::Vector3f(controller_parameters_.rate_gain_kp_.x(), controller_parameters_.rate_gain_kp_.y(), controller_parameters_.rate_gain_kp_.z());
+      rate_gain_ki_ = Eigen::Vector3f(controller_parameters_.rate_gain_ki_.x(), controller_parameters_.rate_gain_ki_.y(), controller_parameters_.rate_gain_ki_.z());
+  
+      yaw_gain_kp_ = controller_parameters_.yaw_gain_kp_;
+      yaw_gain_ki_ = controller_parameters_.yaw_gain_ki_;
+  
+      hovering_gain_kp_ = controller_parameters_.hovering_gain_kp_;
+      hovering_gain_ki_ = controller_parameters_.hovering_gain_ki_;
+      hovering_gain_kd_ = controller_parameters_.hovering_gain_kd_;
+
 }
 
 void PositionController::SetTrajectoryPoint(const mav_msgs::EigenTrajectoryPoint& command_trajectory) {
@@ -148,7 +197,6 @@ void PositionController::Quaternion2Euler(double* roll, double* pitch, double* y
     tf::Quaternion q(x, y, z, w);
     tf::Matrix3x3 m(q);
     m.getRPY(*roll, *pitch, *yaw);
-
 }
 
 void PositionController::XYController(double* theta_command, double* phi_command) {
@@ -167,8 +215,8 @@ void PositionController::XYController(double* theta_command, double* phi_command
     e_vy = ye - v;
 
     double theta_command_kp, phi_command_kp;
-    theta_command_kp = controller_parameters_.xy_gain_kp_.x() * e_vx;
-    theta_command_ki_ = theta_command_ki_ + (controller_parameters_.xy_gain_ki_.x() * e_vx);
+    theta_command_kp = xy_gain_kp_.x() * e_vx;
+    theta_command_ki_ = theta_command_ki_ + (xy_gain_ki_.x() * e_vx);
     *theta_command  = theta_command_kp + theta_command_ki_;
 
     //Theta command is saturated to take into account the physical constrains
@@ -178,8 +226,8 @@ void PositionController::XYController(double* theta_command, double* phi_command
        else
           *theta_command = -MAX_THETA_COMMAND;
 
-    phi_command_kp = controller_parameters_.xy_gain_kp_.y() * e_vy;
-    phi_command_ki_ = phi_command_ki_ + (controller_parameters_.xy_gain_ki_.y() * e_vy);
+    phi_command_kp = xy_gain_kp_.y() * e_vy;
+    phi_command_ki_ = phi_command_ki_ + (xy_gain_ki_.y() * e_vy);
     *phi_command  = phi_command_kp + phi_command_ki_;
 
     //Phi command is saturated to take into account the physical constrains
@@ -206,12 +254,12 @@ void PositionController::AttitudeController(double* p_command, double* q_command
     theta_error = theta_command - pitch;
 
     double p_command_kp, q_command_kp;
-    p_command_kp = controller_parameters_.attitude_gain_kp_.x() * phi_error;
-    p_command_ki_ = p_command_ki_ + (controller_parameters_.attitude_gain_ki_.x() * phi_error);
+    p_command_kp = attitude_gain_kp_.x() * phi_error;
+    p_command_ki_ = p_command_ki_ + (attitude_gain_ki_.x() * phi_error);
     *p_command = p_command_kp + p_command_ki_;
 
-    q_command_kp = controller_parameters_.attitude_gain_kp_.y() * theta_error;
-    q_command_ki_ = q_command_ki_ + (controller_parameters_.attitude_gain_ki_.y() * theta_error);
+    q_command_kp = attitude_gain_kp_.y() * theta_error;
+    q_command_ki_ = q_command_ki_ + (attitude_gain_ki_.y() * theta_error);
     *q_command = q_command_kp + q_command_ki_;
 
 }
@@ -238,14 +286,14 @@ void PositionController::RateController(double* delta_phi, double* delta_theta, 
     r_error = r_command - r;
 
     double delta_phi_kp, delta_theta_kp, delta_psi_kp;
-    delta_phi_kp = controller_parameters_.rate_gain_kp_.x() * p_error;
+    delta_phi_kp = rate_gain_kp_.x() * p_error;
     *delta_phi = delta_phi_kp;
 
-    delta_theta_kp = controller_parameters_.rate_gain_kp_.y() * q_error;
+    delta_theta_kp = rate_gain_kp_.y() * q_error;
     *delta_theta = delta_theta_kp;
 
-    delta_psi_kp = controller_parameters_.rate_gain_kp_.z() * r_error;
-    delta_psi_ki_ = delta_psi_ki_ + (controller_parameters_.rate_gain_ki_.z() * r_error);
+    delta_psi_kp = rate_gain_kp_.z() * r_error;
+    delta_psi_ki_ = delta_psi_ki_ + (rate_gain_ki_.z() * r_error);
     *delta_psi = delta_psi_kp + delta_psi_ki_;
 
 }
@@ -281,8 +329,8 @@ void PositionController::YawPositionController(double* r_command) {
     yaw_error = yaw_reference - yaw;
 
     double r_command_kp;
-    r_command_kp = controller_parameters_.yaw_gain_kp_ * yaw_error;
-    r_command_ki_ = r_command_ki_ + (controller_parameters_.yaw_gain_ki_ * yaw_error);
+    r_command_kp = yaw_gain_kp_ * yaw_error;
+    r_command_ki_ = r_command_ki_ + (yaw_gain_ki_ * yaw_error);
     *r_command = r_command_ki_ + r_command_kp;
 
    //R command value is saturated to take into account the physical constrains
@@ -302,9 +350,9 @@ void PositionController::HoveringController(double* delta_omega) {
     z_error = z_reference - state_.position.z;
 
     double delta_omega_kp, delta_omega_kd;
-    delta_omega_kp = controller_parameters_.hovering_gain_kp_ * z_error;
-    delta_omega_ki_ = delta_omega_ki_ + (controller_parameters_.hovering_gain_ki_ * z_error);
-    delta_omega_kd = controller_parameters_.hovering_gain_kd_ * -state_.linearVelocity.z;
+    delta_omega_kp = hovering_gain_kp_ * z_error;
+    delta_omega_ki_ = delta_omega_ki_ + (hovering_gain_ki_ * z_error);
+    delta_omega_kd = hovering_gain_kd_ * -state_.linearVelocity.z;
     *delta_omega = delta_omega_kp + delta_omega_ki_ + delta_omega_kd;
 
     //Delta omega value is saturated to take into account the physical constrains
