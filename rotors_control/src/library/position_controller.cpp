@@ -32,15 +32,16 @@
 
 
 #define M_PI                                     3.14159265358979323846  /* pi [rad]*/
-#define OMEGA_OFFSET                             65673*(M_PI/30)  /* OMEGA OFFSET [rad/s]*/
+#define OMEGA_OFFSET                             6877  /* OMEGA OFFSET [rad/s]*/
 #define ANGULAR_MOTOR_COEFFICIENT                0.2685 /* ANGULAR_MOTOR_COEFFICIENT */
-#define MOTORS_INTERCEPT                         4070.3*(M_PI/30) /* MOTORS_INTERCEPT [rad/s]*/
+#define MOTORS_INTERCEPT                         426.24 /* MOTORS_INTERCEPT [rad/s]*/
 #define MAX_PROPELLERS_ANGULAR_VELOCITY          2618 /* MAX PROPELLERS ANGULAR VELOCITY [rad/s]*/
-#define MAX_R_DESIDERED                          200*(M_PI/180) /* MAX R DESIDERED VALUE [rad/s]*/   
-#define MAX_THETA_COMMAND                        M_PI/6 /* MAX THETA COMMMAND [rad]*/
-#define MAX_PHI_COMMAND                          M_PI/6 /* MAX PHI COMMAND [rad]*/
-#define MAX_POS_DELTA_OMEGA                      15000*(M_PI/30) /* MAX POSITIVE DELTA OMEGA [rad/s]*/
-#define MAX_NEG_DELTA_OMEGA                      20000*(M_PI/30) /* MAX NEGATIVE DELTA OMEGA [rad/s]*/
+#define MAX_R_DESIDERED                          3.4907 /* MAX R DESIDERED VALUE [rad/s]*/   
+#define MAX_THETA_COMMAND                        0.5236 /* MAX THETA COMMMAND [rad]*/
+#define MAX_PHI_COMMAND                          0.5236 /* MAX PHI COMMAND [rad]*/
+#define MAX_POS_DELTA_OMEGA                      1570 /* MAX POSITIVE DELTA OMEGA [rad/s]*/
+#define MAX_NEG_DELTA_OMEGA                      2094 /* MAX NEGATIVE DELTA OMEGA [rad/s]*/
+#define SAMPLING_TIME                            0.01 /* SAMPLING TIME [s] */
 
 namespace rotors_control{
 
@@ -50,8 +51,8 @@ PositionController::PositionController()
     theta_command_ki_(0),
     p_command_ki_(0),
     q_command_ki_(0),
+	r_command_ki_(0),
     delta_psi_ki_(0),
-    r_command_ki_(0),
     delta_omega_ki_(0){
 
 }
@@ -216,7 +217,7 @@ void PositionController::XYController(double* theta_command, double* phi_command
 
     double theta_command_kp, phi_command_kp;
     theta_command_kp = xy_gain_kp_.x() * e_vx;
-    theta_command_ki_ = theta_command_ki_ + (xy_gain_ki_.x() * e_vx);
+    theta_command_ki_ = theta_command_ki_ + (xy_gain_ki_.x() * e_vx * SAMPLING_TIME);
     *theta_command  = theta_command_kp + theta_command_ki_;
 
     //Theta command is saturated to take into account the physical constrains
@@ -227,7 +228,7 @@ void PositionController::XYController(double* theta_command, double* phi_command
           *theta_command = -MAX_THETA_COMMAND;
 
     phi_command_kp = xy_gain_kp_.y() * e_vy;
-    phi_command_ki_ = phi_command_ki_ + (xy_gain_ki_.y() * e_vy);
+    phi_command_ki_ = phi_command_ki_ + (xy_gain_ki_.y() * e_vy * SAMPLING_TIME);
     *phi_command  = phi_command_kp + phi_command_ki_;
 
     //Phi command is saturated to take into account the physical constrains
@@ -255,11 +256,11 @@ void PositionController::AttitudeController(double* p_command, double* q_command
 
     double p_command_kp, q_command_kp;
     p_command_kp = attitude_gain_kp_.x() * phi_error;
-    p_command_ki_ = p_command_ki_ + (attitude_gain_ki_.x() * phi_error);
+    p_command_ki_ = p_command_ki_ + (attitude_gain_ki_.x() * phi_error * SAMPLING_TIME);
     *p_command = p_command_kp + p_command_ki_;
 
     q_command_kp = attitude_gain_kp_.y() * theta_error;
-    q_command_ki_ = q_command_ki_ + (attitude_gain_ki_.y() * theta_error);
+    q_command_ki_ = q_command_ki_ + (attitude_gain_ki_.y() * theta_error * SAMPLING_TIME);
     *q_command = q_command_kp + q_command_ki_;
 
 }
@@ -293,7 +294,7 @@ void PositionController::RateController(double* delta_phi, double* delta_theta, 
     *delta_theta = delta_theta_kp;
 
     delta_psi_kp = rate_gain_kp_.z() * r_error;
-    delta_psi_ki_ = delta_psi_ki_ + (rate_gain_ki_.z() * r_error);
+    delta_psi_ki_ = delta_psi_ki_ + (rate_gain_ki_.z() * r_error * SAMPLING_TIME);
     *delta_psi = delta_psi_kp + delta_psi_ki_;
 
 }
@@ -330,7 +331,7 @@ void PositionController::YawPositionController(double* r_command) {
 
     double r_command_kp;
     r_command_kp = yaw_gain_kp_ * yaw_error;
-    r_command_ki_ = r_command_ki_ + (yaw_gain_ki_ * yaw_error);
+    r_command_ki_ = r_command_ki_ + (yaw_gain_ki_ * yaw_error * SAMPLING_TIME);
     *r_command = r_command_ki_ + r_command_kp;
 
    //R command value is saturated to take into account the physical constrains
@@ -345,14 +346,20 @@ void PositionController::YawPositionController(double* r_command) {
 void PositionController::HoveringController(double* delta_omega) {
     assert(delta_omega);
 
-    double z_error, z_reference;
+    double z_error, z_reference, dot_zeta;
     z_reference = command_trajectory_.position_W[2];
     z_error = z_reference - state_.position.z;
+	
+	//Velocity along z-axis from body to inertial frame
+	double roll, pitch, yaw;
+	Quaternion2Euler(&roll, &pitch, &yaw); 
+	dot_zeta = -sin(pitch)*state_.linearVelocity.x + sin(roll)*cos(pitch)*state_.linearVelocity.y +
+	            cos(roll)*cos(pitch)*state_.linearVelocity.z;
 
     double delta_omega_kp, delta_omega_kd;
     delta_omega_kp = hovering_gain_kp_ * z_error;
-    delta_omega_ki_ = delta_omega_ki_ + (hovering_gain_ki_ * z_error);
-    delta_omega_kd = hovering_gain_kd_ * -state_.linearVelocity.z;
+    delta_omega_ki_ = delta_omega_ki_ + (hovering_gain_ki_ * z_error * SAMPLING_TIME);
+    delta_omega_kd = hovering_gain_kd_ * -dot_zeta;
     *delta_omega = delta_omega_kp + delta_omega_ki_ + delta_omega_kd;
 
     //Delta omega value is saturated to take into account the physical constrains
@@ -377,7 +384,7 @@ void PositionController::ErrorBodyFrame(double* xe, double* ye) const {
     x_error_ = x_r - state_.position.x;
     y_error_ = y_r - state_.position.y;
 
-    //The estimated attitude
+    //The aircraft attitude (estimated or not, it depends by the employed controller node)
     double yaw, roll, pitch;
     Quaternion2Euler(&roll, &pitch, &yaw);   
     
