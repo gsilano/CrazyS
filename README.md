@@ -6,13 +6,13 @@ CrazyS
 
 CrazyS is an extension of the ROS package [RotorS](https://github.com/ethz-asl/rotors_simulator), aimed to modeling, developing and integrating the [Crazyflie 2.0](https://www.bitcraze.io/crazyflie-2/) nano-quadcopter in the physics based simulation environment Gazebo.
 
-Such simulation platform allows to understand quickly the behavior of the flight control system by comparing and evaluating different indoor and outdoor scenarios, with details level quite close to reality. The proposed extension expands RotorS capabilities by considering the Crazyflie 2.0 physical model and its flight control system, as well.
+Such simulation platform allows to understand quickly the behavior of the flight control system by comparing and evaluating different indoor and outdoor scenarios, with a details level quite close to reality. The proposed extension expands RotorS capabilities by considering the Crazyflie 2.0 physical model and its flight control system, as well.
 
 A simple case study is considered (`crazyflie2_hovering_example.launch`) in order to show how the package works and the validity of the employed dynamical model together the control architecture of the quadcopter.
 
 The code is released under Apache license, thus making it available for scientific and educational activities.
 
-Below we provide the instructions necessary for getting started. See CrazyS' wiki for more instructions and examples (https://github.com/gsilano/CrazyS/wiki).
+Below we provide the instructions necessary for getting started. See [CrazyS' wiki](https://github.com/gsilano/CrazyS/wiki) for more instructions and examples .
 
 If you are using this simulator within the research for your publication, please cite:
 ```bibtex
@@ -46,9 +46,8 @@ Installation Instructions - Ubuntu 16.04 with ROS Kinetic
  $ cd ~/catkin_ws/src
  $ catkin_init_workspace  # initialize your catkin workspace
  $ wstool init
- $ wget https://raw.githubusercontent.com/gsilano/rotors_simulator/master/rotors_hil.rosinstall
- $ wstool merge rotors_hil.rosinstall
- $ wstool update
+ $ git clone https://github.com/gsilano/CrazyS.git
+ $ git clone https://github.com/gsilano/mav_comm.git
  ```
 
   > **Note** On OS X you need to install yaml-cpp using Homebrew `brew install yaml-cpp`.
@@ -88,7 +87,7 @@ Installation Instructions - Ubuntu 14.04 with ROS Indigo
  $ catkin_init_workspace  # initialize your catkin workspace
  $ wstool init
  ```
- > **Note** for setups with multiple workspaces please refer to the official documentation at http://docs.ros.org/independent/api/rosinstall/html/ by replacing `rosws` by `wstool`.
+ > **Note** for setups with multiple workspaces please refer to the [official documentation](http://docs.ros.org/independent/api/rosinstall/html/) by replacing `rosws` by `wstool`.
  3. Get the simulator and additional dependencies
 
  ```
@@ -132,15 +131,15 @@ Basic Usage
 Launch the simulator with the Crazyflie 2.0 model in a basic world.
 
 ```
-$ roslaunch rotors_gazebo crazyflie2_hovering_example.launch
+$ roslaunch rotors_gazebo crazyflie2_hovering_example.launch enable_state_estimator:=true
 ```
 
-> **Note** The first run of gazebo might take considerably long, as it will download some models from an online database.
+> **Note** The first run of gazebo might take considerably long, as it will download some models from an online database. You can decided to enable or not the state estimator, thus to use the virtual (with noise and bias) or the real sensors. The default value of `enable_state_estimator` is `false`.
 
-The whole process is the following: the desired trajectory coordinates (![equation](http://latex.codecogs.com/gif.latex?%24x_r%24%2C%20%24y_r%24%2C%20%24z_r%24%2C%20%24%5Cpsi_r%24)) are published by the hovering example node on the topic `command/trajectory`, to whom the position controller
-node (i.e., the Crazyflie controller) is subscribed. The drone state (`odometry_sensor1/odometry` topic) and the references are used to run the control strategy designed for the path tracking. The outputs of the control algorithm consists into the actuation commands (![equation](http://latex.codecogs.com/gif.latex?%24%5Comega_1%24%2C%20%24%5Comega_2%24%2C%20%24%5Comega_3%24%2C%20%24%5Comega_4%24)) sent to Gazebo (`command/motor_speed`) for the virtual rendering, so to update the aircraft position and orientation.
+The whole process is the following: the desired trajectory coordinates (x_r, y_r, z_r and \psi_r) are published by the hovering example node on the topic `command/trajectory`, to whom the position controller
+node (i.e., the Crazyflie controller) is subscribed. The drone state (`odometry_sensor1/odometry` topic) and the references are used to run the control strategy designed for the path tracking. The outputs of the control algorithm consists into the actuation commands (\omega_1, \omega_2, \omega_3 and \omega_4) sent to Gazebo (`command/motor_speed`) for the virtual rendering, so to update the aircraft position and orientation.
 
-There are some basic launch files where you can load the different multicopters with additional sensors. They can all be found in `~/catkin_ws/src/CrazyS/rotors_gazebo/launch`.
+There are some basic launch files where you can load the different multicopters with additional sensors. They can all be found in `~/catkin_ws/src/CrazyS/rotors_gazebo/launch`. Suche scenarios are better explained in the [RotorS](https://github.com/ethz-asl/rotors_simulator) repository.
 
 The `world_name` argument looks for a .world file with a corresponding name in `~/catkin_ws/src/CrazyS/rotors_gazebo/worlds`. By default, all launch files, with the exception of those that have the world name explicitly included in the file name, use the empty world described in `basic.world`.
 
@@ -158,3 +157,9 @@ YouTube videos
 In such section a video proving the effectiveness of the platform is reported. Further videos can be found in the related YouTube channel. Have fun! :)
 
 [![CrazyS, an exntension of the ROS pakcage RotrS aimed to modeling, developing and integrating the Crazyflie 2.0 nano-quadcopter](https://github.com/gsilano/CrazyS/wiki/img/img_YouTube_MED18.png)](https://www.youtube.com/watch?v=pda-tuULewM "CrazyS, an exntension of the ROS pakcage RotrS aimed to modeling, developing and integrating the Crazyflie 2.0 nano-quadcopter")
+
+
+Bugs & Feature Requests
+--------------
+
+Please report bugs and request features using the [Issue Tracker](https://github.com/gsilano/CrazyS/issues).
