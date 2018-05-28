@@ -180,6 +180,7 @@ void PositionController::CalculateRotorVelocities(Eigen::Vector4d* rotor_velocit
         else
            omega_4 = 0;
 
+    //ROS_INFO("Omega_1: %f Omega_2: %f Omega_3: %f Omega_4: %f", omega_1, omega_2, omega_3, omega_4);
     *rotor_velocities = Eigen::Vector4d(omega_1, omega_2, omega_3, omega_4);
 }
 
@@ -198,6 +199,8 @@ void PositionController::Quaternion2Euler(double* roll, double* pitch, double* y
     tf::Quaternion q(x, y, z, w);
     tf::Matrix3x3 m(q);
     m.getRPY(*roll, *pitch, *yaw);
+   
+    //ROS_INFO("Roll: %f, Pitch: %f, Yaw: %f", *roll, *pitch, *yaw);
 }
 
 void PositionController::XYController(double* theta_command, double* phi_command) {
@@ -237,7 +240,11 @@ void PositionController::XYController(double* theta_command, double* phi_command
           *phi_command = MAX_PHI_COMMAND;
        else
           *phi_command = -MAX_PHI_COMMAND;
-
+  
+     //ROS_INFO("Theta_kp: %f, Theta_ki: %f", theta_command_kp, theta_command_ki_);
+     //ROS_INFO("Phi_kp: %f, Phi_ki: %f", phi_command_kp, phi_command_ki_);
+     //ROS_INFO("Phi_c: %f, Theta_c: %f", *phi_command, *theta_command);
+     //ROS_INFO("E_vx: %f, E_vy: %f", e_vx, e_vy);
 }
 
 void PositionController::AttitudeController(double* p_command, double* q_command) {
@@ -262,6 +269,8 @@ void PositionController::AttitudeController(double* p_command, double* q_command
     q_command_kp = attitude_gain_kp_.y() * theta_error;
     q_command_ki_ = q_command_ki_ + (attitude_gain_ki_.y() * theta_error * SAMPLING_TIME);
     *q_command = q_command_kp + q_command_ki_;
+
+    //ROS_INFO("Phi_c: %f, Phi_e: %f, Theta_c: %f, Theta_e: %f", phi_command, phi_error, theta_command, theta_error);
 
 }
 
@@ -317,6 +326,8 @@ void PositionController::ControlMixer(double* PWM_1, double* PWM_2, double* PWM_
     *PWM_3 = omega + (delta_theta/2) + (delta_phi/2) - delta_psi;
     *PWM_4 = omega - (delta_theta/2) + (delta_phi/2) + delta_psi;
 
+    //ROS_INFO("Omega: %f, Delta_theta: %f, Delta_phi: %f, delta_psi: %f", omega, delta_theta, delta_phi, delta_psi);
+    //ROS_INFO("PWM1: %f, PWM2: %f, PWM3: %f, PWM4: %f", *PWM_1, *PWM_2, *PWM_3, *PWM_4);
 }
 
 void PositionController::YawPositionController(double* r_command) {
@@ -350,10 +361,10 @@ void PositionController::HoveringController(double* delta_omega) {
     z_reference = command_trajectory_.position_W[2];
     z_error = z_reference - state_.position.z;
 	
-	//Velocity along z-axis from body to inertial frame
-	double roll, pitch, yaw;
-	Quaternion2Euler(&roll, &pitch, &yaw); 
-	dot_zeta = -sin(pitch)*state_.linearVelocity.x + sin(roll)*cos(pitch)*state_.linearVelocity.y +
+    //Velocity along z-axis from body to inertial frame
+    double roll, pitch, yaw;
+    Quaternion2Euler(&roll, &pitch, &yaw); 
+    dot_zeta = -sin(pitch)*state_.linearVelocity.x + sin(roll)*cos(pitch)*state_.linearVelocity.y +
 	            cos(roll)*cos(pitch)*state_.linearVelocity.z;
 
     double delta_omega_kp, delta_omega_kd;
@@ -368,6 +379,8 @@ void PositionController::HoveringController(double* delta_omega) {
          *delta_omega = MAX_POS_DELTA_OMEGA;
       else
          *delta_omega = -MAX_NEG_DELTA_OMEGA;
+
+     //ROS_INFO("Z_error: %f, Delta_omega: %f", z_error, *delta_omega);
 
 }
 
