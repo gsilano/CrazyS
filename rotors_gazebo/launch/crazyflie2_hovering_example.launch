@@ -37,7 +37,7 @@
       <remap from="odometry" to="odometry_sensor1/odometry" />
     </node>
    <node if="$(arg enable_state_estimator)" name="position_controller_node_with_stateEstimator" pkg="rotors_control" type="position_controller_node_with_stateEstimator" output="screen">
-      <rosparam command="load" file="$(find rotors_gazebo)/resource/controller_$(arg mav_name).yaml" />
+      <rosparam command="load" file="$(find rotors_gazebo)/resource/controller_$(arg mav_name)_with_stateEstimator.yaml" />
       <rosparam command="load" file="$(find rotors_gazebo)/resource/$(arg mav_name).yaml" />
       <remap from="odometry" to="odometry_sensor1/odometry" />
     </node>
