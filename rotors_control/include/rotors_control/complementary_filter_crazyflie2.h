@@ -54,14 +54,15 @@ class ComplementaryFilterCrazyflie2 {
     ComplementaryFilterCrazyflie2();
     ~ComplementaryFilterCrazyflie2();
 
-    void EstimatorComplementary(state_t* state, sensorData_t* sensorData);
+    void EstimateRate(state_t* state, sensorData_t* sensorData);
+    void EstimateAttitude(state_t* state, sensorData_t* sensorData);
 
   private:
 
     SensFusion sensors_fusion_;
-
-    void PositionUpdateVelocity(double* angularVelocityY, double* angularVelocityX, double* angularAccY, double* angularAccX);
-
+ 
+    void PositionUpdateAngularVelocity(double* angularVelocityZ, double* angularVelocityY,          
+           double* angularVelocityX, double* angularAccZ, double* angularAccY, double* angularAccX);
 };
 
 }

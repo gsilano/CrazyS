@@ -36,6 +36,9 @@
     <xacro:crazyflie2_imu namespace="${namespace}" parent_link="${namespace}/base_link" /> 
   </xacro:if>
 
+  <!-- Mount a generic odometry sensor. -->
+  <xacro:crazyflie2_odometry namespace="${namespace}" parent_link="${namespace}/base_link" /> 
+
   <xacro:if value="$(arg enable_ground_truth)">
     <xacro:ground_truth_imu_and_odometry namespace="${namespace}" parent_link="${namespace}/base_link" />
   </xacro:if>

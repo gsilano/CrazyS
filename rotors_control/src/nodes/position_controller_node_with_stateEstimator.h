@@ -33,6 +33,8 @@
 #include <ros/callback_queue.h>
 #include <ros/ros.h>
 #include <trajectory_msgs/MultiDOFJointTrajectory.h>
+#include <ros/time.h>
+
 
 #include "rotors_control/common.h"
 #include "rotors_control/position_controller.h"
@@ -57,6 +59,12 @@ namespace rotors_control {
 
             std::string namespace_;
 
+            ros::NodeHandle n_;
+            ros::Timer timer_;
+
+            //Callback functions to compute the errors among axis and angles
+            void CallbackAttitudeEstimation(const ros::TimerEvent& event);
+ 
             //subscribers
             ros::Subscriber cmd_multi_dof_joint_trajectory_sub_;
             ros::Subscriber odometry_sub_;

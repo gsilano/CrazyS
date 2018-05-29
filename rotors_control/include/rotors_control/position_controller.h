@@ -27,63 +27,13 @@
 #include "parameters.h"
 #include "stabilizer_types.h"
 #include "complementary_filter_crazyflie2.h"
+#include "crazyflie_onboard_controller.h"
 #include "sensfusion6.h"
+#include "controller_parameters.h"
 
+#include <time.h>
 
 namespace rotors_control {
-
-// Default values for the position controller of the Crazyflie2. XYController [x,y], AttitudeController [phi,theta] 
-//RateController [p,q,r], YawController[yaw], HoveringController[z]
-static const Eigen::Vector2f kPDefaultXYController = Eigen::Vector2f(15, -15);
-static const Eigen::Vector2f kIDefaultXYController = Eigen::Vector2f(1, -1);
-
-static const Eigen::Vector2f kPDefaultAttitudeController = Eigen::Vector2f(3.5, 3.5);
-static const Eigen::Vector2f kIDefaultAttitudeController = Eigen::Vector2f(2, 2);
-
-static const Eigen::Vector3f kPDefaultRateController = Eigen::Vector3f(110, 110, 110);
-static const Eigen::Vector3f kIDefaultRateController = Eigen::Vector3f(0, 0, 16.7);
-
-static const double kPDefaultYawController = 3;
-static const double kIDefaultYawController = 1;
-
-static const double kPDefaultHoveringController = 14000;
-static const double kIDefaultHoveringController = 15000;
-static const double kDDefaultHoveringController = 20000;
-
-
-class PositionControllerParameters {
- public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  PositionControllerParameters()
-      : xy_gain_kp_(kPDefaultXYController), 
-        xy_gain_ki_(kIDefaultXYController), 
-        attitude_gain_kp_(kPDefaultAttitudeController), 
-        attitude_gain_ki_(kIDefaultAttitudeController), 
-        rate_gain_kp_(kPDefaultRateController), 
-        rate_gain_ki_(kIDefaultRateController),  
-        yaw_gain_kp_(kPDefaultYawController), 
-        yaw_gain_ki_(kIDefaultYawController),
-        hovering_gain_kp_(kPDefaultHoveringController), 
-        hovering_gain_ki_(kIDefaultHoveringController), 
-        hovering_gain_kd_(kDDefaultHoveringController) {
-  }
-
-  Eigen::Vector2f xy_gain_kp_;
-  Eigen::Vector2f xy_gain_ki_;
-  
-  Eigen::Vector2f attitude_gain_kp_;
-  Eigen::Vector2f attitude_gain_ki_;
-  
-  Eigen::Vector3f rate_gain_kp_;
-  Eigen::Vector3f rate_gain_ki_;
-  
-  double yaw_gain_kp_;
-  double yaw_gain_ki_;
-  
-  double hovering_gain_kp_;
-  double hovering_gain_ki_;
-  double hovering_gain_kd_;
-};
     
     class PositionController{
         public:
@@ -92,17 +42,22 @@ class PositionControllerParameters {
             void CalculateRotorVelocities(Eigen::Vector4d* rotor_velocities);
 
             void SetOdometryWithStateEstimator(const EigenOdometry& odometry);
-			void SetOdometryWithoutStateEstimator(const EigenOdometry& odometry);
+	    void SetOdometryWithoutStateEstimator(const EigenOdometry& odometry);
             void SetSensorData(const sensorData_t& sensors);
             void SetTrajectoryPoint(const mav_msgs::EigenTrajectoryPoint& command_trajectory);
-			void SetControllerGains();
-            
+	    void SetControllerGains();
+            void CallbackAttitudeEstimation();
+
             PositionControllerParameters controller_parameters_;
             ComplementaryFilterCrazyflie2 complementary_filter_crazyflie_;
+            CrazyflieOnboardController crazyflie_onboard_controller_;
 
             EIGEN_MAKE_ALIGNED_OPERATOR_NEW
         private:
             bool controller_active_;
+            bool state_estimator_active_;
+
+            control_s control_t_;
 
             //Integrator intial condition
             double theta_command_ki_;
@@ -114,26 +69,25 @@ class PositionControllerParameters {
             double delta_omega_ki_;
 
             //Controller gains
-	        Eigen::Vector2f xy_gain_kp_, xy_gain_ki_;
+	    Eigen::Vector2f xy_gain_kp_, xy_gain_ki_;
             Eigen::Vector2f attitude_gain_kp_, attitude_gain_ki_;
             Eigen::Vector3f rate_gain_kp_, rate_gain_ki_;
             double yaw_gain_kp_, yaw_gain_ki_;
             double hovering_gain_kp_, hovering_gain_ki_, hovering_gain_kd_;
 
-            void SetOdometryEstimated();
-			void SetSensorData();
+            void SetSensorData();
 
             mav_msgs::EigenTrajectoryPoint command_trajectory_;
             EigenOdometry odometry_;
             sensorData_t sensors_;
             state_t state_;
 
+            void RateController(double* delta_phi, double* delta_theta, double* delta_psi);
+            void AttitudeController(double* p_command, double* q_command);
             void ErrorBodyFrame(double* xe, double* ye) const;
             void HoveringController(double* delta_omega);
             void YawPositionController(double* r_command);
             void XYController(double* theta_command, double* phi_command);
-            void AttitudeController(double* p_command, double* q_command);
-            void RateController(double* delta_phi, double* delta_theta, double* delta_psi);
             void ControlMixer(double* PWM_1, double* PWM_2, double* PWM_3, double* PWM_4); 
             void Quaternion2Euler(double* roll, double* pitch, double* yaw) const;
 

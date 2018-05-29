@@ -125,9 +125,9 @@ typedef struct state_s {
 } state_t;
 
 typedef struct control_s {
-  int16_t roll;
-  int16_t pitch;
-  int16_t yaw;
+  double roll;
+  double pitch;
+  double yawRate;
   double thrust;
 } control_t;
 

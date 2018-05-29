@@ -21,12 +21,16 @@
 #include <mav_msgs/default_topics.h>
 #include <ros/console.h> 
 #include <sensor_msgs/Imu.h>
+#include <time.h>
+#include <chrono>
 
 #include "position_controller_node_with_stateEstimator.h"
 
 #include "rotors_control/parameters_ros.h"
 #include "rotors_control/stabilizer_types.h"
 #include "rotors_control/complementary_filter_crazyflie2.h"
+
+#define ATTITUDE_UPDATE_DT 0.004  /* ATTITUDE UPDATE RATE [s] */
 
 
 namespace rotors_control {
@@ -47,9 +51,17 @@ PositionControllerNode::PositionControllerNode() {
 
     motor_velocity_reference_pub_ = nh.advertise<mav_msgs::Actuators>(mav_msgs::default_topics::COMMAND_ACTUATORS, 1);
 
+    timer_ = n_.createTimer(ros::Duration(ATTITUDE_UPDATE_DT), &PositionControllerNode::CallbackAttitudeEstimation, this, false, true);
+
 }
 
 PositionControllerNode::~PositionControllerNode(){}
+
+void PositionControllerNode::CallbackAttitudeEstimation(const ros::TimerEvent& event){
+
+    position_controller_.CallbackAttitudeEstimation();
+
+}
 
 void PositionControllerNode::MultiDofJointTrajectoryCallback(const trajectory_msgs::MultiDOFJointTrajectoryConstPtr& msg) {
   // Clear all pending commands.
@@ -146,6 +158,7 @@ void PositionControllerNode::InitializeParams() {
                   &position_controller_.controller_parameters_.hovering_gain_kd_);
 
   position_controller_.SetControllerGains();
+  position_controller_.crazyflie_onboard_controller_.SetControllerGains(position_controller_.controller_parameters_);
 
 }
 

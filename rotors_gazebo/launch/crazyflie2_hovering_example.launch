@@ -15,7 +15,7 @@
   <env name="GAZEBO_MODEL_PATH" value="${GAZEBO_MODEL_PATH}:$(find rotors_gazebo)/models"/>
   <env name="GAZEBO_RESOURCE_PATH" value="${GAZEBO_RESOURCE_PATH}:$(find rotors_gazebo)/models"/>
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(find rotors_gazebo)/worlds/$(arg world_name).world" />
+    <arg name="world_name" value="$(find rotors_gazebo)/worlds/$(arg world_name)_crazyflie.world" />
     <arg name="debug" value="$(arg debug)" />
     <arg name="paused" value="$(arg paused)"/>
     <arg name="gui" value="$(arg gui)" />
@@ -34,12 +34,10 @@
    <node if="$(eval enable_state_estimator == false)" name="position_controller_node_without_stateEstimator" pkg="rotors_control" type="position_controller_node_without_stateEstimator" output="screen">
       <rosparam command="load" file="$(find rotors_gazebo)/resource/controller_$(arg mav_name).yaml" />
       <rosparam command="load" file="$(find rotors_gazebo)/resource/$(arg mav_name).yaml" />
-      <remap from="odometry" to="odometry_sensor1/odometry" />
     </node>
    <node if="$(arg enable_state_estimator)" name="position_controller_node_with_stateEstimator" pkg="rotors_control" type="position_controller_node_with_stateEstimator" output="screen">
       <rosparam command="load" file="$(find rotors_gazebo)/resource/controller_$(arg mav_name)_with_stateEstimator.yaml" />
       <rosparam command="load" file="$(find rotors_gazebo)/resource/$(arg mav_name).yaml" />
-      <remap from="odometry" to="odometry_sensor1/odometry" />
     </node>
     <node name="hovering_example" pkg="rotors_gazebo" type="hovering_example" output="screen" />
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
