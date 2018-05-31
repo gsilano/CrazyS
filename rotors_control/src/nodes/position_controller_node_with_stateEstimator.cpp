@@ -31,7 +31,8 @@
 #include "rotors_control/complementary_filter_crazyflie2.h"
 
 #define ATTITUDE_UPDATE_DT 0.004  /* ATTITUDE UPDATE RATE [s] */
-
+#define RATE_UPDATE_DT 0.002      /* RATE UPDATE RATE [s] */
+#define SAMPLING_TIME  0.01       /* SAMPLING TIME [s] */
 
 namespace rotors_control {
 
@@ -51,7 +52,11 @@ PositionControllerNode::PositionControllerNode() {
 
     motor_velocity_reference_pub_ = nh.advertise<mav_msgs::Actuators>(mav_msgs::default_topics::COMMAND_ACTUATORS, 1);
 
-    timer_ = n_.createTimer(ros::Duration(ATTITUDE_UPDATE_DT), &PositionControllerNode::CallbackAttitudeEstimation, this, false, true);
+    timer_Attitude_ = n_.createTimer(ros::Duration(ATTITUDE_UPDATE_DT), &PositionControllerNode::CallbackAttitudeEstimation, this, false, true);
+
+    timer_highLevelControl = n_.createTimer(ros::Duration(SAMPLING_TIME), &PositionControllerNode::CallbackHightLevelControl, this, false, true);
+
+    timer_IMUUpdate = n_.createTimer(ros::Duration(RATE_UPDATE_DT), &PositionControllerNode::CallbackIMUUpdate, this, false, true);
 
 }
 
@@ -59,9 +64,45 @@ PositionControllerNode::~PositionControllerNode(){}
 
 void PositionControllerNode::CallbackAttitudeEstimation(const ros::TimerEvent& event){
 
-    position_controller_.CallbackAttitudeEstimation();
+    if (waypointHasBeenPublished_)
+            position_controller_.CallbackAttitudeEstimation();
 
 }
+
+void PositionControllerNode::CallbackHightLevelControl(const ros::TimerEvent& event){
+
+    if (waypointHasBeenPublished_)
+            position_controller_.CallbackHightLevelControl();
+
+}
+
+void PositionControllerNode::CallbackIMUUpdate(const ros::TimerEvent& event){
+
+    position_controller_.SetSensorData(sensors_);
+
+    ROS_INFO_ONCE("IMU Message sent to position controller");
+
+    if (waypointHasBeenPublished_){
+
+	    Eigen::Vector4d ref_rotor_velocities;
+	    position_controller_.CalculateRotorVelocities(&ref_rotor_velocities);
+
+	    //creating a new mav message. actuator_msg is used to send the velocities of the propellers.  
+	    mav_msgs::ActuatorsPtr actuator_msg(new mav_msgs::Actuators);
+
+	    //we use clear because we later want to be sure that we used the previously calculated velocity.
+	    actuator_msg->angular_velocities.clear();
+	    //for all propellers, we put them into actuator_msg so they will later be used to control the crazyflie.
+	    for (int i = 0; i < ref_rotor_velocities.size(); i++)
+	       actuator_msg->angular_velocities.push_back(ref_rotor_velocities[i]);
+	    actuator_msg->header.stamp = imu_msg_head_stamp_;
+	    
+	    motor_velocity_reference_pub_.publish(actuator_msg);
+
+    }
+
+}
+
 
 void PositionControllerNode::MultiDofJointTrajectoryCallback(const trajectory_msgs::MultiDOFJointTrajectoryConstPtr& msg) {
   // Clear all pending commands.
@@ -168,20 +209,18 @@ void PositionControllerNode::Publish(){
 void PositionControllerNode::IMUCallback(const sensor_msgs::ImuConstPtr& imu_msg) {
 
     ROS_INFO_ONCE("PositionController got first imu message.");
-
-    sensorData_t sensors;
     
     //Angular velocities data
-    sensors.gyro.x = imu_msg->angular_velocity.x;
-    sensors.gyro.y = imu_msg->angular_velocity.y;
-    sensors.gyro.z = imu_msg->angular_velocity.z;
+    sensors_.gyro.x = imu_msg->angular_velocity.x;
+    sensors_.gyro.y = imu_msg->angular_velocity.y;
+    sensors_.gyro.z = imu_msg->angular_velocity.z;
     
     //Linear acceleration data
-    sensors.acc.x = imu_msg->linear_acceleration.x;
-    sensors.acc.y = imu_msg->linear_acceleration.y;
-    sensors.acc.z = imu_msg->linear_acceleration.z;
+    sensors_.acc.x = imu_msg->linear_acceleration.x;
+    sensors_.acc.y = imu_msg->linear_acceleration.y;
+    sensors_.acc.z = imu_msg->linear_acceleration.z;
 
-    position_controller_.SetSensorData(sensors);
+    imu_msg_head_stamp_ = imu_msg->header.stamp;	
 
 }
 
@@ -196,21 +235,6 @@ void PositionControllerNode::OdometryCallback(const nav_msgs::OdometryConstPtr& 
 	    EigenOdometry odometry;
 	    eigenOdometryFromMsg(odometry_msg, &odometry);
 	    position_controller_.SetOdometryWithStateEstimator(odometry);
-
-	    Eigen::Vector4d ref_rotor_velocities;
-	    position_controller_.CalculateRotorVelocities(&ref_rotor_velocities);
-
-	    //creating a new mav message. actuator_msg is used to send the velocities of the propellers.  
-	    mav_msgs::ActuatorsPtr actuator_msg(new mav_msgs::Actuators);
-
-	    //we use clear because we later want to be sure that we used the previously calculated velocity.
-	    actuator_msg->angular_velocities.clear();
-	    //for all propellers, we put them into actuator_msg so they will later be used to control the crazyflie.
-	    for (int i = 0; i < ref_rotor_velocities.size(); i++)
-	       actuator_msg->angular_velocities.push_back(ref_rotor_velocities[i]);
-	    actuator_msg->header.stamp = odometry_msg->header.stamp;
-	    
-	    motor_velocity_reference_pub_.publish(actuator_msg);
 
     }	 
    

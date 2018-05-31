@@ -23,6 +23,8 @@
 #include "stabilizer_types.h"
 #include "controller_parameters.h"
 
+#include <ros/time.h>
+
 namespace rotors_control {
 
     class CrazyflieOnboardController{
@@ -35,22 +37,27 @@ namespace rotors_control {
             void SetDroneState(const state_s& state_t);
             void SetControllerGains(PositionControllerParameters& controller_parameters_);
             void RateController(double* delta_phi, double* delta_theta, double* delta_psi);
-
+ 
             EIGEN_MAKE_ALIGNED_OPERATOR_NEW
         private:
+            bool controller_active_crazyflieOnboardController_;
 
             control_s control_t_private_;
             state_s state_t_private_;
 
-            double p_command_ki_;
-            double q_command_ki_;
+            ros::NodeHandle n_private_;
+            ros::Timer timer_AttitudeRate;
+
             double delta_psi_ki_;
+            double p_command_ki_, q_command_ki_;
+            double p_command_, q_command_;
 
             Eigen::Vector2f attitude_gain_kp_private_, attitude_gain_ki_private_;
             Eigen::Vector3f rate_gain_kp_private_, rate_gain_ki_private_;
 
             void Quaternion2Euler(double* roll, double* pitch, double* yaw) const;
             void AttitudeController(double* p_command, double* q_command);
+            void CallbackAttitudeControl(const ros::TimerEvent& event);
 
      };
 

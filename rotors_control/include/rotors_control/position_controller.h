@@ -47,6 +47,7 @@ namespace rotors_control {
             void SetTrajectoryPoint(const mav_msgs::EigenTrajectoryPoint& command_trajectory);
 	    void SetControllerGains();
             void CallbackAttitudeEstimation();
+            void CallbackHightLevelControl(); 
 
             PositionControllerParameters controller_parameters_;
             ComplementaryFilterCrazyflie2 complementary_filter_crazyflie_;

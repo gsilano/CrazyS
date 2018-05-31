@@ -56,24 +56,42 @@ PositionController::PositionController()
     q_command_ki_(0),
     r_command_ki_(0),
     delta_psi_ki_(0),
-    delta_omega_ki_(0){ 
- 
+    delta_omega_ki_(0),
+    control_t_({0,0,0,0}), //pitch, roll, yaw rate, thrust
+    state_({0, //Position.x 
+            0, //Position.y
+            0, //Position.z
+            0, //Linear velocity x
+            0, //Linear velocity y
+            0, //Linear velocity z
+            0,//Quaternion x
+            0,//Quaternion y
+            0,//Quaternion z
+            0,//Quaternion w
+            0,//Angular velocity x
+            0,//Angular velocity y
+            0})//Angular velocity z)
+            {
 }
 
 PositionController::~PositionController() {}
 
+//Such function is invoked by the position controller node when the state estimator is taken into account
 void PositionController::SetOdometryWithStateEstimator(const EigenOdometry& odometry) {
     
     odometry_ = odometry;    
 }
 
+//Such function is invoked by the position controller node when the state estimator is not taken into account
 void PositionController::SetOdometryWithoutStateEstimator(const EigenOdometry& odometry) {
     
     odometry_ = odometry; 
-    //Such function is invoked when the ideal odometry sensor is taken into account	
+
+    //Such function is invoked when the ideal odometry sensor is employed	
     SetSensorData();
 }
 
+//The odometry values are put in the state structed. Such structure contains the aircraft state
 void PositionController::SetSensorData() {
     
     // Only the position sensor is ideal, we don't have virtual sensor or systems to get it
@@ -95,23 +113,51 @@ void PositionController::SetSensorData() {
     state_.angularVelocity.z = odometry_.angular_velocity[2];
 }
 
-
+//With a frequency of 250Hz the aircraft attitude is computed by the complementary filter
 void PositionController::CallbackAttitudeEstimation() {
 
-    if(controller_active_){
-      complementary_filter_crazyflie_.EstimateAttitude(&state_, &sensors_);
-      //ROS_INFO("Attitude Callback");
-    }
+    //Angular velocities updating
+    complementary_filter_crazyflie_.EstimateAttitude(&state_, &sensors_);
+
+    //ROS_INFO("Attitude Callback");
 
 }
 
+//With a frequency of 100Hz the high level control pars is run
+void PositionController::CallbackHightLevelControl() {
+
+    //Thrust value
+    HoveringController(&control_t_.thrust);
+    
+    //Phi and theta command signals. In this way also the Error Body Controller is invoked every 0.01 seconds because
+    //its outputs are used by XYController
+    XYController(&control_t_.pitch, &control_t_.roll);
+
+    //The yaw rate command singlas
+    YawPositionController(&control_t_.yawRate);
+   
+    //ROS_INFO("Position_x: %f, Position_y: %f, Position_z: %f", state_.position.x, state_.position.y, state_.position.z);
+
+    //ROS_INFO("Angular_velocity_x: %f, Angular_velocity_y: %f, Angular_velocity_z: %f", state_.angularVelocity.x, 
+    //         state_.angularVelocity.y, state_.angularVelocity.z);
+
+    //ROS_INFO("Linear_velocity_x: %f, Linear_velocity_y: %f, Linear_velocity_z: %f", state_.linearVelocity.x, 
+    //         state_.linearVelocity.y, state_.linearVelocity.z);
+
+}
+
+//With a frequency of 500Hz the aircraft angular velocities are updated
 void PositionController::SetSensorData(const sensorData_t& sensors) {
     
+    //Run at 500Hz because the IMU topic publish the new values with a frequency of 500Hz
     sensors_ = sensors;
     complementary_filter_crazyflie_.EstimateRate(&state_, &sensors_);
-    state_estimator_active_= true;
     
-    // Only the position sensor is ideal, we don't have virtual sensor or systems to get it
+    if(!state_estimator_active_)
+        state_estimator_active_= true;
+    
+    //Only the position sensor is ideal, we don't have virtual sensor or systems to get it
+    //Every 0.002 seconds the values of the odometry message are put on the state_ structure but they change only 0.01 seconds
     state_.position.x = odometry_.position[0];
     state_.position.y = odometry_.position[1];
     state_.position.z = odometry_.position[2];
@@ -120,15 +166,10 @@ void PositionController::SetSensorData(const sensorData_t& sensors) {
     state_.linearVelocity.y = odometry_.velocity[1];
     state_.linearVelocity.z = odometry_.velocity[2];
 
-    //ROS_INFO("Position_x: %f, Position_y: %f, Position_z: %f", state_.position.x, state_.position.y, state_.position.z);
-
-    //ROS_INFO("Angular_velocity_x: %f, Angular_velocity_y: %f, Angular_velocity_z: %f", state_.angularVelocity.x, 
-    //         state_.angularVelocity.y, state_.angularVelocity.z);
-
-    //ROS_INFO("Linear_velocity_x: %f, Linear_velocity_y: %f, Linear_velocity_z: %f", state_.linearVelocity.x, 
-    //         state_.linearVelocity.y, state_.linearVelocity.z);
 }
 
+
+//Put the controller gains inside the internal structures of the position controller algorithm
 void PositionController::SetControllerGains(){
 
       xy_gain_kp_ = Eigen::Vector2f(controller_parameters_.xy_gain_kp_.x(), controller_parameters_.xy_gain_kp_.y());
@@ -215,8 +256,9 @@ void PositionController::Quaternion2Euler(double* roll, double* pitch, double* y
     tf::Quaternion q(x, y, z, w);
     tf::Matrix3x3 m(q);
     m.getRPY(*roll, *pitch, *yaw);
-   
+
     //ROS_INFO("Roll: %f, Pitch: %f, Yaw: %f", *roll, *pitch, *yaw);
+
 }
 
 void PositionController::XYController(double* theta_command, double* phi_command) {
@@ -269,16 +311,14 @@ void PositionController::ControlMixer(double* PWM_1, double* PWM_2, double* PWM_
     assert(PWM_3);
     assert(PWM_4);
     
-    double omega, delta_omega;
-    HoveringController(&delta_omega);
-    omega = OMEGA_OFFSET + delta_omega;
-   
+    if(!state_estimator_active_)
+       //When the state estimator is not actived the delta_omega_ value can be computed when the new odometry message
+       //is available. The timing is handled by the publishing of the odometry topic
+       HoveringController(&control_t_.thrust);
+    
     //The control signals are sent to the on board control architecture if the state estimator is actived
     double delta_phi, delta_theta, delta_psi;
     if(state_estimator_active_){
-       XYController(&control_t_.pitch, &control_t_.roll);
-       control_t_.thrust = omega;
-       YawPositionController(&control_t_.yawRate);
        crazyflie_onboard_controller_.SetControlSignals(control_t_);
        crazyflie_onboard_controller_.SetDroneState(state_);
        crazyflie_onboard_controller_.RateController(&delta_phi, &delta_theta, &delta_psi);
@@ -286,12 +326,12 @@ void PositionController::ControlMixer(double* PWM_1, double* PWM_2, double* PWM_
     else
        RateController(&delta_phi, &delta_theta, &delta_psi);
 
-    *PWM_1 = omega - (delta_theta/2) - (delta_phi/2) - delta_psi;
-    *PWM_2 = omega + (delta_theta/2) - (delta_phi/2) + delta_psi;
-    *PWM_3 = omega + (delta_theta/2) + (delta_phi/2) - delta_psi;
-    *PWM_4 = omega - (delta_theta/2) + (delta_phi/2) + delta_psi;
+    *PWM_1 = control_t_.thrust - (delta_theta/2) - (delta_phi/2) - delta_psi;
+    *PWM_2 = control_t_.thrust + (delta_theta/2) - (delta_phi/2) + delta_psi;
+    *PWM_3 = control_t_.thrust + (delta_theta/2) + (delta_phi/2) - delta_psi;
+    *PWM_4 = control_t_.thrust - (delta_theta/2) + (delta_phi/2) + delta_psi;
 
-    //ROS_INFO("Omega: %f, Delta_theta: %f, Delta_phi: %f, delta_psi: %f", omega, delta_theta, delta_phi, delta_psi);
+    //ROS_INFO("Omega: %f, Delta_theta: %f, Delta_phi: %f, delta_psi: %f", control_t_.thrust, delta_theta, delta_phi, delta_psi);
     //ROS_INFO("PWM1: %f, PWM2: %f, PWM3: %f, PWM4: %f", *PWM_1, *PWM_2, *PWM_3, *PWM_4);
 }
 
@@ -319,8 +359,8 @@ void PositionController::YawPositionController(double* r_command) {
 
 }
 
-void PositionController::HoveringController(double* delta_omega) {
-    assert(delta_omega);
+void PositionController::HoveringController(double* omega) {
+    assert(omega);
 
     double z_error, z_reference, dot_zeta;
     z_reference = command_trajectory_.position_W[2];
@@ -332,18 +372,20 @@ void PositionController::HoveringController(double* delta_omega) {
     dot_zeta = -sin(pitch)*state_.linearVelocity.x + sin(roll)*cos(pitch)*state_.linearVelocity.y +
 	            cos(roll)*cos(pitch)*state_.linearVelocity.z;
 
-    double delta_omega_kp, delta_omega_kd;
+    double delta_omega, delta_omega_kp, delta_omega_kd;
     delta_omega_kp = hovering_gain_kp_ * z_error;
     delta_omega_ki_ = delta_omega_ki_ + (hovering_gain_ki_ * z_error * SAMPLING_TIME);
     delta_omega_kd = hovering_gain_kd_ * -dot_zeta;
-    *delta_omega = delta_omega_kp + delta_omega_ki_ + delta_omega_kd;
+    delta_omega = delta_omega_kp + delta_omega_ki_ + delta_omega_kd;
 
     //Delta omega value is saturated to take into account the physical constrains
-    if(!(*delta_omega < MAX_POS_DELTA_OMEGA && *delta_omega > -MAX_NEG_DELTA_OMEGA))
-      if(*delta_omega > MAX_POS_DELTA_OMEGA)
-         *delta_omega = MAX_POS_DELTA_OMEGA;
+    if(!(delta_omega < MAX_POS_DELTA_OMEGA && delta_omega > -MAX_NEG_DELTA_OMEGA))
+      if(delta_omega > MAX_POS_DELTA_OMEGA)
+         delta_omega = MAX_POS_DELTA_OMEGA;
       else
-         *delta_omega = -MAX_NEG_DELTA_OMEGA;
+         delta_omega = -MAX_NEG_DELTA_OMEGA;
+
+     *omega = OMEGA_OFFSET + delta_omega;
 
      //ROS_INFO("Delta_omega_kp: %f, Delta_omega_ki: %f, Delta_omega_kd: %f", delta_omega_kp, delta_omega_ki_, delta_omega_kd);
      //ROS_INFO("Z_error: %f, Delta_omega: %f", z_error, *delta_omega);

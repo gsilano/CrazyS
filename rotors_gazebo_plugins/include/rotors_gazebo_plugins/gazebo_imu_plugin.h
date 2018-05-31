@@ -57,7 +57,7 @@ static constexpr double kDefaultAdisAccelerometerTurnOnBiasSigma =
 static constexpr double kDefaultGravityMagnitude = 9.8068;
 static constexpr int kDefaultMeasurementDivisor = 1;
 static constexpr int kDefaultMeasurementDelay = 0;
-static constexpr int kDefaultGazeboSequence = 0;
+static constexpr int kDefaultGazeboSequence = 0.0;
 
 // A description of the parameters:
 // https://github.com/ethz-asl/kalibr/wiki/IMU-Noise-Model-and-Intrinsics

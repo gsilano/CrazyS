@@ -56,14 +56,20 @@ namespace rotors_control {
             bool waypointHasBeenPublished_ = false;
 
             PositionController position_controller_;
+            sensorData_t sensors_;
+            ros::Time imu_msg_head_stamp_;
 
             std::string namespace_;
 
             ros::NodeHandle n_;
-            ros::Timer timer_;
+            ros::Timer timer_Attitude_;
+            ros::Timer timer_highLevelControl;
+            ros::Timer timer_IMUUpdate;
 
             //Callback functions to compute the errors among axis and angles
             void CallbackAttitudeEstimation(const ros::TimerEvent& event);
+            void CallbackHightLevelControl(const ros::TimerEvent& event);
+            void CallbackIMUUpdate(const ros::TimerEvent& event);
  
             //subscribers
             ros::Subscriber cmd_multi_dof_joint_trajectory_sub_;
