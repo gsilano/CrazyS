@@ -23,8 +23,6 @@
 #include "stabilizer_types.h"
 #include "controller_parameters.h"
 
-#include <ros/time.h>
-
 namespace rotors_control {
 
     class CrazyflieOnboardController{
@@ -40,13 +38,12 @@ namespace rotors_control {
  
             EIGEN_MAKE_ALIGNED_OPERATOR_NEW
         private:
-            bool controller_active_crazyflieOnboardController_;
 
             control_s control_t_private_;
             state_s state_t_private_;
-
-            ros::NodeHandle n_private_;
-            ros::Timer timer_AttitudeRate;
+ 
+            // counter for critical section
+            bool counter_;          
 
             double delta_psi_ki_;
             double p_command_ki_, q_command_ki_;
@@ -57,7 +54,6 @@ namespace rotors_control {
 
             void Quaternion2Euler(double* roll, double* pitch, double* yaw) const;
             void AttitudeController(double* p_command, double* q_command);
-            void CallbackAttitudeControl(const ros::TimerEvent& event);
 
      };
 
