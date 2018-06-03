@@ -135,8 +135,8 @@ void CrazyflieOnboardController::AttitudeController(double* p_command_internal, 
 
     ROS_INFO_ONCE("The p and q values have updated");
 
-    //ROS_INFO("Phi_c: %f, Phi_e: %f, Theta_c: %f, Theta_e: %f", phi_command, phi_error, theta_command, theta_error);
-    //ROS_INFO("p_command: %f, q_command: %f", *p_command_internal, *q_command_internal);
+    ROS_DEBUG("Phi_c: %f, Phi_e: %f, Theta_c: %f, Theta_e: %f", phi_command, phi_error, theta_command, theta_error);
+    ROS_DEBUG("p_command: %f, q_command: %f", *p_command_internal, *q_command_internal);
     
 }
 
@@ -156,7 +156,7 @@ void CrazyflieOnboardController::Quaternion2Euler(double* roll, double* pitch, d
     tf::Matrix3x3 m(q);
     m.getRPY(*roll, *pitch, *yaw);
    
-    //ROS_INFO("Roll: %f, Pitch: %f, Yaw: %f", *roll, *pitch, *yaw);
+    ROS_DEBUG("Roll: %f, Pitch: %f, Yaw: %f", *roll, *pitch, *yaw);
 }
 
 }

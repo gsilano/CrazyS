@@ -144,7 +144,7 @@ void PositionController::CalculateRotorVelocities(Eigen::Vector4d* rotor_velocit
         else
            omega_4 = 0;
 
-    //ROS_INFO("Omega_1: %f Omega_2: %f Omega_3: %f Omega_4: %f", omega_1, omega_2, omega_3, omega_4);
+    ROS_DEBUG("Omega_1: %f Omega_2: %f Omega_3: %f Omega_4: %f", omega_1, omega_2, omega_3, omega_4);
     *rotor_velocities = Eigen::Vector4d(omega_1, omega_2, omega_3, omega_4);
 }
 
@@ -164,7 +164,7 @@ void PositionController::Quaternion2Euler(double* roll, double* pitch, double* y
     tf::Matrix3x3 m(q);
     m.getRPY(*roll, *pitch, *yaw);
 
-    //ROS_INFO("Roll: %f, Pitch: %f, Yaw: %f", *roll, *pitch, *yaw);
+    ROS_DEBUG("Roll: %f, Pitch: %f, Yaw: %f", *roll, *pitch, *yaw);
 
 }
 
@@ -194,8 +194,8 @@ void PositionController::ControlMixer(double* PWM_1, double* PWM_2, double* PWM_
     *PWM_3 = control_t_.thrust + (delta_theta/2) + (delta_phi/2) - delta_psi;
     *PWM_4 = control_t_.thrust - (delta_theta/2) + (delta_phi/2) + delta_psi;
 
-    //ROS_INFO("Omega: %f, Delta_theta: %f, Delta_phi: %f, delta_psi: %f", control_t_.thrust, delta_theta, delta_phi, delta_psi);
-    //ROS_INFO("PWM1: %f, PWM2: %f, PWM3: %f, PWM4: %f", *PWM_1, *PWM_2, *PWM_3, *PWM_4);
+    ROS_DEBUG("Omega: %f, Delta_theta: %f, Delta_phi: %f, delta_psi: %f", control_t_.thrust, delta_theta, delta_phi, delta_psi);
+    ROS_DEBUG("PWM1: %f, PWM2: %f, PWM3: %f, PWM4: %f", *PWM_1, *PWM_2, *PWM_3, *PWM_4);
 }
 
 void PositionController::XYController(double* theta_command, double* phi_command) {
@@ -237,11 +237,11 @@ void PositionController::XYController(double* theta_command, double* phi_command
        else
           *phi_command = -MAX_PHI_COMMAND;
   
-     //ROS_INFO("Theta_kp: %f, Theta_ki: %f", theta_command_kp, theta_command_ki_);
-     //ROS_INFO("Phi_kp: %f, Phi_ki: %f", phi_command_kp, phi_command_ki_);
-     //ROS_INFO("Phi_c: %f, Theta_c: %f", *phi_command, *theta_command);
-     //ROS_INFO("E_vx: %f, E_vy: %f", e_vx, e_vy);
-     //ROS_INFO("E_x: %f, E_y: %f", xe, ye);
+     ROS_DEBUG("Theta_kp: %f, Theta_ki: %f", theta_command_kp, theta_command_ki_);
+     ROS_DEBUG("Phi_kp: %f, Phi_ki: %f", phi_command_kp, phi_command_ki_);
+     ROS_DEBUG("Phi_c: %f, Theta_c: %f", *phi_command, *theta_command);
+     ROS_DEBUG("E_vx: %f, E_vy: %f", e_vx, e_vy);
+     ROS_DEBUG("E_x: %f, E_y: %f", xe, ye);
 }
 
 void PositionController::YawPositionController(double* r_command) {
@@ -297,9 +297,9 @@ void PositionController::HoveringController(double* omega) {
 
      *omega = OMEGA_OFFSET + delta_omega;
 
-     //ROS_INFO("Delta_omega_kp: %f, Delta_omega_ki: %f, Delta_omega_kd: %f", delta_omega_kp, delta_omega_ki_, delta_omega_kd);
-     //ROS_INFO("Z_error: %f, Delta_omega: %f", z_error, *delta_omega);
-     //ROS_INFO("Dot_zeta: %f", dot_zeta);
+     ROS_DEBUG("Delta_omega_kp: %f, Delta_omega_ki: %f, Delta_omega_kd: %f", delta_omega_kp, delta_omega_ki_, delta_omega_kd);
+     ROS_DEBUG("Z_error: %f, Delta_omega: %f", z_error, delta_omega);
+     ROS_DEBUG("Dot_zeta: %f", dot_zeta);
 }
 
 void PositionController::ErrorBodyFrame(double* xe, double* ye) const {
@@ -416,7 +416,7 @@ void PositionController::AttitudeController(double* p_command, double* q_command
     q_command_ki_ = q_command_ki_ + (attitude_gain_ki_.y() * theta_error * SAMPLING_TIME);
     *q_command = q_command_kp + q_command_ki_;
 
-    //ROS_INFO("Phi_c: %f, Phi_e: %f, Theta_c: %f, Theta_e: %f", phi_command, phi_error, theta_command, theta_error);
+    ROS_DEBUG("Phi_c: %f, Phi_e: %f, Theta_c: %f, Theta_e: %f", phi_command, phi_error, theta_command, theta_error);
 
 }
 
@@ -437,7 +437,7 @@ void PositionController::CallbackAttitudeEstimation() {
     //Angular velocities updating
     complementary_filter_crazyflie_.EstimateAttitude(&state_, &sensors_);
 
-    //ROS_INFO("Attitude Callback");
+    ROS_DEBUG("Attitude Callback");
 
 }
 
@@ -454,13 +454,13 @@ void PositionController::CallbackHightLevelControl() {
     //The yaw rate command singlas
     YawPositionController(&control_t_.yawRate);
    
-    //ROS_INFO("Position_x: %f, Position_y: %f, Position_z: %f", state_.position.x, state_.position.y, state_.position.z);
+    ROS_DEBUG("Position_x: %f, Position_y: %f, Position_z: %f", state_.position.x, state_.position.y, state_.position.z);
 
-    //ROS_INFO("Angular_velocity_x: %f, Angular_velocity_y: %f, Angular_velocity_z: %f", state_.angularVelocity.x, 
-    //         state_.angularVelocity.y, state_.angularVelocity.z);
+    ROS_DEBUG("Angular_velocity_x: %f, Angular_velocity_y: %f, Angular_velocity_z: %f", state_.angularVelocity.x, 
+             state_.angularVelocity.y, state_.angularVelocity.z);
 
-    //ROS_INFO("Linear_velocity_x: %f, Linear_velocity_y: %f, Linear_velocity_z: %f", state_.linearVelocity.x, 
-    //         state_.linearVelocity.y, state_.linearVelocity.z);
+    ROS_DEBUG("Linear_velocity_x: %f, Linear_velocity_y: %f, Linear_velocity_z: %f", state_.linearVelocity.x, 
+             state_.linearVelocity.y, state_.linearVelocity.z);
 
 }
 

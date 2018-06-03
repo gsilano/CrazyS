@@ -1,16 +1,15 @@
 <package>
   <name>rotors_simulator</name>
-  <version>2.1.1</version>
-  <description>RotorS is a MAV gazebo simulator.</description>
+  <version>0.0.3</version>
+  <description>CrazyS is an extension ROS package of RotorS aimed to modeling, developing and integrating the Crazyflie nano-quadcopter.</description>
 
   <maintainer email="giuseppe.silano@unisannio.it">Giuseppe Silano</maintainer>
   <maintainer email="luigi.iannelli@unisannio.it">Luigi Iannelli</maintainer>
 
-  <author>Fadri Furrer</author>
-  <author>Michael Burri</author>
-  <author>Mina Kamel</author>
-  <author>Janosch Nikolic</author>
-  <author>Markus Achtelik</author>
+  <author>Giuseppe Silano</author>
+  <author>Emanuele Aucone</author>
+  <author>Benjamin Rodriguez</author>
+  <author>Emanuele Aucone</author>
 
   <license>ASL 2.0</license>
 

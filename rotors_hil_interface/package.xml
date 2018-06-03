@@ -1,14 +1,17 @@
 <?xml version="1.0"?>
 <package>
   <name>rotors_hil_interface</name>
-  <version>2.2.2</version>
+  <version>0.0.3</version>
   <description>RotorS Hardware-in-the-loop interface package</description>
 
   <maintainer email="giuseppe.silano@unisannio.it">Giuseppe Silano</maintainer>
   <maintainer email="luigi.iannelli@unisannio.it">Luigi Iannelli</maintainer>
 
-  <author>Pavel Vechersky</author>
-
+  <author>Giuseppe Silano</author>
+  <author>Emanuele Aucone</author>
+  <author>Benjamin Rodriguez</author>
+  <author>Luigi Iannelli</author>
+  
   <license>ASL 2.0</license>
 
   <url type="website">https://github.com/gsilano/CrazyS</url>
