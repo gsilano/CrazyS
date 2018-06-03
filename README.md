@@ -128,7 +128,7 @@ Installation Instructions - Ubuntu 14.04 with ROS Indigo
 Basic Usage
 -----------
 
-Launch the simulator with the Crazyflie 2.0 model in a basic world.
+Launch the simulator with the Crazyflie 2.0 model in a basic world. By changing the value of the `enable_state_estimator` variable (`true` or `false`), you can enable or disable the state estimator. In other words, it is possible to simulate the behavior of the drone when the real or ideal sensors are in the loop, respectively.
 
 ```
 $ roslaunch rotors_gazebo crazyflie2_hovering_example.launch enable_state_estimator:=true
