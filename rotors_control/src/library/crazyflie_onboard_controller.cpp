@@ -1,7 +1,5 @@
 /*
  * Copyright 2018 Giuseppe Silano, University of Sannio in Benevento, Italy
- * Copyright 2018 Emanuele Aucone, University of Sannio in Benevento, Italy
- * Copyright 2018 Benjamin Rodriguez, MIT, USA
  * Copyright 2018 Luigi Iannelli, University of Sannio in Benevento, Italy
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
