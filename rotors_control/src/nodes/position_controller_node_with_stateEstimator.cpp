@@ -1,7 +1,5 @@
 /*
  * Copyright 2018 Giuseppe Silano, University of Sannio in Benevento, Italy
- * Copyright 2018 Emanuele Aucone, University of Sannio in Benevento, Italy
- * Copyright 2018 Benjamin Rodriguez, MIT, USA
  * Copyright 2018 Luigi Iannelli, University of Sannio in Benevento, Italy
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,6 +50,7 @@ PositionControllerNode::PositionControllerNode() {
 
     motor_velocity_reference_pub_ = nh.advertise<mav_msgs::Actuators>(mav_msgs::default_topics::COMMAND_ACTUATORS, 1);
 
+    //The timers allow to set the working frequency of the control system parts
     timer_Attitude_ = n_.createTimer(ros::Duration(ATTITUDE_UPDATE_DT), &PositionControllerNode::CallbackAttitudeEstimation, this, false, true);
 
     timer_highLevelControl = n_.createTimer(ros::Duration(SAMPLING_TIME), &PositionControllerNode::CallbackHightLevelControl, this, false, true);
@@ -199,6 +198,7 @@ void PositionControllerNode::OdometryCallback(const nav_msgs::OdometryConstPtr& 
    
 }
 
+//The attitude is estimated only if the waypoint has been published
 void PositionControllerNode::CallbackAttitudeEstimation(const ros::TimerEvent& event){
 
     if (waypointHasBeenPublished_)
@@ -206,6 +206,7 @@ void PositionControllerNode::CallbackAttitudeEstimation(const ros::TimerEvent& e
 
 }
 
+//The high level control is run only if the waypoint has been published
 void PositionControllerNode::CallbackHightLevelControl(const ros::TimerEvent& event){
 
     if (waypointHasBeenPublished_)
@@ -213,6 +214,7 @@ void PositionControllerNode::CallbackHightLevelControl(const ros::TimerEvent& ev
 
 }
 
+//The IMU messages are sent to the controller with a frequency of 500Hz. In other words, with a sampling time of 0.002 seconds
 void PositionControllerNode::CallbackIMUUpdate(const ros::TimerEvent& event){
 
     position_controller_.SetSensorData(sensors_);

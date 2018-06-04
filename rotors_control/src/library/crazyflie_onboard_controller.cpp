@@ -40,11 +40,13 @@ CrazyflieOnboardController::CrazyflieOnboardController()
 
 CrazyflieOnboardController::~CrazyflieOnboardController() {}
 
+// Make a copy of the control signals and get them private
 void CrazyflieOnboardController::SetControlSignals(const control_s& control_t) {
     
     control_t_private_ = control_t;    
 }
 
+// Make a copy of the drone state and get it private
 void CrazyflieOnboardController::SetDroneState(const state_s& state_t) {
     
     state_t_private_ = state_t;    
@@ -79,6 +81,8 @@ void CrazyflieOnboardController::RateController(double* delta_phi, double* delta
     double r_command;
     r_command = control_t_private_.yawRate;
 
+    //Allow to update the q and q command with a frequency of 250Hz. Indeed, the rate controller works at a
+    //frequency of 500Hz
     if(counter_){
        AttitudeController(&p_command_, &q_command_);
        counter_ = false;   

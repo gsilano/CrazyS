@@ -40,9 +40,11 @@ namespace rotors_control {
             control_s control_t_private_;
             state_s state_t_private_;
  
-            // counter for critical section
+            // counter for critical section. It allows to synchronize the attitude and rate parts of
+            // the crazyflie on board controller.
             bool counter_;          
 
+            //Integrator intial condition
             double delta_psi_ki_;
             double p_command_ki_, q_command_ki_;
             double p_command_, q_command_;

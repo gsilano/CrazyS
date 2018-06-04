@@ -120,6 +120,7 @@ void PositionController::CalculateRotorVelocities(Eigen::Vector4d* rotor_velocit
     omega_3 = ((PWM_3 * ANGULAR_MOTOR_COEFFICIENT) + MOTORS_INTERCEPT); 
     omega_4 = ((PWM_4 * ANGULAR_MOTOR_COEFFICIENT) + MOTORS_INTERCEPT); 
 
+    //The omega values are satured to take into account the physical constrain of the system
     if(!(omega_1 < MAX_PROPELLERS_ANGULAR_VELOCITY && omega_1 > 0))
         if(omega_1 > MAX_PROPELLERS_ANGULAR_VELOCITY)
            omega_1 = MAX_PROPELLERS_ANGULAR_VELOCITY;
@@ -279,6 +280,7 @@ void PositionController::HoveringController(double* omega) {
     double roll, pitch, yaw;
     Quaternion2Euler(&roll, &pitch, &yaw); 
 
+    //Needed because the velocitis both angular and linear are expressed in the aircraft body frame
     dot_zeta = -sin(pitch)*state_.linearVelocity.x + sin(roll)*cos(pitch)*state_.linearVelocity.y +
 	            cos(roll)*cos(pitch)*state_.linearVelocity.z;
 

@@ -46,33 +46,32 @@
 
 namespace rotors_control {
 
-class SensFusion {
-  public:
-    SensFusion();
-    ~SensFusion();
+	class SensFusion {
+	  public:
+	    SensFusion();
+	    ~SensFusion();
 
-    void Sensfusion6UpdateQ(double *gx, double *gy, double *gz, double *ax, double *ay, double *az, double dt);
-    void Sensfusion6GetQuaternion(double* qx, double* qy, double* qz, double* qw);
-    void Sensfusion6GetEulerRPY(double* roll, double* pitch, double* yaw);
-    void Sensfusion6GetAccZWithoutGravity(double* angularAccZ, double* ax, double* ay, double* az);
+	    void Sensfusion6UpdateQ(double *gx, double *gy, double *gz, double *ax, double *ay, double *az, double dt);
+	    void Sensfusion6GetQuaternion(double* qx, double* qy, double* qz, double* qw);
+	    void Sensfusion6GetEulerRPY(double* roll, double* pitch, double* yaw);
+	    void Sensfusion6GetAccZWithoutGravity(double* angularAccZ, double* ax, double* ay, double* az);
 
-  private:
-   
-    // quaternion of sensor frame relative to auxiliary frame [w,x,y,z]
-    double q0_, q1_, q2_, q3_;
-    double baseZacc_;
+	  private:
+	   
+	    // quaternion of sensor frame relative to auxiliary frame [w,x,y,z]
+	    double q0_, q1_, q2_, q3_;
+	    double baseZacc_;
 
-    // Unit vector in the estimated gravity direction
-    double gravX_, gravY_, gravZ_;
+	    // Unit vector in the estimated gravity direction
+	    double gravX_, gravY_, gravZ_;
 
-    bool isCalibrated_;
-   
-    double Sensfusion6GetInvThrustCompensationForTilt();
-    double InvSqrt(double x);
-    void EstimatedGravityDirection(double* gx, double* gy, double* gz);
-    void Sensfusion6GetAccZ(double* baseZacc_, double* ax, double* ay, double* az);
-
-  };
+	    bool isCalibrated_;
+	   
+	    double Sensfusion6GetInvThrustCompensationForTilt();
+	    double InvSqrt(double x);
+	    void EstimatedGravityDirection(double* gx, double* gy, double* gz);
+	    void Sensfusion6GetAccZ(double* baseZacc_, double* ax, double* ay, double* az);
+      };
 }
 
 #endif /* SENSORFUSION6_CRAZYFLIE_H_ */
