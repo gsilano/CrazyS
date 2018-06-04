@@ -1,16 +1,15 @@
 <package>
   <name>rotors_comm</name>
-  <version>2.1.1</version>
+  <version>4.0.3</version>
   <description>RotorS specific messages and services.</description>
 
   <maintainer email="giuseppe.silano@unisannio.it">Giuseppe Silano</maintainer>
   <maintainer email="luigi.iannelli@unisannio.it">Luigi Iannelli</maintainer>
 
-  <author>Fadri Furrer</author>
-  <author>Michael Burri</author>
-  <author>Mina Kamel</author>
-  <author>Janosch Nikolic</author>
-  <author>Markus Achtelik</author>
+  <author>Giuseppe Silano</author>
+  <author>Emanuele Aucone</author>
+  <author>Benjamin Rodriguez</author>
+  <author>Luigi Iannelli</author>
 
   <license>ASL 2.0</license>
 

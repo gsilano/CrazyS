@@ -1,12 +1,15 @@
 <package>
   <name>rqt_rotors</name>
-  <version>2.1.1</version>
+  <version>4.0.3</version>
   <description>The rqt_rotors package</description>
 
   <maintainer email="giuseppe.silano@unisannio.it">Giuseppe Silano</maintainer>
   <maintainer email="luigi.iannelli@unisannio.it">Luigi Iannelli</maintainer>
 
-  <author>Pavel Vechersky</author>
+  <author>Giuseppe Silano</author>
+  <author>Emanuele Aucone</author>
+  <author>Benjamin Rodriguez</author>
+  <author>Luigi Iannelli</author>
 
   <license>ASL 2.0</license>
 
