@@ -12,7 +12,7 @@ A simple case study is considered (`crazyflie2_hovering_example.launch`) in orde
 
 The code is released under Apache license, thus making it available for scientific and educational activities.
 
-The platform has been developed by using Ubuntu 16.04 and the Kinetic Kame version of ROS, but it is fully compatible with Indigo Igloo and Ubuntu 14.04 (it is not recommended, the support will be untile the April, 2019).
+The platform has been developed by using Ubuntu 16.04 and the Kinetic Kame version of ROS, but it is fully compatible with Indigo Igloo and Ubuntu 14.04 (it is not recommended, the support will be until the April, 2019).
 
 Below we provide the instructions necessary for getting started. See [CrazyS' wiki](https://github.com/gsilano/CrazyS/wiki) for more instructions and examples .
 
