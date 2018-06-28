@@ -25,6 +25,7 @@ title = {CrazyS: a software-in-the-loop platform for the Crazyflie 2.0 nano-quad
 year = {2018}, 
 volume = {}, 
 number = {}, 
+pages={352-357}, 
 month = {June},
 }
 ```
