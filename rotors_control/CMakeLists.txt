@@ -18,7 +18,7 @@ find_package(
 
 catkin_package(
   INCLUDE_DIRS include ${Eigen_INCLUDE_DIRS}
-  LIBRARIES lee_position_controller position_controller crazyflie_onboard_controller roll_pitch_yawrate_thrust_controller sensfusion6 complementary_filter_crazyflie2
+  LIBRARIES lee_position_controller position_controller crazyflie_onboard_controller roll_pitch_yawrate_thrust_controller sensfusion6 crazyflie_complementary_filter
   CATKIN_DEPENDS geometry_msgs mav_msgs nav_msgs roscpp sensor_msgs
   DEPENDS Eigen
 )
@@ -46,8 +46,8 @@ add_library(roll_pitch_yawrate_thrust_controller
   src/library/roll_pitch_yawrate_thrust_controller.cpp
 )
 
-add_library(complementary_filter_crazyflie2
-  src/library/complementary_filter_crazyflie2.cpp
+add_library(crazyflie_complementary_filter
+  src/library/crazyflie_complementary_filter.cpp
 )
 
 add_library(sensfusion6
@@ -66,8 +66,8 @@ add_dependencies(roll_pitch_yawrate_thrust_controller ${catkin_EXPORTED_TARGETS}
 target_link_libraries(crazyflie_onboard_controller ${catkin_LIBRARIES})
 add_dependencies(crazyflie_onboard_controller ${catkin_EXPORTED_TARGETS})
 
-target_link_libraries(complementary_filter_crazyflie2 ${catkin_LIBRARIES})
-add_dependencies(complementary_filter_crazyflie2 ${catkin_EXPORTED_TARGETS})
+target_link_libraries(crazyflie_complementary_filter ${catkin_LIBRARIES})
+add_dependencies(crazyflie_complementary_filter ${catkin_EXPORTED_TARGETS})
 
 target_link_libraries(sensfusion6 ${catkin_LIBRARIES})
 add_dependencies(sensfusion6 ${catkin_EXPORTED_TARGETS})
@@ -80,12 +80,12 @@ target_link_libraries(lee_position_controller_node
 add_executable(position_controller_node_with_stateEstimator src/nodes/position_controller_node_with_stateEstimator.cpp)
 add_dependencies(position_controller_node_with_stateEstimator ${catkin_EXPORTED_TARGETS})
 target_link_libraries(position_controller_node_with_stateEstimator
-  position_controller complementary_filter_crazyflie2 crazyflie_onboard_controller sensfusion6 ${catkin_LIBRARIES})
+  position_controller crazyflie_complementary_filter crazyflie_onboard_controller sensfusion6 ${catkin_LIBRARIES})
 
 add_executable(position_controller_node_without_stateEstimator src/nodes/position_controller_node_without_stateEstimator.cpp)
 add_dependencies(position_controller_node_without_stateEstimator ${catkin_EXPORTED_TARGETS})
 target_link_libraries(position_controller_node_without_stateEstimator
-  position_controller complementary_filter_crazyflie2  crazyflie_onboard_controller sensfusion6 ${catkin_LIBRARIES})
+  position_controller crazyflie_complementary_filter  crazyflie_onboard_controller sensfusion6 ${catkin_LIBRARIES})
 
 add_executable(roll_pitch_yawrate_thrust_controller_node
   src/nodes/roll_pitch_yawrate_thrust_controller_node.cpp)

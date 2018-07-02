@@ -38,7 +38,7 @@
 
 #include "rotors_control/common.h"
 #include "rotors_control/position_controller.h"
-#include "rotors_control/complementary_filter_crazyflie2.h"
+#include "rotors_control/crazyflie_complementary_filter.h"
 
 
 namespace rotors_control {

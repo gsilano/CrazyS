@@ -41,7 +41,7 @@
  * estimator_complementary.c - Complementary estimator
  */
 
-#include "rotors_control/complementary_filter_crazyflie2.h"
+#include "rotors_control/crazyflie_complementary_filter.h"
 #include "rotors_control/stabilizer_types.h"
 
 namespace rotors_control {

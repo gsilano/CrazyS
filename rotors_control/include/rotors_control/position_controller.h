@@ -26,7 +26,7 @@
 #include "common.h"
 #include "parameters.h"
 #include "stabilizer_types.h"
-#include "complementary_filter_crazyflie2.h"
+#include "crazyflie_complementary_filter.h"
 #include "crazyflie_onboard_controller.h"
 #include "sensfusion6.h"
 #include "controller_parameters.h"

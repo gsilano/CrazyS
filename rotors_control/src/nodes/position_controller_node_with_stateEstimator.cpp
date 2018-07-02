@@ -26,7 +26,7 @@
 
 #include "rotors_control/parameters_ros.h"
 #include "rotors_control/stabilizer_types.h"
-#include "rotors_control/complementary_filter_crazyflie2.h"
+#include "rotors_control/crazyflie_complementary_filter.h"
 
 #define ATTITUDE_UPDATE_DT 0.004  /* ATTITUDE UPDATE RATE [s] - 500Hz */
 #define RATE_UPDATE_DT 0.002      /* RATE UPDATE RATE [s] - 250Hz */
