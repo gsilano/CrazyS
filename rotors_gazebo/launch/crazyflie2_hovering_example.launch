@@ -31,7 +31,7 @@
       <arg name="enable_state_estimator" value="$(arg enable_state_estimator)" />
       <arg name="log_file" value="$(arg log_file)"/>
     </include>
-   <node if="$(eval enable_state_estimator == false)" name="position_controller_node_without_stateEstimator" pkg="rotors_control" type="position_controller_node_without_stateEstimator" output="screen">
+   <node unless="$(arg enable_state_estimator)" name="position_controller_node_without_stateEstimator" pkg="rotors_control" type="position_controller_node_without_stateEstimator" output="screen">
       <rosparam command="load" file="$(find rotors_gazebo)/resource/controller_$(arg mav_name).yaml" />
       <rosparam command="load" file="$(find rotors_gazebo)/resource/$(arg mav_name).yaml" />
     </node>
