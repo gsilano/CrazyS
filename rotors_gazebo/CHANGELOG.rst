@@ -2,7 +2,7 @@
 Changelog for package rotors_gazebo
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-4.0.3.1.1 (2018-09-30)
+4.0.4 (2018-09-30)
 ------------------
 * Fix issue #6
 * The gains in the "controller_crazyflie2_with_stateEstimator.yaml" file have been changed.

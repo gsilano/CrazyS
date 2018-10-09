@@ -2,7 +2,7 @@
 Changelog for package rotors_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-4.0.3.1.1 (2018-09-30)
+4.0.4 (2018-09-30)
 ------------------
 * Names update. Some cpp files have been renamed in a more general way making them independent of Crazyflie (e.g., the complementary filter).
 * Contributors: Giuseppe Silano
