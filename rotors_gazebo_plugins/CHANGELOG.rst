@@ -2,6 +2,9 @@
 Changelog for package rotors_gazebo_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.0.3.1.1 (2018-09-30)
+------------------
+
 4.0.3 (2018-06-04)
 ------------------
 * Inserted the measuerement divisor into the gazebo plugin aimed to model the Inertial Measurement Unit (IMU)

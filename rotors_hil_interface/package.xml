@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>rotors_hil_interface</name>
-  <version>4.0.3</version>
+  <version>4.0.3.1.1</version>
   <description>RotorS Hardware-in-the-loop interface package</description>
 
   <maintainer email="giuseppe.silano@unisannio.it">Giuseppe Silano</maintainer>

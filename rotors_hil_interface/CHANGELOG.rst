@@ -2,6 +2,9 @@
 Changelog for package rotors_hil_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.0.3.1.1 (2018-09-30)
+------------------
+
 4.0.3 (2018-06-04)
 ------------------
 * Fixed build issue in the Kinetic Kame version of ROS.

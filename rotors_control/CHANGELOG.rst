@@ -2,6 +2,11 @@
 Changelog for package rotors_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.0.3.1.1 (2018-09-30)
+------------------
+* Names update. Some cpp files have been renamed in a more general way making them independent of Crazyflie (e.g., the complementary filter).
+* Contributors: Giuseppe Silano
+
 4.0.3 (2018-06-04)
 ------------------
 * bug fixing in the controller position node and in the controller position, complementary filter and sensfusion6 algorithms
