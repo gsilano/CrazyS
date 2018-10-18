@@ -34,15 +34,15 @@
 
 
 #define M_PI                                     3.14159265358979323846  /* pi [rad]*/
-#define OMEGA_OFFSET                             6877  /* OMEGA OFFSET [rad/s]*/
+#define OMEGA_OFFSET                             6874  /* OMEGA OFFSET [PWM]*/
 #define ANGULAR_MOTOR_COEFFICIENT                0.2685 /* ANGULAR_MOTOR_COEFFICIENT */
 #define MOTORS_INTERCEPT                         426.24 /* MOTORS_INTERCEPT [rad/s]*/
 #define MAX_PROPELLERS_ANGULAR_VELOCITY          2618 /* MAX PROPELLERS ANGULAR VELOCITY [rad/s]*/
 #define MAX_R_DESIDERED                          3.4907 /* MAX R DESIDERED VALUE [rad/s]*/   
 #define MAX_THETA_COMMAND                        0.5236 /* MAX THETA COMMMAND [rad]*/
 #define MAX_PHI_COMMAND                          0.5236 /* MAX PHI COMMAND [rad]*/
-#define MAX_POS_DELTA_OMEGA                      1570 /* MAX POSITIVE DELTA OMEGA [rad/s]*/
-#define MAX_NEG_DELTA_OMEGA                      2094 /* MAX NEGATIVE DELTA OMEGA [rad/s]*/
+#define MAX_POS_DELTA_OMEGA                      1289 /* MAX POSITIVE DELTA OMEGA [PWM]*/
+#define MAX_NEG_DELTA_OMEGA                      -1718 /* MAX NEGATIVE DELTA OMEGA [PWM]*/
 #define SAMPLING_TIME                            0.01 /* SAMPLING TIME [s] */
 
 namespace rotors_control{
@@ -280,7 +280,7 @@ void PositionController::HoveringController(double* omega) {
     double roll, pitch, yaw;
     Quaternion2Euler(&roll, &pitch, &yaw); 
 
-    //Needed because the velocitis both angular and linear are expressed in the aircraft body frame
+    //Needed because the velocities both angular and linear are expressed in the aircraft body frame
     dot_zeta = -sin(pitch)*state_.linearVelocity.x + sin(roll)*cos(pitch)*state_.linearVelocity.y +
 	            cos(roll)*cos(pitch)*state_.linearVelocity.z;
 
@@ -291,7 +291,7 @@ void PositionController::HoveringController(double* omega) {
     delta_omega = delta_omega_kp + delta_omega_ki_ + delta_omega_kd;
 
     //Delta omega value is saturated to take into account the physical constrains
-    if(!(delta_omega < MAX_POS_DELTA_OMEGA && delta_omega > -MAX_NEG_DELTA_OMEGA))
+    if(delta_omega > MAX_POS_DELTA_OMEGA || delta_omega < MAX_NEG_DELTA_OMEGA)
       if(delta_omega > MAX_POS_DELTA_OMEGA)
          delta_omega = MAX_POS_DELTA_OMEGA;
       else
@@ -302,6 +302,8 @@ void PositionController::HoveringController(double* omega) {
      ROS_DEBUG("Delta_omega_kp: %f, Delta_omega_ki: %f, Delta_omega_kd: %f", delta_omega_kp, delta_omega_ki_, delta_omega_kd);
      ROS_DEBUG("Z_error: %f, Delta_omega: %f", z_error, delta_omega);
      ROS_DEBUG("Dot_zeta: %f", dot_zeta);
+     ROS_DEBUG("Omega: %f, delta_omega: %f", *omega, delta_omega);
+
 }
 
 void PositionController::ErrorBodyFrame(double* xe, double* ye) const {
