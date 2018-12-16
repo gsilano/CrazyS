@@ -4,6 +4,7 @@
 # Available here:
 #   - http://felixduvallet.github.io/ros-travis-integration
 #   - https://github.com/felixduvallet/ros-travis-integration
+#   - https://github.com/gsilano/ros-travis-integration
 #
 # This installs ROS on a clean Travis-CI virtual machine, creates a ROS
 # workspace, resolves all listed dependencies, and sets environment variables
@@ -19,8 +20,8 @@
 #     `wstool`, and should be listed in a file named dependencies.rosinstall.
 #
 # There are two variables you may want to change:
-#   - ROS_DISTRO (default is indigo). Note that packages must be available for
-#     ubuntu 14.04 trusty.
+#   - ROS_DISTRO (default is indigo, but also kinetic is now compatible). Note that 
+#     packages must be available for ubuntu 14.04 trusty and xenial 16.04, respectively.
 #
 # See the README.md for more information.
 #
@@ -96,7 +97,9 @@ install:
   # source it to set the path variables.
   - git clone https://github.com/gsilano/CrazyS.git
   - git clone https://github.com/gsilano/mav_comm.git
+  - rosdep update
   - cd ~/catkin_ws
+  - rosdep install --from-paths src -i
   - catkin build
   - echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc
   - source ~/.bashrc
