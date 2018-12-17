@@ -81,6 +81,9 @@ SensFusion::SensFusion()
     q1_(0),
     q2_(0),
     q3_(0),
+    gravX_(0),
+    gravY_(0),
+    gravZ_(0),
     baseZacc_(9.81){
 
 }
@@ -94,7 +97,7 @@ SensFusion::~SensFusion() {}
 //
 // Date     Author          Notes
 // 29/09/2011 SOH Madgwick    Initial release
-// 02/10/2011 SOH Madgwick    Optimised for reduced CPU load
+// 02/10/2011 SOH Madgwick    Optimized for reduced CPU load
 void SensFusion::Sensfusion6UpdateQ(double* gx, double* gy, double* gz, double* ax, double* ay, double* az, double dt){
   assert(gx);
   assert(gy);
@@ -129,7 +132,7 @@ void SensFusion::Sensfusion6UpdateQ(double* gx, double* gy, double* gz, double* 
   // Compute feedback only if accelerometer measurement valid (avoids NaN in accelerometer normalization)
   if(!((ax == 0.0) && (ay == 0.0) && (az == 0.0))){
 
-    // Normalise accelerometer measurement
+    // Normalize accelerometer measurement
     recipNorm = InvSqrt(ax_ * ax_ + ay_ * ay_ + az_ * az_);
     ax_ *= recipNorm;
     ay_ *= recipNorm;
@@ -155,7 +158,7 @@ void SensFusion::Sensfusion6UpdateQ(double* gx, double* gy, double* gz, double* 
     s1 = _4q1 * q3q3 - _2q3 * ax_ + 4.0 * q0q0 * q1_ - _2q0 * ay_ - _4q1 + _8q1 * q1q1 + _8q1 * q2q2 + _4q1 * az_;
     s2 = 4.0 * q0q0 * q2_ + _2q0 * ax_ + _4q2 * q3q3 - _2q3 * ay_ - _4q2 + _8q2 * q1q1 + _8q2 * q2q2 + _4q2 * az_;
     s3 = 4.0 * q1q1 * q3_ - _2q1 * ax_ + 4.0 * q2q2 * q3_ - _2q2 * ay_;
-    recipNorm = InvSqrt(s0 * s0 + s1 * s1 + s2 * s2 + s3 * s3); // normalise step magnitude
+    recipNorm = InvSqrt(s0 * s0 + s1 * s1 + s2 * s2 + s3 * s3); // normalize step magnitude
     s0 *= recipNorm;
     s1 *= recipNorm;
     s2 *= recipNorm;
@@ -174,7 +177,7 @@ void SensFusion::Sensfusion6UpdateQ(double* gx, double* gy, double* gz, double* 
   q2_ += qDot3 * dt_;
   q3_ += qDot4 * dt_;
 
-  // Normalise quaternion
+  // Normalize quaternion
   recipNorm = invSqrt(q0_*q0_ + q1_*q1_ + q2_*q2_ + q3_*q3_);
   q0_ *= recipNorm;
   q1_ *= recipNorm;
@@ -196,7 +199,7 @@ void SensFusion::Sensfusion6UpdateQ(double* gx, double* gy, double* gz, double* 
 //
 // Date     Author      Notes
 // 29/09/2011 SOH Madgwick    Initial release
-// 02/10/2011 SOH Madgwick    Optimised for reduced CPU load
+// 02/10/2011 SOH Madgwick    Optimized for reduced CPU load
 void SensFusion::Sensfusion6UpdateQ(double* gx, double* gy, double* gz, double* ax, double* ay, double* az, double dt){
   assert(gx);
   assert(gy);
@@ -221,7 +224,7 @@ void SensFusion::Sensfusion6UpdateQ(double* gx, double* gy, double* gz, double* 
   az_ = *az/GRAVITY_MAGNITUDE;
   dt_ = dt;
 
-  // Compute feedback only if accelerometer measurement valid (avoids NaN in accelerometer normalisation)
+  // Compute feedback only if accelerometer measurement valid (avoids NaN in accelerometer normalization)
   if(!((ax_ == 0.0) && (ay_ == 0.0) && (az_ == 0.0))){
 
     // Normalise accelerometer measurement
@@ -275,7 +278,7 @@ void SensFusion::Sensfusion6UpdateQ(double* gx, double* gy, double* gz, double* 
   q2_ += (qa * gy_ - qb * gz_ + q3_ * gx_);
   q3_ += (qa * gz_ + qb * gy_ - qc * gx_);
 
-  // Normalise quaternion
+  // Normalize quaternion
   recipNorm = InvSqrt(q0_ * q0_ + q1_ * q1_ + q2_ * q2_ + q3_ * q3_);
   q0_ *= recipNorm;
   q1_ *= recipNorm;

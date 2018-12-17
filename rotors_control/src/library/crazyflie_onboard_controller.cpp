@@ -40,7 +40,7 @@ CrazyflieOnboardController::CrazyflieOnboardController()
 
 CrazyflieOnboardController::~CrazyflieOnboardController() {}
 
-// Make a copy of the control signals and get them private
+// Make a copy of control signals and get them private
 void CrazyflieOnboardController::SetControlSignals(const control_s& control_t) {
     
     control_t_private_ = control_t;    
@@ -52,6 +52,7 @@ void CrazyflieOnboardController::SetDroneState(const state_s& state_t) {
     state_t_private_ = state_t;    
 }
 
+// Set the controller gains as local global variables
 void CrazyflieOnboardController::SetControllerGains(PositionControllerParameters& controller_parameters_) {
     
       attitude_gain_kp_private_ = Eigen::Vector2f(controller_parameters_.attitude_gain_kp_.x(), controller_parameters_.attitude_gain_kp_.y());
@@ -60,11 +61,11 @@ void CrazyflieOnboardController::SetControllerGains(PositionControllerParameters
       rate_gain_kp_private_ = Eigen::Vector3f(controller_parameters_.rate_gain_kp_.x(), controller_parameters_.rate_gain_kp_.y(), controller_parameters_.rate_gain_kp_.z());
       rate_gain_ki_private_ = Eigen::Vector3f(controller_parameters_.rate_gain_ki_.x(), controller_parameters_.rate_gain_ki_.y(), controller_parameters_.rate_gain_ki_.z());
 
-      //ROS_INFO("Attitude gains - Kp_p: %f, Ki_p: %f, Kp_q: %f, Ki_q: %f", attitude_gain_kp_private_.x(), 
-      //           attitude_gain_ki_private_.x(), attitude_gain_kp_private_.y(), attitude_gain_ki_private_.y());
-      //ROS_INFO("Rate gains - Kp_phi: %f, Ki_phi: %f, Kp_theta: %f, Ki_theta: %f, Kp_psi: %f, Ki_psi: %f", rate_gain_kp_private_.x(),
-      //           rate_gain_ki_private_.x(), rate_gain_kp_private_.y(), rate_gain_ki_private_.y(), rate_gain_kp_private_.z(), 
-      //           rate_gain_ki_private_.z());
+      ROS_DEBUG("Attitude gains - Kp_p: %f, Ki_p: %f, Kp_q: %f, Ki_q: %f", attitude_gain_kp_private_.x(),
+                 attitude_gain_ki_private_.x(), attitude_gain_kp_private_.y(), attitude_gain_ki_private_.y());
+      ROS_DEBUG("Rate gains - Kp_phi: %f, Ki_phi: %f, Kp_theta: %f, Ki_theta: %f, Kp_psi: %f, Ki_psi: %f", rate_gain_kp_private_.x(),
+                 rate_gain_ki_private_.x(), rate_gain_kp_private_.y(), rate_gain_ki_private_.y(), rate_gain_kp_private_.z(),
+                 rate_gain_ki_private_.z());
   
 }
 
@@ -81,8 +82,7 @@ void CrazyflieOnboardController::RateController(double* delta_phi, double* delta
     double r_command;
     r_command = control_t_private_.yawRate;
 
-    //Allow to update the q and q command with a frequency of 250Hz. Indeed, the rate controller works at a
-    //frequency of 500Hz
+    // Update the p and q commands with a frequency rate of 250Hz. The rate controller works with a frequency rate of 500Hz
     if(counter_){
        AttitudeController(&p_command_, &q_command_);
        counter_ = false;   
@@ -95,7 +95,7 @@ void CrazyflieOnboardController::RateController(double* delta_phi, double* delta
     q_error = q_command_ - q;
     r_error = r_command - r;
 
-    //ROS_INFO("p_command: %f, q_command: %f", p_command_, q_command_);
+    ROS_DEBUG("p_command: %f, q_command: %f", p_command_, q_command_);
 
     double delta_phi_kp, delta_theta_kp, delta_psi_kp;
     delta_phi_kp = rate_gain_kp_private_.x() * p_error;
@@ -110,7 +110,7 @@ void CrazyflieOnboardController::RateController(double* delta_phi, double* delta
 
 }
 
-//The attitude controller is run with a frequency of 250Hz
+// The attitude controller runs with a frequency rate of 250Hz
 void CrazyflieOnboardController::AttitudeController(double* p_command_internal, double* q_command_internal) {
     assert(p_command_internal);
     assert(q_command_internal); 
