@@ -43,6 +43,7 @@ generator python-wstool build-essential
  $ catkin init
  $ git clone https://github.com/gsilano/CrazyS.git
  $ git clone https://github.com/gsilano/mav_comm.git
+ $ cd ~/catkin_ws/src/mav_comm & git checkout crazys
  $ rosdep update
  $ cd ~/catkin_ws
  $ rosdep install --from-paths src -i
@@ -70,16 +71,15 @@ Installation Instructions - Ubuntu 14.04 with ROS Indigo
  1. Install and initialize ROS indigo desktop full, additional ROS packages, catkin-tools, and wstool:
 
  ```
-$ sudo sh -c ’echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list’
-$ sudo apt-key adv --keyserver hkp://ha.pool.skskeyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
-$ sudo apt-get update
-$ sudo apt-get install ros-indigo-desktop-full ros-indigo-joy ros-indigo-octomap-ros python-wstool python-catkin-tools protobuf-compiler
-libgoogle-glog-dev
-$ sudo rosdep init
-$ rosdep update
-$ echo "source /opt/ros/indigo/setup.bash" >> ~/.bashrc
-$ source ~/.bashrc
-$ sudo apt-get install python-rosinstall
+ $ sudo sh -c ’echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list’
+ $ sudo apt-key adv --keyserver hkp://ha.pool.skskeyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
+ $ sudo apt-get update
+ $ sudo apt-get install ros-indigo-desktop-full ros-indigo-joy ros-indigo-octomap-ros python-wstool python-catkin-tools protobuf compiler libgoogle-glog-dev
+ $ sudo rosdep init
+ $ rosdep update
+ $ echo "source /opt/ros/indigo/setup.bash" >> ~/.bashrc
+ $ source ~/.bashrc
+ $ sudo apt-get install python-rosinstall
  ```
  2. If you don't have ROS workspace yet you can do so by
 
@@ -96,6 +96,7 @@ $ sudo apt-get install python-rosinstall
  $ cd ~/catkin_ws/src
  $ git clone https://github.com/gsilano/CrazyS.git
  $ git clone https://github.com/gsilano/mav_comm.git
+ $ cd ~/catkin_ws/src/mav_comm & git checkout crazys
  $ rosdep update
  $ rosdep install --from-paths src -i
  ```
