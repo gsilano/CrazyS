@@ -4,6 +4,8 @@ Changelog for package rotors_gazebo_plugins
 
 4.0.5 (2018-12-17)
 ------------------
+* The crazyflie2_hovering_example.launch file has been modified considering the changes made on the position_controller_node
+* Contributors: Giuseppe Silano
 
 4.0.4 (2018-09-30)
 ------------------
