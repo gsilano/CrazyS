@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 
-#ifndef CRAZYFLIE_2_POSITION_CONTROLLER_NODE_H
-#define CRAZYFLIE_2_POSITION_CONTROLLER_NODE_H
+#ifndef CRAYZFLIE_2_POSITION_CONTROLLER_NODE_H
+#define CRAYZFLIE_2_POSITION_CONTROLLER_NODE_H
 
 #include <boost/bind.hpp>
 #include <Eigen/Eigen>
@@ -29,12 +29,16 @@
 #include <mav_msgs/AttitudeThrust.h>
 #include <mav_msgs/eigen_mav_msgs.h>
 #include <nav_msgs/Odometry.h>
+#include <sensor_msgs/Imu.h>
 #include <ros/callback_queue.h>
 #include <ros/ros.h>
 #include <trajectory_msgs/MultiDOFJointTrajectory.h>
+#include <ros/time.h>
+
 
 #include "rotors_control/common.h"
 #include "rotors_control/position_controller.h"
+#include "rotors_control/crazyflie_complementary_filter.h"
 
 
 namespace rotors_control {
@@ -50,14 +54,28 @@ namespace rotors_control {
         private:
 
             bool waypointHasBeenPublished_ = false;
+            bool enable_state_estimator_;
 
             PositionController position_controller_;
+            sensorData_t sensors_;
+            ros::Time imu_msg_head_stamp_;
 
             std::string namespace_;
 
+            ros::NodeHandle n_;
+            ros::Timer timer_Attitude_;
+            ros::Timer timer_highLevelControl;
+            ros::Timer timer_IMUUpdate;
+
+            //Callback functions to compute the errors among axis and angles
+            void CallbackAttitudeEstimation(const ros::TimerEvent& event);
+            void CallbackHightLevelControl(const ros::TimerEvent& event);
+            void CallbackIMUUpdate(const ros::TimerEvent& event);
+ 
             //subscribers
             ros::Subscriber cmd_multi_dof_joint_trajectory_sub_;
             ros::Subscriber odometry_sub_;
+            ros::Subscriber imu_sub_;
 
             //publisher
             ros::Publisher motor_velocity_reference_pub_;
@@ -69,6 +87,8 @@ namespace rotors_control {
             void MultiDofJointTrajectoryCallback(const trajectory_msgs::MultiDOFJointTrajectoryConstPtr& trajectory_reference_msg);
 
             void OdometryCallback(const nav_msgs::OdometryConstPtr& odometry_msg);
+
+            void IMUCallback(const sensor_msgs::ImuConstPtr& imu_msg);
 
     };
 }

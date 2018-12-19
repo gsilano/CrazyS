@@ -63,14 +63,14 @@ void ComplementaryFilterCrazyflie2::PositionUpdateAngularVelocity(double* angula
 
 void ComplementaryFilterCrazyflie2::EstimateAttitude(state_t* state, sensorData_t* sensorData){
 
-  // Read sensors at full rate (500Hz). The IMU topic publish the data with a frequency around 800Hz but such data are passed to the position control
-  // algorithm with a frequency of 500Hz. There is a timer that handles the data exchange.
+  // Sensors values are read at full rate (500Hz). The IMU topic publishes data with a frequency around 800Hz but such data is passed to the position control
+  // algorithm with a frequency of 500Hz. There is a timer that manages data exchange.
   sensors_fusion_.Sensfusion6UpdateQ(&sensorData->gyro.x, &sensorData->gyro.y, &sensorData->gyro.z, &sensorData->acc.x, &sensorData->acc.y, &sensorData->acc.z, (double) ATTITUDE_UPDATE_DT);
 
-  // Save attitude, adjusted for the legacy CF2 body coordinate system
+  // Saving attitude values, adjusted for the legacy CF2 body coordinate system
   sensors_fusion_.Sensfusion6GetEulerRPY(&state->attitude.roll, &state->attitude.pitch, &state->attitude.yaw);
 
-  // Save quaternion, hopefully one day this could be used in a better controller.
+  // Saving quaternion values, hopefully one day this could be used in a better controller.
   // Note that this is not adjusted for the legacy coordinate system
   sensors_fusion_.Sensfusion6GetQuaternion(
       &state->attitudeQuaternion.x,

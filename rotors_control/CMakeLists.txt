@@ -77,15 +77,10 @@ add_dependencies(lee_position_controller_node ${catkin_EXPORTED_TARGETS})
 target_link_libraries(lee_position_controller_node
   lee_position_controller ${catkin_LIBRARIES})
 
-add_executable(position_controller_node_with_stateEstimator src/nodes/position_controller_node_with_stateEstimator.cpp)
-add_dependencies(position_controller_node_with_stateEstimator ${catkin_EXPORTED_TARGETS})
-target_link_libraries(position_controller_node_with_stateEstimator
+add_executable(position_controller_node src/nodes/position_controller_node.cpp)
+add_dependencies(position_controller_node ${catkin_EXPORTED_TARGETS})
+target_link_libraries(position_controller_node
   position_controller crazyflie_complementary_filter crazyflie_onboard_controller sensfusion6 ${catkin_LIBRARIES})
-
-add_executable(position_controller_node_without_stateEstimator src/nodes/position_controller_node_without_stateEstimator.cpp)
-add_dependencies(position_controller_node_without_stateEstimator ${catkin_EXPORTED_TARGETS})
-target_link_libraries(position_controller_node_without_stateEstimator
-  position_controller crazyflie_complementary_filter  crazyflie_onboard_controller sensfusion6 ${catkin_LIBRARIES})
 
 add_executable(roll_pitch_yawrate_thrust_controller_node
   src/nodes/roll_pitch_yawrate_thrust_controller_node.cpp)
@@ -97,7 +92,7 @@ install(TARGETS lee_position_controller position_controller crazyflie_onboard_co
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )
 
-install(TARGETS lee_position_controller_node position_controller_node_with_stateEstimator position_controller_node_without_stateEstimator roll_pitch_yawrate_thrust_controller_node
+install(TARGETS lee_position_controller_node position_controller_node roll_pitch_yawrate_thrust_controller_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

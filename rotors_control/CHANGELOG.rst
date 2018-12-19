@@ -2,6 +2,13 @@
 Changelog for package rotors_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.0.5 (2018-12-17)
+------------------
+* The position_controller_node_with_stateEstimator and position_controller_node_without_stateEstimator files were rewritten as an unique controller: the position_controller_node
+* The comments have been reviewed improving the readability of the code
+* Some bugs have been fixed
+* Contributors: Giuseppe Silano
+
 4.0.4 (2018-09-30)
 ------------------
 * Names update. Some cpp files have been renamed in a more general way making them independent of Crazyflie (e.g., the complementary filter).
