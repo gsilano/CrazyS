@@ -69,20 +69,10 @@ PositionController::PositionController()
     delta_omega_ki_(0),
     hovering_gain_kd_(0),
     control_t_({0,0,0,0}), //pitch, roll, yaw rate, thrust
-    state_({0, //Position.x 
-            0, //Position.y
-            0, //Position.z
-            0, //Linear velocity x
-            0, //Linear velocity y
-            0, //Linear velocity z
-            0,//Quaternion x
-            0,//Quaternion y
-            0,//Quaternion z
-            0,//Quaternion w
-            0,//Angular velocity x
-            0,//Angular velocity y
-            0})//Angular velocity z)
-            {
+    //Position.x, Position.y, Position.z, Linear velocity x, Linear velocity y
+    //Linear velocity z, Quaternion x, Quaternion y, Quaternion z, Quaternion w
+    //Angular velocity x, Angular velocity y, Angular velocity z
+    state_({0,0,0,0,0,0,0,0,0,0,0,0,0}){
 }
 
 PositionController::~PositionController() {}
