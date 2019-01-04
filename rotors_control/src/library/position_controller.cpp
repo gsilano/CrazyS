@@ -49,27 +49,27 @@ namespace rotors_control{
 
 PositionController::PositionController()
     : controller_active_(false),
-    state_estimator_active_(false){
+    state_estimator_active_(false),
+    xy_gain_kp_(0),
+    attitude_gain_kp_(0),
+    rate_gain_kp_(0),
+    yaw_gain_kp_(0),
+    hovering_gain_kp_(0),
+    xy_gain_ki_(0),
+    attitude_gain_ki_(0),
+    rate_gain_ki_(0),
+    yaw_gain_ki_(0),
+    hovering_gain_ki_(0),
+    phi_command_ki_(0),
+    theta_command_ki_(0),
+    p_command_ki_(0),
+    q_command_ki_(0),
+    r_command_ki_(0),
+    delta_psi_ki_(0),
+    delta_omega_ki_(0),
+    hovering_gain_kd_(0){
 
-      xy_gain_kp_ = 0;
-      attitude_gain_kp_ = 0;
-      rate_gain_kp_ = 0;
-      yaw_gain_kp_ = 0;
-      hovering_gain_kp_ = 0;
-      xy_gain_ki_ = 0;
-      attitude_gain_ki_ = 0;
-      rate_gain_ki_ = 0;
-      yaw_gain_ki_ = 0;
-      hovering_gain_ki_ = 0;
-      phi_command_ki_ = 0;
-      theta_command_ki_ = 0;
-      p_command_ki_ = 0;
-      q_command_ki_ = 0;
-      r_command_ki_ = 0;
-      delta_psi_ki_ = 0;
-      delta_omega_ki_ = 0;
-      hovering_gain_kd_ = 0;
-
+      // The control variables are initialized to zero
       control_t_.roll = 0;
       control_t_.pitch = 0;
       control_t_.yawRate = 0;
