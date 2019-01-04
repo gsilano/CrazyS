@@ -70,6 +70,11 @@ PositionController::PositionController()
     hovering_gain_kd_(0),
     control_t_({0,0,0,0}){
 
+      control_t_.roll = 0;
+      control_t_.pitch = 0;
+      control_t_.yawRate = 0;
+      control_t_.thrust = 0;
+
       state_.angularAcc.x = 0; // Angular Acceleration x
       state_.angularAcc.y = 0; // Angular Acceleration y
       state_.angularAcc.z = 0; // Angular Acceleration z
