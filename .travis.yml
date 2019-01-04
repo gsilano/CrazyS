@@ -99,6 +99,7 @@ install:
   - git clone https://github.com/gsilano/CrazyS.git
   - cd ~/catkin_ws/src/CrazyS
   - git checkout hotfix/build-process
+  - cd ~/catkin_ws/src
   - git clone https://github.com/gsilano/mav_comm.git
   - cd ~/catkin_ws/src/mav_comm 
   - git checkout crazys
