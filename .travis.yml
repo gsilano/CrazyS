@@ -97,7 +97,6 @@ install:
   # Create the devel/setup.bash (run catkin_make with an empty workspace) and
   # source it to set the path variables.
   - git clone https://github.com/gsilano/CrazyS.git
-  - cd ~/catkin_ws/src/CrazyS & git checkout hotfix/build-process
   - git clone https://github.com/gsilano/mav_comm.git
   - cd ~/catkin_ws/src/mav_comm & git checkout crazys
   - rosdep update
