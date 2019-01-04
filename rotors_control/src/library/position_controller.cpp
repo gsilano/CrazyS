@@ -67,8 +67,7 @@ PositionController::PositionController()
     r_command_ki_(0),
     delta_psi_ki_(0),
     delta_omega_ki_(0),
-    hovering_gain_kd_(0),
-    control_t_({0,0,0,0}){
+    hovering_gain_kd_(0){
 
       control_t_.roll = 0;
       control_t_.pitch = 0;
