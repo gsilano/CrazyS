@@ -2,6 +2,9 @@
 Changelog for package rotors_gazebo
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.0.6 (2019-01-04)
+------------------
+
 4.0.5 (2018-12-17)
 ------------------
 * The launch file that allows Crazyflie simulation when Matlab and Robotics System Toolbox are in the loop has been inserted in the repository
