@@ -42,10 +42,10 @@ namespace rotors_control {
             void CalculateRotorVelocities(Eigen::Vector4d* rotor_velocities);
 
             void SetOdometryWithStateEstimator(const EigenOdometry& odometry);
-	    void SetOdometryWithoutStateEstimator(const EigenOdometry& odometry);
+	          void SetOdometryWithoutStateEstimator(const EigenOdometry& odometry);
             void SetSensorData(const sensorData_t& sensors);
             void SetTrajectoryPoint(const mav_msgs::EigenTrajectoryPoint& command_trajectory);
-	    void SetControllerGains();
+	          void SetControllerGains();
             void CallbackAttitudeEstimation();
             void CallbackHightLevelControl(); 
 
@@ -53,14 +53,14 @@ namespace rotors_control {
             ComplementaryFilterCrazyflie2 complementary_filter_crazyflie_;
             CrazyflieOnboardController crazyflie_onboard_controller_;
 
-            EIGEN_MAKE_ALIGNED_OPERATOR_NEW
         private:
+            EIGEN_MAKE_ALIGNED_OPERATOR_NEW
             bool controller_active_;
             bool state_estimator_active_;
 
             control_s control_t_;
 
-            //Integrator intial condition
+            //Integrator initial conditions
             double theta_command_ki_;
             double phi_command_ki_;
             double p_command_ki_;
@@ -70,7 +70,7 @@ namespace rotors_control {
             double delta_omega_ki_;
 
             //Controller gains
-	    Eigen::Vector2f xy_gain_kp_, xy_gain_ki_;
+	          Eigen::Vector2f xy_gain_kp_, xy_gain_ki_;
             Eigen::Vector2f attitude_gain_kp_, attitude_gain_ki_;
             Eigen::Vector3f rate_gain_kp_, rate_gain_ki_;
             double yaw_gain_kp_, yaw_gain_ki_;

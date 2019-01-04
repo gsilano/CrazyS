@@ -2,6 +2,11 @@
 Changelog for package rotors_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.0.6 (2019-01-04)
+------------------
+* Changes in the position controller libray to fix issue in the building process
+* Contributors: Giuseppe Silano
+
 4.0.5 (2018-12-17)
 ------------------
 * The position_controller_node_with_stateEstimator and position_controller_node_without_stateEstimator files were rewritten as an unique controller: the position_controller_node

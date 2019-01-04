@@ -22,21 +22,21 @@
 
 // Default values for the position controller of the Crazyflie2. XYController [x,y], AttitudeController [phi,theta] 
 //RateController [p,q,r], YawController[yaw], HoveringController[z]
-static const Eigen::Vector2f kPDefaultXYController = Eigen::Vector2f(15, -15);
-static const Eigen::Vector2f kIDefaultXYController = Eigen::Vector2f(1, -1);
+static const Eigen::Vector2f kPDefaultXYController = Eigen::Vector2f(3.594, -3.594);
+static const Eigen::Vector2f kIDefaultXYController = Eigen::Vector2f(5.72958, -5.72958);
 
-static const Eigen::Vector2f kPDefaultAttitudeController = Eigen::Vector2f(3.5, 3.5);
-static const Eigen::Vector2f kIDefaultAttitudeController = Eigen::Vector2f(2, 2);
+static const Eigen::Vector2f kPDefaultAttitudeController = Eigen::Vector2f(0.0611, 0.0611);
+static const Eigen::Vector2f kIDefaultAttitudeController = Eigen::Vector2f(0.0349, 0.0349);
 
-static const Eigen::Vector3f kPDefaultRateController = Eigen::Vector3f(110, 110, 110);
-static const Eigen::Vector3f kIDefaultRateController = Eigen::Vector3f(0, 0, 16.7);
+static const Eigen::Vector3f kPDefaultRateController = Eigen::Vector3f(1000, 1000, 1000);
+static const Eigen::Vector3f kIDefaultRateController = Eigen::Vector3f(0, 0, 95.6839);
 
-static const double kPDefaultYawController = 3;
-static const double kIDefaultYawController = 1;
+static const double kPDefaultYawController = 0.0914;
+static const double kIDefaultYawController = 0;
 
-static const double kPDefaultHoveringController = 14000;
-static const double kIDefaultHoveringController = 15000;
-static const double kDDefaultHoveringController = 20000;
+static const double kPDefaultHoveringController = 70;
+static const double kIDefaultHoveringController = 3.15;
+static const double kDDefaultHoveringController = 373;
 
 namespace rotors_control {
 
@@ -45,16 +45,16 @@ namespace rotors_control {
 	  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	  PositionControllerParameters()
 	      : xy_gain_kp_(kPDefaultXYController), 
-		xy_gain_ki_(kIDefaultXYController), 
-		attitude_gain_kp_(kPDefaultAttitudeController), 
-		attitude_gain_ki_(kIDefaultAttitudeController), 
-		rate_gain_kp_(kPDefaultRateController), 
-		rate_gain_ki_(kIDefaultRateController),  
-		yaw_gain_kp_(kPDefaultYawController), 
-		yaw_gain_ki_(kIDefaultYawController),
-		hovering_gain_kp_(kPDefaultHoveringController), 
-		hovering_gain_ki_(kIDefaultHoveringController), 
-		hovering_gain_kd_(kDDefaultHoveringController) {
+	        xy_gain_ki_(kIDefaultXYController),
+          attitude_gain_kp_(kPDefaultAttitudeController),
+          attitude_gain_ki_(kIDefaultAttitudeController),
+          rate_gain_kp_(kPDefaultRateController),
+          rate_gain_ki_(kIDefaultRateController),
+          yaw_gain_kp_(kPDefaultYawController),
+          yaw_gain_ki_(kIDefaultYawController),
+          hovering_gain_kp_(kPDefaultHoveringController),
+          hovering_gain_ki_(kIDefaultHoveringController),
+          hovering_gain_kd_(kDDefaultHoveringController) {
 	  }
 
 	  Eigen::Vector2f xy_gain_kp_;
