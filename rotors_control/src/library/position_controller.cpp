@@ -68,11 +68,32 @@ PositionController::PositionController()
     delta_psi_ki_(0),
     delta_omega_ki_(0),
     hovering_gain_kd_(0),
-    control_t_({0,0,0,0}), //pitch, roll, yaw rate, thrust
-    //Position.x, Position.y, Position.z, Linear velocity x, Linear velocity y
-    //Linear velocity z, Quaternion x, Quaternion y, Quaternion z, Quaternion w
-    //Angular velocity x, Angular velocity y, Angular velocity z
-    state_({0,0,0,0,0,0,0,0,0,0,0,0,0}){
+    control_t_({0,0,0,0}){
+
+      state_.angularAcc.x = 0; // Angular Acceleration x
+      state_.angularAcc.y = 0; // Angular Acceleration y
+      state_.angularAcc.z = 0; // Angular Acceleration z
+
+      state_.attitude.roll = 0; // Roll
+      state_.attitude.pitch = 0; // Pitch
+      state_.attitude.yaw = 0; // Yaw
+
+      state_.position.x = 0; // Position.x
+      state_.position.y = 0; // Position.y
+      state_.position.z = 0; // Position.z
+
+      state_.angularVelocity.x = 0; // Angular velocity x
+      state_.angularVelocity.y = 0; // Angular velocity y
+      state_.angularVelocity.z = 0; // Angular velocity z
+
+      state_.linearVelocity.x = 0; //Linear velocity x
+      state_.linearVelocity.y = 0; //Linear velocity y
+      state_.linearVelocity.z = 0; //Linear velocity z
+
+      state_.attitudeQuaternion.x = 0; // Quaternion x
+      state_.attitudeQuaternion.y = 0; // Quaternion y
+      state_.attitudeQuaternion.z = 0; // Quaternion z
+      state_.attitudeQuaternion.w = 0; // Quaternion w
 }
 
 PositionController::~PositionController() {}
