@@ -37,7 +37,6 @@ namespace rotors_control {
     
     class PositionController{
         public:
-            EIGEN_MAKE_ALIGNED_OPERATOR_NEW
             PositionController();
             ~PositionController();
             void CalculateRotorVelocities(Eigen::Vector4d* rotor_velocities);
@@ -55,6 +54,7 @@ namespace rotors_control {
             CrazyflieOnboardController crazyflie_onboard_controller_;
 
         private:
+            EIGEN_MAKE_ALIGNED_OPERATOR_NEW
             bool controller_active_;
             bool state_estimator_active_;
 
