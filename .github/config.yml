@@ -14,3 +14,7 @@ newPRWelcomeComment: >
 firstPRMergeComment: >
   Congrats on merging your first pull request! We here at behaviorbot are proud of you! Thanks to you, the CrazyS package increases and is now bigger than before.
 # It is recommend to include as many gifs and emojis as possible
+
+# *Required* Comment to reply with
+requestInfoReplyComment: >
+  We would appreciate it if you could provide us with more info about this issue/pr!
