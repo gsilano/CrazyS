@@ -5,7 +5,7 @@ Contributing
 
 We welcome and encourage contribution. There is many way to contribute: you can
 write bug report, contribute code or documentation (please, take a look to the 
-[Wiki section](https://github.com/gsilano/CrazyS/wiki).
+[Wiki section](https://github.com/gsilano/CrazyS/wiki)).
 
 ## Reporting issues
 
