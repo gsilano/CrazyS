@@ -164,6 +164,13 @@ At a minimum, Gazebo `v2.x` is required (which is installed by default with ROS 
 1. `iris.sdf` can only be generated with Gazebo >= `v3.0`, as it requires use of the `gz sdf ...` tool. If this requirement is not met, you will not be able to use the Iris MAV in any of the simulations.
 2. The Gazebo plugins `GazeboGeotaggedImagesPlugin`, `LidarPlugin` and the `LiftDragPlugin` all require Gazebo >= `v5.0`, and will not be built if this requirement is not met.
 
+Bugs & Feature Requests
+--------------
+
+Please report bugs and request features by using the [Issue Tracker](https://github.com/gsilano/CrazyS/issues). Furthermore, please see
+the [Contributing.md](https://github.com/gsilano/CrazyS/blob/master/CONTRIBUTING.md) file if you plan to help use to improve 
+CrazyS functionalities.
+
 YouTube videos
 --------------
 
@@ -171,9 +178,3 @@ In this section a video providing the effectiveness of the platform and how it w
 
 [![CrazyS, an exntension of the ROS pakcage RotrS aimed to modeling, developing and integrating the Crazyflie 2.0 nano-quadcopter](https://github.com/gsilano/CrazyS/wiki/img/img_YouTube_MED18.png)](https://youtu.be/qsrYCUSQ-S4 "CrazyS, an exntension of the ROS pakcage RotrS aimed to modeling, developing and integrating the Crazyflie 2.0 nano-quadcopter")
 
-Bugs & Feature Requests
---------------
-
-Please report bugs and request features by using the [Issue Tracker](https://github.com/gsilano/CrazyS/issues). Furthermore, please see
-the [Contributing.md](https://github.com/gsilano/CrazyS/blob/master/CONTRIBUTING.md) file if you plan to help use to improve 
-CrazyS functionalities.
