@@ -174,4 +174,6 @@ In this section a video providing the effectiveness of the platform and how it w
 Bugs & Feature Requests
 --------------
 
-Please report bugs and request features by using the [Issue Tracker](https://github.com/gsilano/CrazyS/issues).
+Please report bugs and request features by using the [Issue Tracker](https://github.com/gsilano/CrazyS/issues). Furthermore, please see
+the [Contributing.md](https://github.com/gsilano/CrazyS/blob/master/CONTRIBUTING.md) file if you plan to help use to improve 
+CrazyS functionalities.
