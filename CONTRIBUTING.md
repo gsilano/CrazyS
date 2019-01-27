@@ -41,5 +41,4 @@ There is some basic requirement for us to merge a pull request:
  - The pull request must pass the automated test (as described previously)
 
 In your code:
- - Make sure the coding style of your code follows the style of the file (take a look at the ["Developer Section"]
- (https://github.com/gsilano/CrazyS/wiki#for-developers) into the first page of the CrazyS Wiki page).
+ - Make sure the coding style of your code follows the style of the file (take a look at the [Developer Section](https://github.com/gsilano/CrazyS/wiki#for-developers) into the first page of the CrazyS Wiki page).
