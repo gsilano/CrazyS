@@ -168,8 +168,8 @@ Bugs & Feature Requests
 --------------
 
 Please report bugs and request features by using the [Issue Tracker](https://github.com/gsilano/CrazyS/issues). Furthermore, please see
-the [Contributing.md](https://github.com/gsilano/CrazyS/blob/master/CONTRIBUTING.md) file if you plan to help use to improve 
-CrazyS functionalities.
+the [Contributing.md](https://github.com/gsilano/CrazyS/blob/master/CONTRIBUTING.md) file if you plan to help us to improve 
+CrazyS features.
 
 YouTube videos
 --------------
