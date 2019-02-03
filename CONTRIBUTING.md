@@ -7,6 +7,11 @@ We welcome and encourage contribution. There is many way to contribute: you can
 write bug report, contribute code or documentation (please, take a look to the 
 [Wiki section](https://github.com/gsilano/CrazyS/wiki)).
 
+Working on your first Pull Request?
+============
+
+You can learn how from this *free* series [How to Contribute to an Open Source Project on GitHub](https://egghead.io/series/how-to-contribute-to-an-open-source-project-on-github)
+
 ## Reporting issues
 
 When reporting issues the more information you can supply the better.
