@@ -46,3 +46,65 @@ There is some basic requirement for us to merge a pull request:
 
 In your code:
  - Make sure the coding style of your code follows the style of the file (take a look at the [Developer Section](https://github.com/gsilano/CrazyS/wiki#for-developers) into the first page of the CrazyS Wiki page).
+ 
+## Workflow
+
+### Stable branch: `master`
+
+The `master` branch is stable and **should not receive new features**. Only **bug fixes** are accepted.
+
+This is the typical workflow to fix a bug in the master branch.
+
+* Identify a bug that does not require breaking changes of the API/ABI.
+* Open an issue on github.
+* Add some label (FIXME which label?).
+* Assign the issue to yourself.
+* Create a new branch starting from the `master` branch:
+
+```
+git fetch origin
+git checkout -b <branch_name> origin/master
+```
+
+* Fix the bug and make one or more commits.
+* [Push the branch on your fork and create a pull request](https://help.github.com/categories/collaborating-on-projects-using-pull-requests/).
+* Wait for someone else to review your fix and merge your pull request.
+* Your fix is now in the `master` branch, now you need to port it to the `devel`
+  branch.
+* Ensure that your branches are in sync with `origin`:
+
+```
+git checkout master
+git pull --rebase origin master
+git checkout devel
+git pull --rebase origin devel
+```
+
+  * Merge master into devel and eventually fix the conflicts.
+
+```
+git merge master
+```
+
+##### Work in progress PR
+As final note, in case you need to start a PR but you deem it still **work-in-progress** and don't want anyone to merge it by mistake, do the following:
+- Put `[WIP]` at the beginning of the PR title.
+- Mark the PR with the label `"Status: In Progress"`.
+
+Once you're happy about your work, just remove the `[WIP]` tag as well as the label, and drop a message within the PR to notify the community that reviews are welcome and merging is now possible.
+
+### Development branch: `dev`
+
+
+We use the branch `dev` to collect the ongoing work, which is given in terms of **new features** and **bug fixes**.
+
+When we introduce a new feature that will cause downstream projects to be aware of such update, we do increase the tweak number (always sticking to _odd numbers_).
+
+When we decide to publish these new features in a new software release (roughly each _3 months_), we merge the new modifications into `master`, doing:
+
+```sh
+git checkout master
+git merge --no-ff devel
+git push origin master
+```
+
