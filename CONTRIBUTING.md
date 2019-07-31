@@ -69,15 +69,15 @@ git checkout -b <branch_name> origin/master
 * Fix the bug and make one or more commits.
 * [Push the branch on your fork and create a pull request](https://help.github.com/categories/collaborating-on-projects-using-pull-requests/).
 * Wait for someone else to review your fix and merge your pull request.
-* Your fix is now in the `master` branch, now you need to port it to the `devel`
+* Your fix is now in the `master` branch, now you need to port it to the `dev`
   branch.
 * Ensure that your branches are in sync with `origin`:
 
 ```
 git checkout master
 git pull --rebase origin master
-git checkout devel
-git pull --rebase origin devel
+git checkout dev
+git pull --rebase origin dev
 ```
 
   * Merge master into devel and eventually fix the conflicts.
@@ -87,11 +87,11 @@ git merge master
 ```
 
 ##### Work in progress PR
-As final note, in case you need to start a PR but you deem it still **work-in-progress** and don't want anyone to merge it by mistake, do the following:
+As final note, in case you need to start a PR but you deem it still **work-in-progress** and do not want anyone to merge it by mistake, do the following:
 - Put `[WIP]` at the beginning of the PR title.
 - Mark the PR with the label `"Status: In Progress"`.
 
-Once you're happy about your work, just remove the `[WIP]` tag as well as the label, and drop a message within the PR to notify the community that reviews are welcome and merging is now possible.
+Once you are happy about your work, just remove the `[WIP]` tag as well as the label, and drop a message within the PR to notify the community that reviews are welcome and merging is now possible.
 
 ### Development branch: `dev`
 
@@ -104,7 +104,7 @@ When we decide to publish these new features in a new software release (roughly 
 
 ```sh
 git checkout master
-git merge --no-ff devel
+git merge --no-ff dev
 git push origin master
 ```
 
