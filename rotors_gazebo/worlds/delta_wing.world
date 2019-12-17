@@ -4,6 +4,12 @@
     <!-- A global light source -->
     <include>
       <uri>model://sun</uri>
+
+    <!-- Turn off the shadows -->
+    <scene>
+      <shadows>0</shadows>
+    </scene>
+
     </include>
     <!-- A ground plane -->
     <include>

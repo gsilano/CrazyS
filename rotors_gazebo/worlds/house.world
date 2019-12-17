@@ -7,6 +7,12 @@
     <include>
       <uri>model://sun</uri>
     </include>
+
+    <!-- Turn off the shadows -->
+    <scene>
+      <shadows>0</shadows>
+    </scene>
+
     <include>
       <uri>model://fast_food</uri>
         <pose>0 5 0 0 -0 0</pose>

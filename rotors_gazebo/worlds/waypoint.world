@@ -4,6 +4,12 @@
     <include>
       <uri>model://sun</uri>
     </include>
+
+    <!-- Turn off the shadows -->
+    <scene>
+      <shadows>0</shadows>
+    </scene>
+
     <include>
       <uri>model://occupancy_grid</uri>
       <pose>5 0 0 0.0 0.0 0.0</pose>
