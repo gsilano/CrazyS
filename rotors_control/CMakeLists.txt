@@ -16,7 +16,7 @@ find_package(Eigen3 REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include ${Eigen3_INCLUDE_DIRS}
-  LIBRARIES lee_position_controller roll_pitch_yawrate_thrust_controller
+  LIBRARIES lee_position_controller position_controller crazyflie_onboard_controller roll_pitch_yawrate_thrust_controller sensfusion6 crazyflie_complementary_filter
   CATKIN_DEPENDS geometry_msgs mav_msgs nav_msgs roscpp sensor_msgs
   DEPENDS Eigen3
 )
@@ -89,7 +89,7 @@ install(TARGETS lee_position_controller position_controller crazyflie_onboard_co
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )
 
-install(TARGETS lee_position_controller_node position_controller_node
+install(TARGETS lee_position_controller_node position_controller_node roll_pitch_yawrate_thrust_controller_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
