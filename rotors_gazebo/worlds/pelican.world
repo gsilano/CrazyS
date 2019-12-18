@@ -7,12 +7,6 @@
     <include>
       <uri>model://sun</uri>
     </include>
-
-    <!-- Turn off the shadows -->
-    <scene>
-      <shadows>0</shadows>
-    </scene>
-
     <spherical_coordinates>
       <surface_model>EARTH_WGS84</surface_model>
       <latitude_deg>47.3667</latitude_deg>

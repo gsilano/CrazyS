@@ -41,15 +41,13 @@ namespace rotors_control {
 
 class LeePositionControllerNode {
  public:
-  LeePositionControllerNode(const ros::NodeHandle& nh, const ros::NodeHandle& private_nh);
+  LeePositionControllerNode();
   ~LeePositionControllerNode();
 
   void InitializeParams();
   void Publish();
 
  private:
-  ros::NodeHandle nh_;
-  ros::NodeHandle private_nh_;
 
   LeePositionController lee_position_controller_;
 

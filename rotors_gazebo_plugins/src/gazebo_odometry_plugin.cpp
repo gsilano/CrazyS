@@ -23,6 +23,7 @@
 #include "rotors_gazebo_plugins/gazebo_odometry_plugin.h"
 
 // SYSTEM
+#include <ros/ros.h>
 #include <chrono>
 #include <iostream>
 
@@ -43,6 +44,7 @@
 namespace gazebo {
 
 GazeboOdometryPlugin::~GazeboOdometryPlugin() {
+  
 }
 
 void GazeboOdometryPlugin::Load(physics::ModelPtr _model,

@@ -9,12 +9,6 @@
     <include>
       <uri>model://sun</uri>
     </include>
-
-    <!-- Turn off the shadows -->
-    <scene>
-      <shadows>0</shadows>
-    </scene>
-
     <plugin filename="libRubblePlugin.so" name="rubble">
       <bottom_right>-.5 -1 0.0</bottom_right>
       <top_left>0.5 1.0 0.4</top_left>
