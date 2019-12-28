@@ -81,8 +81,53 @@ $ sudo apt install gazebo9 gazebo9-*
 $ sudo apt upgrade
 ```
 
+Installation Instructions - Ubuntu 16.04 with ROS Kinetic and Gazebo 7
+---------------------------------------------------------
+To use the code developed and stored in this repository some preliminary actions are needed. They are listed below.
 
-Installation Instructions - Ubuntu 16.04 with ROS Kinetic
+ 1. Install and initialize ROS Kinetic desktop full, additional ROS packages, catkin-tools, and wstool:
+
+```console
+$ sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu `lsb_release -sc` main" > /etc/apt/sources.list.d/ros-latest.list'
+$ wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
+$ sudo apt-get update
+$ sudo apt-get install ros-kinetic-desktop-full ros-kinetic-joy ros-kinetic-octomap-ros ros-kinetic-mavlink
+$ sudo apt-get install python-wstool python-catkin-tools protobuf-compiler libgoogle-glog-dev ros-kinetic-control-toolbox
+$ sudo rosdep init
+$ rosdep update
+$ echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc
+$ source ~/.bashrc
+$ sudo apt-get install python-rosinstall python-rosinstall-generator build-essential
+```
+
+ 2. If you don't have ROS workspace yet you can do so by
+
+```console
+$ mkdir -p ~/catkin_ws/src
+$ cd ~/catkin_ws/src
+$ catkin_init_workspace  # initialize your catkin workspace
+$ cd ~/catkin_ws/
+$ catkin init
+$ cd ~/catkin_ws/src
+$ git clone -b dev/gazebo9 https://github.com/gsilano/CrazyS.git
+$ git clone -b med18_gazebo9 https://github.com/gsilano/mav_comm
+```
+
+ 3. Build your workspace with `python_catkin_tools` (therefore you need `python_catkin_tools`)
+
+```console
+$ rosdep install --from-paths src -i
+$ catkin build
+```
+
+ 4. Add sourcing to your `.bashrc` file
+
+```console
+$ echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc
+$ source ~/.bashrc
+```
+
+Installation Instructions - Ubuntu 16.04 with ROS Kinetic and Gazebo 7
 ---------------------------------------------------------
  1. Install and initialize ROS kinetic desktop full, additional ROS packages, catkin-tools, and wstool:
 
@@ -107,10 +152,7 @@ $ cd ~/catkin_ws/src
 $ catkin_init_workspace  # initialize your catkin workspace
 $ catkin init
 $ git clone https://github.com/gsilano/CrazyS.git
-$ git clone https://github.com/gsilano/mav_comm.git
-$ cd ~/catkin_ws/src/mav_comm
-$ git checkout crazys
-$ rosdep update
+$ git clone -b crazys https://github.com/gsilano/mav_comm.git
 $ cd ~/catkin_ws
 $ rosdep install --from-paths src -i
 $ catkin build
@@ -164,10 +206,7 @@ $ catkin init
 ```console
 $ cd ~/catkin_ws/src
 $ git clone https://github.com/gsilano/CrazyS.git
-$ git clone https://github.com/gsilano/mav_comm.git
-$ cd ~/catkin_ws/src/mav_comm
-$ git checkout crazys
-$ rosdep update
+$ git clone -b crazys https://github.com/gsilano/mav_comm.git
 $ cd ~/catkin_ws
 $ rosdep install --from-paths src -i
 ```
