@@ -2,6 +2,11 @@
 Changelog for package rotors_gazebo
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.0.7 (2019-12-28)
+------------------
+* Disable shadows
+* Contributors: Giuseppe Silano
+
 4.0.6 (2019-01-04)
 ------------------
 
