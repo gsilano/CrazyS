@@ -1,6 +1,6 @@
 <package>
   <name>rotors_description</name>
-  <version>4.0.6</version>
+  <version>4.0.7</version>
   <description>The rotors_description package provides URDF models of the AscTec multicopters.</description>
 
   <maintainer email="giuseppe.silano@unisannio.it">Giuseppe Silano</maintainer>

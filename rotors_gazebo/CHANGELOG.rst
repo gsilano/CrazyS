@@ -2,6 +2,12 @@
 Changelog for package rotors_gazebo
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.0.7 (2019-12-28)
+------------------
+* Disable shadows
+* Fix issue related to "xacro.py is deprecated; please use xacro instead"
+* Contributors: Giuseppe Silano
+
 4.0.6 (2019-01-04)
 ------------------
 

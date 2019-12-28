@@ -2,6 +2,9 @@
 Changelog for package rotors_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.0.7 (2019-12-28)
+------------------
+
 4.0.6 (2019-01-04)
 ------------------
 * Changes in the position controller libray to fix issue in the building process
@@ -38,4 +41,3 @@ Changelog for package rotors_control
 * added Crazyflie 2.0 position controller. The lower level controller is the same of the Crazyflie 2.0 firmware (released 2018.01.01)
 * started from the 2.1.1 (2017-04-27) release version of RotorS
 * Contributors: Giuseppe Silano, Emanuele Aucone, Benjamin Rodriguez, Luigi Iannelli
-

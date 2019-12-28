@@ -22,7 +22,6 @@
 -->
 
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
-  <xacro:property name="pi" value="3.14159265359" />
 
   <!-- Macro to add logging to a bag file. -->
   <xacro:macro name="bag_plugin_macro"
@@ -263,11 +262,11 @@
       </plugin>
     </gazebo>
   </xacro:macro>
-  
+
   <!-- =============================================================== -->
   <!-- ==================== ROS INTERFACE MACRO ====================== -->
   <!-- =============================================================== -->
-  <!-- <xacro:macro 
+  <!-- <xacro:macro
   		name="ros_interface_plugin_macro"
   		params="namespace">
     <gazebo>
@@ -280,10 +279,10 @@
   <!-- =============================================================== -->
   <!-- ================== MAVLINK INTERFACE MACRO ==================== -->
   <!-- =============================================================== -->
-  <xacro:macro name="mavlink_interface_macro" 
-    params="namespace mavlink_sub_topic imu_sub_topic mavlink_pub_topic 
-      motors_speeds_pub_topic gps_update_freq rotor_count reference_magnetic_field_north 
-      reference_magnetic_field_east reference_magnetic_field_down reference_latitude 
+  <xacro:macro name="mavlink_interface_macro"
+    params="namespace mavlink_sub_topic imu_sub_topic mavlink_pub_topic
+      motors_speeds_pub_topic gps_update_freq rotor_count reference_magnetic_field_north
+      reference_magnetic_field_east reference_magnetic_field_down reference_latitude
       reference_longitude reference_altitude">
     <gazebo>
       <plugin name="mavlink_interface" filename="librotors_gazebo_mavlink_interface.so">
@@ -296,7 +295,7 @@
 	<rotorCount>${rotor_count}</rotorCount>
         <!-- [Gauss] Below are the North, East, and Down components of the Earth's magnetic field at the reference location.
              The default reference location is Zurich (lat=+47.3667degN, lon=+8.5500degE, h=+500m, WGS84).
-	     You can obtain the magnetic field strength for your location using the World Magnetic Model: 
+	     You can obtain the magnetic field strength for your location using the World Magnetic Model:
              https://www.ngdc.noaa.gov/geomag/WMM/calculators.shtml -->
         <referenceMagNorth>${reference_magnetic_field_north}</referenceMagNorth>
         <referenceMagEast>${reference_magnetic_field_east}</referenceMagEast>
@@ -311,7 +310,7 @@
   <!-- Macro to add an IMU. -->
   <xacro:macro name="imu_plugin_macro"
     params="namespace imu_suffix parent_link imu_topic
-      mass_imu_sensor measurement_divisor measurement_delay gyroscope_noise_density 
+      mass_imu_sensor measurement_divisor measurement_delay gyroscope_noise_density
       gyroscope_random_walk gyroscope_bias_correlation_time gyroscope_turn_on_bias_sigma
       accelerometer_noise_density accelerometer_random_walk
       accelerometer_bias_correlation_time accelerometer_turn_on_bias_sigma
@@ -488,7 +487,7 @@
   <!-- Macro to add a magnetometer. -->
   <xacro:macro name="magnetometer_plugin_macro"
     params="namespace magnetometer_suffix parent_link magnetometer_topic
-      mass_magnetometer_sensor ref_mag_north ref_mag_east ref_mag_down 
+      mass_magnetometer_sensor ref_mag_north ref_mag_east ref_mag_down
       noise_normal noise_uniform_initial_bias *inertia *origin">
     <!-- Magnetometer link -->
     <link name="${namespace}/magnetometer${magnetometer_suffix}_link">
@@ -512,7 +511,7 @@
         <magnetometerTopic>${magnetometer_topic}</magnetometerTopic> <!-- (string): name of the sensor output topic and prefix of service names (defaults to 'magnetic_field') -->
         <!-- [Tesla] Below is the reference Earth's magnetic field at the reference location in NED frame.
              The default reference location is Zurich (lat=+47.3667degN, lon=+8.5500degE, h=+500m, WGS84).
-	     You can obtain the magnetic field strength for your location using the World Magnetic Model: 
+	     You can obtain the magnetic field strength for your location using the World Magnetic Model:
              http://www.ngdc.noaa.gov/geomag-web/#igrfwmm -->
         <refMagNorth>${ref_mag_north}</refMagNorth>
         <refMagEast>${ref_mag_east}</refMagEast>
@@ -558,7 +557,7 @@
   <xacro:macro name="wind_plugin_macro"
     params="namespace xyz_offset wind_direction wind_force_mean
       wind_gust_direction wind_gust_duration wind_gust_start
-      wind_gust_force_mean wind_speed_mean use_custom_static_wind_field 
+      wind_gust_force_mean wind_speed_mean use_custom_static_wind_field
       custom_wind_field_path">
     <gazebo>
       <plugin filename="librotors_gazebo_wind_plugin.so" name="wind_plugin">
@@ -922,7 +921,7 @@
       gyroscope_noise_density="0.000175"
       gyroscope_random_walk="0.0105"
       gyroscope_bias_correlation_time="1000.0"
-      gyroscope_turn_on_bias_sigma= "0.09" 
+      gyroscope_turn_on_bias_sigma= "0.09"
       accelerometer_noise_density="0.003"
       accelerometer_random_walk="0.18"
       accelerometer_bias_correlation_time="300.0"
