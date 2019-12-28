@@ -5,7 +5,6 @@
  * Copyright 2015 Janosch Nikolic, ASL, ETH Zurich, Switzerland
  * Copyright 2015 Markus Achtelik, ASL, ETH Zurich, Switzerland
  * Copyright 2016 Geoffrey Hunter <gbmhunter@gmail.com>
- * Copyright 2018 Giuseppe Silano, University of Sannio, Benevento, Italy
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +44,6 @@ GazeboImuPlugin::GazeboImuPlugin()
       pubs_and_subs_created_(false) {}
 
 GazeboImuPlugin::~GazeboImuPlugin() {
-  event::Events::DisconnectWorldUpdateBegin(updateConnection_);
 }
 
 void GazeboImuPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf) {
@@ -61,9 +59,6 @@ void GazeboImuPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf) {
 
   // default params
   namespace_.clear();
-  imu_queue_quaternion_.clear();
-  imu_queue_angular_velocity_.clear();
-  imu_queue_linear_acceleration_.clear();
 
   //==============================================//
   //========== READ IN PARAMS FROM SDF ===========//
@@ -94,10 +89,6 @@ void GazeboImuPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf) {
 
   getSdfParam<std::string>(_sdf, "imuTopic", imu_topic_,
                            mav_msgs::default_topics::IMU);
-  getSdfParam<int>(_sdf, "measurementDivisor", imu_parameters_.measurement_divisor_,
-                   imu_parameters_.measurement_divisor_);
-  getSdfParam<int>(_sdf, "measurementDelay", imu_parameters_.measurement_delay_,
-                   imu_parameters_.measurement_delay_);
   getSdfParam<double>(_sdf, "gyroscopeNoiseDensity",
                       imu_parameters_.gyroscope_noise_density,
                       imu_parameters_.gyroscope_noise_density);
@@ -125,7 +116,7 @@ void GazeboImuPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf) {
                       imu_parameters_.accelerometer_turn_on_bias_sigma,
                       imu_parameters_.accelerometer_turn_on_bias_sigma);
 
-  last_time_ = world_->GetSimTime();
+  last_time_ = world_->SimTime();
 
   // Listen to the update event. This event is broadcast every
   // simulation iteration.
@@ -200,8 +191,8 @@ void GazeboImuPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf) {
     }
   }
 
-  gravity_W_ = world_->GetPhysicsEngine()->GetGravity();
-  imu_parameters_.gravity_magnitude = gravity_W_.GetLength();
+  gravity_W_ = world_->Gravity();
+  imu_parameters_.gravity_magnitude = gravity_W_.Length();
 
   standard_normal_distribution_ = std::normal_distribution<double>(0.0, 1.0);
 
@@ -282,107 +273,68 @@ void GazeboImuPlugin::OnUpdate(const common::UpdateInfo& _info) {
     pubs_and_subs_created_ = true;
   }
 
-  common::Time current_time = world_->GetSimTime();
+  common::Time current_time = world_->SimTime();
   double dt = (current_time - last_time_).Double();
   last_time_ = current_time;
   double t = current_time.Double();
 
-  math::Pose T_W_I = link_->GetWorldPose();  // TODO(burrimi): Check tf.
-  math::Quaternion C_W_I = T_W_I.rot;
+  ignition::math::Pose3d T_W_I = link_->WorldPose();  // TODO(burrimi): Check tf.
+  ignition::math::Quaterniond C_W_I = T_W_I.Rot();
 
-#if GAZEBO_MAJOR_VERSION < 5
-  math::Vector3 velocity_current_W = link_->GetWorldLinearVel();
-  // link_->GetRelativeLinearAccel() does not work sometimes with old gazebo
-  // versions.
-  // This issue is solved in gazebo 5.
-  math::Vector3 acceleration = (velocity_current_W - velocity_prev_W_) / dt;
-  math::Vector3 acceleration_I =
-      C_W_I.RotateVectorReverse(acceleration - gravity_W_);
+  ignition::math::Vector3d acceleration_I =
+      link_->RelativeLinearAccel() - C_W_I.RotateVectorReverse(gravity_W_);
 
-  velocity_prev_W_ = velocity_current_W;
-#else
-  math::Vector3 acceleration_I =
-      link_->GetRelativeLinearAccel() - C_W_I.RotateVectorReverse(gravity_W_);
-#endif
+  ignition::math::Vector3d angular_vel_I = link_->RelativeAngularVel();
 
-  math::Vector3 angular_vel_I = link_->GetRelativeAngularVel();
-
-  Eigen::Vector3d linear_acceleration_I(acceleration_I.x, acceleration_I.y,
-                                        acceleration_I.z);
-  Eigen::Vector3d angular_velocity_I(angular_vel_I.x, angular_vel_I.y,
-                                     angular_vel_I.z);
+  Eigen::Vector3d linear_acceleration_I(acceleration_I.X(), acceleration_I.Y(),
+                                        acceleration_I.Z());
+  Eigen::Vector3d angular_velocity_I(angular_vel_I.X(), angular_vel_I.Y(),
+                                     angular_vel_I.Z());
 
   AddNoise(&linear_acceleration_I, &angular_velocity_I, dt);
 
-  if (imu_parameters_.gazebo_sequence_ % imu_parameters_.measurement_divisor_ == 0) {
+  // Fill IMU message.
+  //  imu_message_.header.stamp.sec = current_time.sec;
+  imu_message_.mutable_header()->mutable_stamp()->set_sec(current_time.sec);
 
-	  // Fill IMU message.
-	  //  imu_message_.header.stamp.sec = current_time.sec;
-	  imu_message_.mutable_header()->mutable_stamp()->set_sec(current_time.sec);
+  //  imu_message_.header.stamp.nsec = current_time.nsec;
+  imu_message_.mutable_header()->mutable_stamp()->set_nsec(current_time.nsec);
 
-	  //  imu_message_.header.stamp.nsec = current_time.nsec;
-	  imu_message_.mutable_header()->mutable_stamp()->set_nsec(current_time.nsec);
+  /// \todo(burrimi): Add orientation estimator.
+  // NOTE: rotors_simulator used to set the orientation to "0", since it is
+  // not raw IMU data but rather a calculation (and could confuse users).
+  // However, the orientation is now set as it is used by PX4.
+  /*gazebo::msgs::Quaternion* orientation = new gazebo::msgs::Quaternion();
+  orientation->set_x(0);
+  orientation->set_y(0);
+  orientation->set_z(0);
+  orientation->set_w(1);
+  imu_message_.set_allocated_orientation(orientation);*/
 
-	  /// \todo(burrimi): Add orientation estimator.
-	  // NOTE: rotors_simulator used to set the orientation to "0", since it is
-	  // not raw IMU data but rather a calculation (and could confuse users).
-	  // However, the orientation is now set as it is used by PX4.
-	  /*gazebo::msgs::Quaternion* orientation = new gazebo::msgs::Quaternion();
-	  orientation->set_x(0);
-	  orientation->set_y(0);
-	  orientation->set_z(0);
-	  orientation->set_w(1);
-	  imu_message_.set_allocated_orientation(orientation);*/
+  /// \todo(burrimi): add noise.
+  gazebo::msgs::Quaternion* orientation = new gazebo::msgs::Quaternion();
+  orientation->set_w(C_W_I.W());
+  orientation->set_x(C_W_I.X());
+  orientation->set_y(C_W_I.Y());
+  orientation->set_z(C_W_I.Z());
+  imu_message_.set_allocated_orientation(orientation);
 
-	  /// \todo(burrimi): add noise.
-	  gazebo::msgs::Quaternion* orientation = new gazebo::msgs::Quaternion();
-	  orientation->set_w(C_W_I.w);
-	  orientation->set_x(C_W_I.x);
-	  orientation->set_y(C_W_I.y);
-	  orientation->set_z(C_W_I.z);
+  gazebo::msgs::Vector3d* linear_acceleration = new gazebo::msgs::Vector3d();
+  linear_acceleration->set_x(linear_acceleration_I[0]);
+  linear_acceleration->set_y(linear_acceleration_I[1]);
+  linear_acceleration->set_z(linear_acceleration_I[2]);
+  imu_message_.set_allocated_linear_acceleration(linear_acceleration);
 
-	  gazebo::msgs::Vector3d* linear_acceleration = new gazebo::msgs::Vector3d();
-	  linear_acceleration->set_x(linear_acceleration_I[0]);
-	  linear_acceleration->set_y(linear_acceleration_I[1]);
-	  linear_acceleration->set_z(linear_acceleration_I[2]);
+  gazebo::msgs::Vector3d* angular_velocity = new gazebo::msgs::Vector3d();
+  angular_velocity->set_x(angular_velocity_I[0]);
+  angular_velocity->set_y(angular_velocity_I[1]);
+  angular_velocity->set_z(angular_velocity_I[2]);
+  imu_message_.set_allocated_angular_velocity(angular_velocity);
 
-	  gazebo::msgs::Vector3d* angular_velocity = new gazebo::msgs::Vector3d();
-	  angular_velocity->set_x(angular_velocity_I[0]);
-	  angular_velocity->set_y(angular_velocity_I[1]);
-	  angular_velocity->set_z(angular_velocity_I[2]);
+  // Publish the IMU message
+  imu_pub_->Publish(imu_message_);
 
-	  // std::cout << "Published IMU message.\n";
-
-          imu_queue_quaternion_.push_back(
-          std::make_pair(imu_parameters_.gazebo_sequence_ + imu_parameters_.measurement_delay_, orientation));
-          imu_queue_linear_acceleration_.push_back(
-          std::make_pair(imu_parameters_.gazebo_sequence_ + imu_parameters_.measurement_delay_, linear_acceleration));
-          imu_queue_angular_velocity_.push_back(
-          std::make_pair(imu_parameters_.gazebo_sequence_ + imu_parameters_.measurement_delay_, angular_velocity));
-  }
-
-  // Is it time to publish the front element?
-  if (imu_parameters_.gazebo_sequence_ == imu_queue_quaternion_.front().first) {
-	    // Copy the odometry message that is on the queue
-	    gazebo::msgs::Quaternion* orientation_msg(imu_queue_quaternion_.front().second);
-            gazebo::msgs::Vector3d* linear_acceleration_msg(imu_queue_linear_acceleration_.front().second);
-            gazebo::msgs::Vector3d* angular_velocity_msg(imu_queue_angular_velocity_.front().second);
-
-	    // Now that we have copied the first element from the queue, remove it.
-	    imu_queue_quaternion_.pop_front();
-	    imu_queue_linear_acceleration_.pop_front();
-	    imu_queue_angular_velocity_.pop_front();
-
-	    imu_message_.set_allocated_orientation(orientation_msg);
-	    imu_message_.set_allocated_linear_acceleration(linear_acceleration_msg);
-	    imu_message_.set_allocated_angular_velocity(angular_velocity_msg);
-	  
-	    // Publish the IMU message
-	    imu_pub_->Publish(imu_message_);
-   }
-
-   ++imu_parameters_.gazebo_sequence_;
-
+  // std::cout << "Published IMU message.\n";
 }
 
 void GazeboImuPlugin::CreatePubsAndSubs() {
@@ -407,7 +359,6 @@ void GazeboImuPlugin::CreatePubsAndSubs() {
       gz_std_msgs::ConnectGazeboToRosTopic::IMU);
   connect_gazebo_to_ros_topic_pub->Publish(connect_gazebo_to_ros_topic_msg,
                                            true);
-
 }
 
 GZ_REGISTER_MODEL_PLUGIN(GazeboImuPlugin);

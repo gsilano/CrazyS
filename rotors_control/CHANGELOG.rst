@@ -2,6 +2,9 @@
 Changelog for package rotors_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.0.1 (2019-12-28)
+------------------
+
 4.0.6 (2019-01-04)
 ------------------
 * Changes in the position controller libray to fix issue in the building process
