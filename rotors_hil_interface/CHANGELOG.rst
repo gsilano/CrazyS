@@ -2,6 +2,9 @@
 Changelog for package rotors_hil_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.0.1 (2019-12-28)
+------------------
+
 4.0.6 (2019-01-04)
 ------------------
 
@@ -23,4 +26,3 @@ Changelog for package rotors_hil_interface
 ------------------
 * initial package Ubuntu release
 * Contributors: Giuseppe Silano, Emanuele Aucone, Benjamin Rodriguez, Luigi Iannelli
-

@@ -1,6 +1,6 @@
 <package>
   <name>rotors_gazebo_plugins</name>
-  <version>4.0.6</version>
+  <version>5.0.1</version>
   <description>The rotors_gazebo_plugins package</description>
 
   <maintainer email="giuseppe.silano@unisannio.it">Giuseppe Silano</maintainer>
@@ -21,8 +21,6 @@
   <!-- Dependencies needed to compile this package. -->
   <build_depend>cmake_modules</build_depend>
   <build_depend>cv_bridge</build_depend>
-  <build_depend>gazebo_dev</build_depend>
-  <build_depend>gazebo_ros</build_depend>
   <build_depend>gazebo</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>libgoogle-glog-dev</build_depend>
@@ -30,7 +28,6 @@
   <build_depend>octomap</build_depend>
   <build_depend>octomap_msgs</build_depend>
   <build_depend>octomap_ros</build_depend>
-  <build_depend>octomap</build_depend>
   <build_depend>rosbag</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>rotors_comm</build_depend>
@@ -39,7 +36,6 @@
   <build_depend>tf</build_depend>
   <build_depend>yaml-cpp</build_depend>
   <build_depend>protobuf-dev</build_depend>
-
 
   <!-- Dependencies needed after this package is compiled. -->
   <run_depend>cv_bridge</run_depend>

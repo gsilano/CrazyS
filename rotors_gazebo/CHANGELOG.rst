@@ -2,6 +2,11 @@
 Changelog for package rotors_gazebo
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.0.1 (2019-12-28)
+------------------
+* Fix issue related to "xacro.py is deprecated; please use xacro instead"
+* Contributors: Giuseppe Silano
+
 4.0.6 (2019-01-04)
 ------------------
 

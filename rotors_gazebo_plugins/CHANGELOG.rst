@@ -2,6 +2,11 @@
 Changelog for package rotors_gazebo_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.0.1 (2019-12-28)
+------------------
+* The package has been made compatible with ROS Kinetic and Gazebo 9. The RotorS's feature/gazebo9 branch has been used as a basis.
+* Contributors: Giuseppe Silano
+
 4.0.6 (2019-01-04)
 ------------------
 

@@ -2,6 +2,11 @@
 Changelog for package rotors_description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.0.1 (2019-12-28)
+------------------
+* Deleted pi constant in the component_snippest file.
+* Contributors: Giuseppe Silano
+
 4.0.6 (2019-01-04)
 ------------------
 
@@ -27,4 +32,3 @@ Changelog for package rotors_description
 * added Crazyflie 2.0 urdf: crazyflie2.xacro and crazyflie2_base.xacro. The MPU-9250 IMU plugin is under developing.
 * added Crazyflie 2.0 mesh file
 * Contributors: Giuseppe Silano, Emanuele Aucone, Benjamin Rodriguez, Luigi Iannelli
-
