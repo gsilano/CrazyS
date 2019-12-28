@@ -108,7 +108,8 @@ $ catkin_init_workspace  # initialize your catkin workspace
 $ catkin init
 $ git clone https://github.com/gsilano/CrazyS.git
 $ git clone https://github.com/gsilano/mav_comm.git
-$ cd ~/catkin_ws/src/mav_comm & git checkout crazys
+$ cd ~/catkin_ws/src/mav_comm
+$ git checkout crazys
 $ rosdep update
 $ cd ~/catkin_ws
 $ rosdep install --from-paths src -i
