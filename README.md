@@ -104,6 +104,7 @@ generator python-wstool build-essential
 $ mkdir -p ~/catkin_ws/src
 $ cd ~/catkin_ws/src
 $ catkin_init_workspace  # initialize your catkin workspace
+$ cd ~/catkin_ws/
 $ catkin init
 $ git clone https://github.com/gsilano/CrazyS.git
 $ git clone -b crazys https://github.com/gsilano/mav_comm.git
