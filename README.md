@@ -142,6 +142,7 @@ $ sudo apt-get update
 $ sudo apt-get install gazebo9 gazebo9-* ros-kinetic-gazebo9-*
 $ sudo apt upgrade
 ```
+> **Note** Remove `ros-kinetic-gazebo9-*` from the command `sudo apt-get install gazebo9 gazebo9-* ros-kinetic-gazebo9-*` if fetch problems should appear during the installation.
 
  2. Additional packages are required to build the package.
 
@@ -157,8 +158,10 @@ $ cd ~
 $ mkdir -p ros-kinetic-gazebo9-pkgs
 $ cd ros-kinetic-gazebo9-pkgs
 $ git clone -b feature/ros-kinetic-gazebo9-pkgs https://github.com/gsilano/BebopS.git
+$ cd BebopS
 $ chmod 777 gazebo9.sh
 $ ./gazebo9.sh
+$ sudo rm -rf ros-kinetic-gazebo9-pkgs # delete the folder after the installation
 ```
 
 4. Clean the workspace and compile again the code
