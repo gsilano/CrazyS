@@ -94,8 +94,7 @@ $ sudo rosdep init
 $ rosdep update
 $ echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc
 $ source ~/.bashrc
-$ sudo apt-get install python-rosinstall pythonrosinstall-
-generator python-wstool build-essential
+$ sudo apt-get install python-rosinstall python-rosinstall-generator python-wstool build-essential
  ```
 
  2. If you don't have ROS workspace yet you can do so by
@@ -106,6 +105,7 @@ $ cd ~/catkin_ws/src
 $ catkin_init_workspace  # initialize your catkin workspace
 $ cd ~/catkin_ws/
 $ catkin init
+$ cd ~/catkin_ws/src
 $ git clone https://github.com/gsilano/CrazyS.git
 $ git clone -b crazys https://github.com/gsilano/mav_comm.git
 $ cd ~/catkin_ws
@@ -161,6 +161,7 @@ $ git clone -b feature/ros-kinetic-gazebo9-pkgs https://github.com/gsilano/Bebop
 $ cd BebopS
 $ chmod 777 gazebo9.sh
 $ ./gazebo9.sh
+$ cd ~
 $ sudo rm -rf ros-kinetic-gazebo9-pkgs # delete the folder after the installation
 ```
 
