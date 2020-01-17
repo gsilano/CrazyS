@@ -23,6 +23,7 @@ f you are using this simulator for research purposes especially for your publica
 To facilitate the use of the repository, in addition to the installation instructions, the following are links to two virtual machines created using Oracle VirtualBox.
 
 [Ubuntu 16.04 with ROS Kinetic and Gazebo 7](https://mega.nz/#!oxdwzaIY!C27ekXwbObbiU37BrVQSjeRMP2HCACVgQj1WbvVmXlA)
+
 [Ubuntu 16.04 with ROS Kinetic and Gazebo 9](https://mega.nz/#!550ASCrZ!JYm1mFFlYa9fNh_Cb4Z6p7l9k6Vu5tpRJB3NjMoSF1A)
 
 ```
