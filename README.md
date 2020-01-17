@@ -20,6 +20,18 @@ Below we provide the instructions necessary for getting started. See [CrazyS' wi
 
 f you are using this simulator for research purposes especially for your publication, please take a look at the [Publications page](https://github.com/gsilano/CrazyS/wiki/Publications). The page contains the core papers and all related works (using the platform).
 
+To facilitate the use of the repository, in addition to the installation instructions, the following are links to two virtual machines created using Oracle VirtualBox.
+
+[Ubuntu 16.04 with ROS Kinetic and Gazebo 7](https://mega.nz/#!oxdwzaIY!C27ekXwbObbiU37BrVQSjeRMP2HCACVgQj1WbvVmXlA)
+[Ubuntu 16.04 with ROS Kinetic and Gazebo 9](https://mega.nz/#!550ASCrZ!JYm1mFFlYa9fNh_Cb4Z6p7l9k6Vu5tpRJB3NjMoSF1A)
+
+```
+USER: user
+PASS: password
+Keyboard layout: Italian
+Language: English
+```
+
 Installation Instructions - Ubuntu 18.04 with ROS Melodic and Gazebo 9
 ---------------------------------------------------------
 To use the code developed and stored in this repository some preliminary actions are needed. They are listed below.
