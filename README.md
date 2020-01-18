@@ -94,6 +94,17 @@ $ sudo apt install gazebo9 gazebo9-* ros-melodic-gazebo-*
 $ sudo apt upgrade
 ```
 
+> In the event that the simulation does not start, the problem may be related to Gazebo and missing packages. Therefore, run the following commands. More details are reported in [#25](https://github.com/gsilano/CrazyS/issues/25).
+
+```console
+$ sudo apt-get remove ros-melodic-gazebo* gazebo*
+$ sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list'
+$ wget http://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
+$ sudo apt-get update
+$ sudo apt-get install gazebo9 gazebo9-* ros-melodic-gazebo-*
+$ sudo apt upgrade
+```
+
 Installation Instructions - Ubuntu 16.04 with ROS Kinetic and Gazebo 7
 ---------------------------------------------------------
  1. Install and initialize ROS kinetic desktop full, additional ROS packages, catkin-tools, and wstool:
