@@ -51,7 +51,7 @@ PositionControllerNode::PositionControllerNode() {
 
     // The subscription to the IMU topic is made only if it is available, when simulating the Crazyflie dynamics considering the also IMU values
     if(pnh_node.getParam("enable_state_estimator", enable_state_estimator_)){
-      ROS_INFO("Got param 'enable_state_estimator': %d", enable_state_estimator);
+      ROS_INFO("Got param 'enable_state_estimator': %d", enable_state_estimator_);
     }
 
     if (enable_state_estimator_){
