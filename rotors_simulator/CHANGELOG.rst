@@ -2,6 +2,11 @@
 Changelog for package rotors_simulator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.0.2 (XX-XX-XX)
+------------------
+* Removed rotors_hil_interface as runtime dependencies
+* Contributors: Giuseppe Silano
+
 6.0.1 (2019-12-28)
 ------------------
 
