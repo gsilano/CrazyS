@@ -4,6 +4,10 @@ Changelog for package rotors_gazebo
 
 6.0.2 (20XX-XX-XX)
 ------------------
+* Add spline trajectory generator
+* Add launch files to run the Internal Model and Mellinger's controllers
+* Add resource files for the above controllers and trajectory generator
+* Contributors: Ria Sonecha, Giuseppe Silano
 
 6.0.1 (2019-12-28)
 ------------------
