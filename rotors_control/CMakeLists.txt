@@ -109,7 +109,7 @@ install(TARGETS lee_position_controller position_controller crazyflie_onboard_co
 )
 
 install(TARGETS lee_position_controller_node position_controller_node roll_pitch_yawrate_thrust_controller_node
-  roll_pitch_yawrate_thrust_controller_node
+  roll_pitch_yawrate_thrust_controller_crazyflie_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
