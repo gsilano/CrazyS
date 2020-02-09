@@ -23,7 +23,11 @@ add_executable(rotors_joy_interface src/joy.cpp)
 add_dependencies(rotors_joy_interface ${catkin_EXPORTED_TARGETS})
 target_link_libraries(rotors_joy_interface ${catkin_LIBRARIES})
 
-install(TARGETS rotors_joy_interface
+add_executable(rotors_joy_interface_crazyflie src/joy_crazyflie.cpp)
+add_dependencies(rotors_joy_interface_crazyflie ${catkin_EXPORTED_TARGETS})
+target_link_libraries(rotors_joy_interface_crazyflie ${catkin_LIBRARIES})
+
+install(TARGETS rotors_joy_interface rotors_joy_interface_crazyflie
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
