@@ -4,6 +4,9 @@ Changelog for package rotors_gazebo
 
 5.0.2 (2020-02-09)
 ------------------
+* Add resource file for the Crazyflie's on-board controller when the joystick interface is active
+* Add lunch file for piloting the Crazyflie with the joystick
+Contributors: Giuseppe Silano
 
 5.0.1 (2019-12-28)
 ------------------
