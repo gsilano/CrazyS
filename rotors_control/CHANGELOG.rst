@@ -2,7 +2,7 @@
 Changelog for package rotors_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-4.0.8 (2020-01-18)
+4.0.8 (2020-02-09)
 ------------------
 * Fix typo in the position_controller_node with the enable_state_estimator variable #24
 * Contributors: Giuseppe Silano
