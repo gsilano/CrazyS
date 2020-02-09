@@ -2,6 +2,9 @@
 Changelog for package rotors_gazebo_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.0.2 (2020-02-09)
+------------------
+
 6.0.1 (2019-12-28)
 ------------------
 * The package has been made compatible with ROS Melodic and Gazebo 9. The RotorS's feature/gazebo9 branch has been used as a basis.

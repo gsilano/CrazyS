@@ -2,7 +2,7 @@
 Changelog for package rotors_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-6.0.2 (2020-01-18)
+6.0.2 (2020-02-09)
 ------------------
 * Fix typo in the position_controller_node with the enable_state_estimator variable #24
 * Contributors: Giuseppe Silano
@@ -46,4 +46,3 @@ Changelog for package rotors_control
 * added Crazyflie 2.0 position controller. The lower level controller is the same of the Crazyflie 2.0 firmware (released 2018.01.01)
 * started from the 2.1.1 (2017-04-27) release version of RotorS
 * Contributors: Giuseppe Silano, Emanuele Aucone, Benjamin Rodriguez, Luigi Iannelli
-

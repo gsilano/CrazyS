@@ -2,6 +2,9 @@
 Changelog for package rotors_description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.0.2 (2020-02-09)
+------------------
+
 6.0.1 (2019-12-28)
 ------------------
 * Deleted pi constant in the component_snippest file.
