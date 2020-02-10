@@ -107,6 +107,7 @@ install:
   - if [[ "$ROS_DISTRO" == "melodic" ]]; then git checkout dev/ros-melodic; fi
   - cd ~/catkin_ws/src/mav_comm
   - if [[ "$ROS_DISTRO" == "kinetic" ]]; then git checkout crazys; fi
+  - if [[ "$ROS_DISTRO" == "indigo" ]]; then git checkout crazys; fi
   - if [[ "$ROS_DISTRO" == "melodic" ]]; then git checkout med18_gazebo9; fi
   - cd ~/catkin_ws
   # Please, withe ROS Indigo follow what is reported at the link http://rosindex.github.io/p/mavros/#indigo
