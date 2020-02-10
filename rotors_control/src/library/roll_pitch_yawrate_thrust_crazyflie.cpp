@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-#include "rotors_control/roll_pitch_yawrate_thrust_controller_crazyflie.h"
+#include "rotors_control/roll_pitch_yawrate_thrust_crazyflie.h"
 
 #include "rotors_control/transform_datatypes.h"
-#include "LinearMath/btQuaternion.h"
 
 #include <angles/angles.h>
 
@@ -25,7 +24,7 @@
 #include <ros/console.h>
 #include <nav_msgs/Odometry.h>
 
-#define M_PI       3.14159265358979323846  /* pi */
+#define M_PI                                     3.14159265358979323846  /* pi */
 #define ANGULAR_MOTOR_COEFFICIENT                0.2685 /* ANGULAR_MOTOR_COEFFICIENT */
 #define MOTORS_INTERCEPT                         426.24 /* MOTORS_INTERCEPT [rad/s]*/
 #define SAMPLING_TIME                            0.01 /* SAMPLING TIME [s] */
@@ -35,7 +34,10 @@ namespace rotors_control {
 
 RollPitchYawrateThrustControllerCrazyflie::RollPitchYawrateThrustControllerCrazyflie()
     : initialized_params_(false),
-    controller_active_(false){
+    controller_active_(false),
+    delta_psi_ki_(0),
+    p_command_ki_(0),
+    q_command_ki_(0){
 
       // The control variables are initialized to zero (the inputs come from the joystick)
       roll_pitch_yawrate_thrust_.roll = 0;
@@ -102,9 +104,10 @@ void RollPitchYawrateThrustControllerCrazyflie::CalculateRotorVelocities(Eigen::
 
   ROS_DEBUG("Omega_1: %f Omega_2: %f Omega_3: %f Omega_4: %f", omega_1, omega_2, omega_3, omega_4);
   *rotor_velocities = Eigen::Vector4d(omega_1, omega_2, omega_3, omega_4);
+
 }
 
-void RollPitchYawrateThrustControllerCrazyflie::ControlMixer(double* PWM_1, double* PWM_2, double* PWM_3, double* PWM_4, double* omega) {
+void RollPitchYawrateThrustControllerCrazyflie::ControlMixer(double* PWM_1, double* PWM_2, double* PWM_3, double* PWM_4) {
     assert(PWM_1);
     assert(PWM_2);
     assert(PWM_3);
@@ -115,12 +118,12 @@ void RollPitchYawrateThrustControllerCrazyflie::ControlMixer(double* PWM_1, doub
     double delta_phi, delta_theta, delta_psi;
     RateController(&delta_phi, &delta_theta, &delta_psi);
 
-    *PWM_1 = control_t_.thrust - (delta_theta/2) - (delta_phi/2) - delta_psi;
-    *PWM_2 = control_t_.thrust + (delta_theta/2) - (delta_phi/2) + delta_psi;
-    *PWM_3 = control_t_.thrust + (delta_theta/2) + (delta_phi/2) - delta_psi;
-    *PWM_4 = control_t_.thrust - (delta_theta/2) + (delta_phi/2) + delta_psi;
+    *PWM_1 = roll_pitch_yawrate_thrust_.thrust - (delta_theta/2) - (delta_phi/2) - delta_psi;
+    *PWM_2 = roll_pitch_yawrate_thrust_.thrust + (delta_theta/2) - (delta_phi/2) + delta_psi;
+    *PWM_3 = roll_pitch_yawrate_thrust_.thrust + (delta_theta/2) + (delta_phi/2) - delta_psi;
+    *PWM_4 = roll_pitch_yawrate_thrust_.thrust - (delta_theta/2) + (delta_phi/2) + delta_psi;
 
-    ROS_DEBUG("Omega: %f, Delta_theta: %f, Delta_phi: %f, delta_psi: %f", control_t_.thrust, delta_theta, delta_phi, delta_psi);
+    ROS_DEBUG("Omega: %f, Delta_theta: %f, Delta_phi: %f, delta_psi: %f", roll_pitch_yawrate_thrust_.thrust, delta_theta, delta_phi, delta_psi);
     ROS_DEBUG("PWM1: %f, PWM2: %f, PWM3: %f, PWM4: %f", *PWM_1, *PWM_2, *PWM_3, *PWM_4);
 
 }
@@ -160,18 +163,18 @@ void RollPitchYawrateThrustControllerCrazyflie::RateController(double* delta_phi
 
 }
 
-void RollPitchYawrateThrustControllerCrazyflie::AttitudeController(double* p_command_, double* q_command_) {
+void RollPitchYawrateThrustControllerCrazyflie::AttitudeController(double* p_command, double* q_command) {
     assert(p_command);
     assert(q_command);
 
     double roll, pitch, yaw;
     Quaternion2Euler(&roll, &pitch, &yaw);
 
-    double theta_command_, phi_command_;
-    theta_command_ = roll_pitch_yawrate_thrust_.pitch;
-    phi_command_ = roll_pitch_yawrate_thrust_.roll;
+    double theta_command, phi_command;
+    theta_command = roll_pitch_yawrate_thrust_.pitch;
+    phi_command = roll_pitch_yawrate_thrust_.roll;
 
-    double phi_error_, theta_error_;
+    double phi_error, theta_error;
     phi_error = phi_command - roll;
     theta_error = theta_command - pitch;
 
@@ -184,7 +187,7 @@ void RollPitchYawrateThrustControllerCrazyflie::AttitudeController(double* p_com
     q_command_ki_ = q_command_ki_ + (attitude_gain_ki_.y() * theta_error * SAMPLING_TIME);
     *q_command = q_command_kp + q_command_ki_;
 
-    ROS_DEBUG("Phi_c: %f, Phi_e: %f, Theta_c: %f, Theta_e: %f", phi_command, phi_error, theta_command, theta_error);
+    ROS_INFO("Phi_c: %f, Phi_e: %f, Theta_c: %f, Theta_e: %f", phi_command, phi_error, theta_command, theta_error);
 
 }
 

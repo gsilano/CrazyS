@@ -68,6 +68,8 @@ class RollPitchYawrateThrustControllerCrazyflieParameters {
             void SetRollPitchYawrateThrust(
                 const mav_msgs::EigenRollPitchYawrateThrustCrazyflie& roll_pitch_yawrate_thrust);
 
+            void SetControllerGains();
+
             RollPitchYawrateThrustControllerCrazyflieParameters controller_parameters_;
 
             EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -80,13 +82,17 @@ class RollPitchYawrateThrustControllerCrazyflieParameters {
             Eigen::Vector2f attitude_gain_kp_, attitude_gain_ki_;
             Eigen::Vector3f rate_gain_kp_, rate_gain_ki_;
 
+            double delta_psi_ki_;
+            double p_command_ki_, q_command_ki_;
+
             mav_msgs::EigenRollPitchYawrateThrustCrazyflie roll_pitch_yawrate_thrust_;
             EigenOdometry odometry_;
 
-            void AttitudeController(double* p_command_, double* q_command_);
+            void AttitudeController(double* p_command, double* q_command);
             void RateController(double* delta_phi, double* delta_theta, double* delta_psi);
-            void ControlMixer(double* PWM_1, double* PWM_2, double* PWM_3, double* PWM_4, double* omega);
+            void ControlMixer(double* PWM_1, double* PWM_2, double* PWM_3, double* PWM_4);
             void Quaternion2Euler(double* roll, double* pitch, double* yaw) const;
+            void SetSensorData();
 };
 }
 
