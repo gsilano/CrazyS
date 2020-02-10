@@ -19,8 +19,7 @@
 
 #include <mav_msgs/default_topics.h>
 
-#define
-#define MAX_THRUST 2618 // propeller angular velocities [rad/s]
+#define MAX_THRUST 8162.0 // propeller angular velocities [PWM]
 #define MAX_ROLL 30.0 * M_PI / 180.0 // [rad]
 #define MAX_PITCH 30.0 * M_PI / 180.0 // [rad]
 #define MAX_YAWRATE 200.0 * M_PI / 180.0 // [rad/s]
