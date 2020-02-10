@@ -298,6 +298,12 @@ There are some basic launch files where you can load the different multicopters 
 
 The `world_name` argument looks for a .world file with a corresponding name in `~/catkin_ws/src/CrazyS/rotors_gazebo/worlds`. By default, all launch files, with the exception of those that have the world name explicitly included in the file name, use the empty world described in `basic.world`.
 
+The package also provides a launch file for piloting the Crazyflie using a PC joystick. To run the simulation simple copy and paste the command in the following in a terminal window
+
+```console
+$ roslaunch rotors_gazebo crazyflie2_with_joy.launch
+```
+
 Gazebo Version
 --------------
 
