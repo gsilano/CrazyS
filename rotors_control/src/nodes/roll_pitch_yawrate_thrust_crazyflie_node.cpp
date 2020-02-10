@@ -19,7 +19,7 @@
 #include <ros/ros.h>
 #include <mav_msgs/default_topics.h>
 #include <ros/console.h>
-#include "parameters_ros.h"
+#include "rotors_control/parameters_ros.h"
 
 namespace rotors_control {
 
@@ -83,7 +83,7 @@ void RollPitchYawrateThrustCrazyflieNode::InitializeParams() {
                   roll_pitch_yawrate_thrust_crazyflie_.controller_parameters_.thrust_percentage_,
                   &roll_pitch_yawrate_thrust_crazyflie_.controller_parameters_.thrust_percentage_);
 
-  position_controller_.SetControllerGains();
+  roll_pitch_yawrate_thrust_crazyflie_.SetControllerGains();
 
 }
 

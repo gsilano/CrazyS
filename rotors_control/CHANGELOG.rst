@@ -5,7 +5,7 @@ Changelog for package rotors_control
 4.0.8 (2020-02-09)
 ------------------
 * Fix typo in the position_controller_node with the enable_state_estimator variable #24
-* Add RollPitchYawRateThrust controller library for piloting the Crazyflie using the joystick
+* Add RollPitchYawRateThrust controller library for piloting the Crazyflie using the joystick #30
 * Contributors: Giuseppe Silano
 
 4.0.7 (2019-12-28)
