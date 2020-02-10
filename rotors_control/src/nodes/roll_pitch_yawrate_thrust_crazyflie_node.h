@@ -29,7 +29,7 @@
 #include <ros/callback_queue.h>
 
 #include "rotors_control/common.h"
-#include "rotors_control/roll_pitch_yawrate_thrust_controller_crazyflie.h"
+#include "rotors_control/roll_pitch_yawrate_thrust_crazyflie.h"
 
 namespace rotors_control {
 
