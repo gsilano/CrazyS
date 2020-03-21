@@ -8,11 +8,14 @@
   <arg name="paused" value="true"/>
   <arg name="debug" default="false"/>
   <arg name="gui" default="true"/>
+  <arg name="csvFilesStoring" default="false"/>
+  <arg name="csvFilesStoringTime" default="25.0"/> <!-- seconds -->
+  <arg name="user_account" default="giuseppe"/>
   <!-- The following line causes gzmsg and gzerr messages to be printed to the console
       (even when Gazebo is started through roslaunch) -->
   <arg name="verbose" default="false"/>
-  
-  <!-- The following lines simulate the world in Gazebo. The physic engine properties 
+
+  <!-- The following lines simulate the world in Gazebo. The physic engine properties
         are set up in the file "basic_crazyflie.world" file -->
   <env name="GAZEBO_MODEL_PATH" value="${GAZEBO_MODEL_PATH}:$(find rotors_gazebo)/models"/>
   <env name="GAZEBO_RESOURCE_PATH" value="${GAZEBO_RESOURCE_PATH}:$(find rotors_gazebo)/models"/>

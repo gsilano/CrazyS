@@ -34,7 +34,7 @@
 #include <time.h>
 
 namespace rotors_control {
-    
+
     class PositionController{
         public:
             PositionController();
@@ -47,7 +47,15 @@ namespace rotors_control {
             void SetTrajectoryPoint(const mav_msgs::EigenTrajectoryPoint& command_trajectory);
 	          void SetControllerGains();
             void CallbackAttitudeEstimation();
-            void CallbackHightLevelControl(); 
+            void CallbackHightLevelControl();
+            void SetLaunchFileParameters();
+
+            // Lunch file parameters
+            std::string user_;
+            double dataStoringTime_;
+            bool dataStoring_active_;
+            bool waypointFilter_active_;
+            bool EKF_active_;
 
             PositionControllerParameters controller_parameters_;
             ComplementaryFilterCrazyflie2 complementary_filter_crazyflie_;
@@ -57,8 +65,26 @@ namespace rotors_control {
             EIGEN_MAKE_ALIGNED_OPERATOR_NEW
             bool controller_active_;
             bool state_estimator_active_;
+            bool dataStoring_active_;
 
             control_s control_t_;
+
+            // Lists for data saving
+            std::vector<string> listPropellersVelocity_;
+            std::vector<string> listDroneAttiude_;
+            std::vector<string> listPWM_;
+            std::vector<string> listPWMComponents_;
+            std::vector<string> listCommandAttiude_;
+            std::vector<string> listRCommand_;
+            std::vector<string> listOmegaCommand_;
+            std::vector<string> listXeYe_;
+            std::vector<string> listDeltaCommands_;
+            std::vector<string> listPQCommands_;
+
+            // Callbacks
+            ros::NodeHandle n_;
+            ros::Timer timer_;
+            void CallbackSaveData(const ros::TimerEvent& event);
 
             //Integrator initial conditions
             double theta_command_ki_;
@@ -89,7 +115,7 @@ namespace rotors_control {
             void HoveringController(double* delta_omega);
             void YawPositionController(double* r_command);
             void XYController(double* theta_command, double* phi_command);
-            void ControlMixer(double* PWM_1, double* PWM_2, double* PWM_3, double* PWM_4); 
+            void ControlMixer(double* PWM_1, double* PWM_2, double* PWM_3, double* PWM_4);
             void Quaternion2Euler(double* roll, double* pitch, double* yaw) const;
 
     };
