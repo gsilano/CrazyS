@@ -121,6 +121,7 @@ void PositionController::CallbackSaveData(const ros::TimerEvent& event){
       ofstream fileXeYe;
       ofstream fileDeltaCommands;
       ofstream filePQCommands;
+      ofstream fileDronePosition;
 
       ROS_INFO("CallbackSavaData function is working. Time: %f seconds, %f nanoseconds", odometry_.timeStampSec, odometry_.timeStampNsec);
 
@@ -134,6 +135,7 @@ void PositionController::CallbackSaveData(const ros::TimerEvent& event){
       fileXeYe.open("/home/" + user_ + "/XeYe.csv", std::ios_base::app);
       fileDeltaCommands.open("/home/" + user_ + "/DeltaCommands.csv", std::ios_base::app);
       filePQCommands.open("/home/" + user_ + "/PQCommands.csv", std::ios_base::app);
+      fileDronePosition.open("/home/" + user_ + "/DronePosition.csv", std::ios_base::app);
 
       // Saving control signals in a file
       for (unsigned n=0; n < listPropellersVelocity_.size(); ++n) {
@@ -176,6 +178,10 @@ void PositionController::CallbackSaveData(const ros::TimerEvent& event){
           filePQCommands << listPQCommands_.at( n );
       }
 
+      for (unsigned n=0; n < listDronePosition_.size(); ++n) {
+          fileDronePosition << listDronePosition_.at( n );
+      }
+
       // Closing all opened files
       filePropellersVelocity.close();
       fileDroneAttiude.close();
@@ -187,6 +193,7 @@ void PositionController::CallbackSaveData(const ros::TimerEvent& event){
       fileXeYe.close();
       fileDeltaCommands.close();
       filePQCommands.close();
+      fileDronePosition.close();
 
       // To have a one shot storing
       dataStoring_active_ = false;
@@ -213,6 +220,7 @@ void PositionController::SetLaunchFileParameters(){
     listXeYe_.clear();
     listDeltaCommands_.clear();
     listPQCommands_.clear();
+    listDronePosition_.clear();
 
 	}
 
@@ -351,6 +359,8 @@ void PositionController::ControlMixer(double* PWM_1, double* PWM_2, double* PWM_
       std::stringstream tempPWM;
       tempPWM << *PWM_1 << "," << *PWM_2 << "," << *PWM_3 << "," << *PWM_4 << ","
               << odometry_.timeStampSec << "," << odometry_.timeStampNsec << "\n";
+
+      listPWM_.push_back(tempPWM.str());
 
       // Saving drone attitude in a file
       std::stringstream tempPWMComponents;
@@ -544,6 +554,16 @@ void PositionController::SetOdometryWithoutStateEstimator(const EigenOdometry& o
 
     // Such function is invoked when the ideal odometry sensor is employed
     SetSensorData();
+
+    if(dataStoring_active_){
+
+      // Saving drone attitude in a file
+      std::stringstream tempDronePosition;
+      tempDronePosition << odometry_.position[0] << "," << odometry_.position[1] << "," << odometry_.position[2] << "," 
+              << odometry_.timeStampSec << "," << odometry_.timeStampNsec << "\n";
+
+      listDronePosition_.push_back(tempDronePosition.str());
+    }
 }
 
 // Odometry values are put in the state structure. The structure contains the aircraft state

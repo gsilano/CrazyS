@@ -85,6 +85,7 @@ namespace rotors_control {
             std::vector<string> listXeYe_;
             std::vector<string> listDeltaCommands_;
             std::vector<string> listPQCommands_;
+            std::vector<string> listDronePosition_;
 
             // Callbacks
             ros::NodeHandle n_;
