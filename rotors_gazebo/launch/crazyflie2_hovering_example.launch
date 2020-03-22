@@ -40,6 +40,9 @@
    <!-- The Crazyflie position controller -->
    <node name="position_controller_node" pkg="rotors_control" type="position_controller_node" output="screen">
       <param name="enable_state_estimator" value="$(arg enable_state_estimator)" />
+      <param name="csvFilesStoring" value="$(arg csvFilesStoring)"/>
+      <param name="csvFilesStoringTime" value="$(arg csvFilesStoringTime)"/>
+      <param name="user_account" value="$(arg user_account)"/>
       <rosparam unless="$(arg enable_state_estimator)" command="load" file="$(find rotors_gazebo)/resource/controller_$(arg mav_name).yaml" />
       <rosparam if="$(arg enable_state_estimator)" command="load" file="$(find rotors_gazebo)/resource/controller_$(arg mav_name)_with_stateEstimator.yaml" />
       <rosparam command="load" file="$(find rotors_gazebo)/resource/$(arg mav_name).yaml" />
