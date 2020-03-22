@@ -19,7 +19,7 @@
 
 #include <ros/ros.h>
 #include <mav_msgs/default_topics.h>
-#include <ros/console.h> 
+#include <ros/console.h>
 #include <sensor_msgs/Imu.h>
 #include <time.h>
 #include <chrono>
@@ -170,6 +170,34 @@ void PositionControllerNode::InitializeParams() {
   if (enable_state_estimator_)
     position_controller_.crazyflie_onboard_controller_.SetControllerGains(position_controller_.controller_parameters_);
 
+  //Reading the parameters come from the launch file
+  bool dataStoringActive;
+  double dataStoringTime;
+  std::string user;
+
+  if (pnh.getParam("user_account", user)){
+	  ROS_INFO("Got param 'user_account': %s", user.c_str());
+	  position_controller_.user_ = user;
+  }
+  else
+      ROS_ERROR("Failed to get param 'user'");
+
+  if (pnh.getParam("csvFilesStoring", dataStoringActive)){
+	  ROS_INFO("Got param 'csvFilesStoring': %d", dataStoringActive);
+	  position_controller_.dataStoring_active_ = dataStoringActive;
+  }
+  else
+      ROS_ERROR("Failed to get param 'csvFilesStoring'");
+
+  if (pnh.getParam("csvFilesStoringTime", dataStoringTime)){
+	  ROS_INFO("Got param 'csvFilesStoringTime': %f", dataStoringTime);
+	  position_controller_.dataStoringTime_ = dataStoringTime;
+  }
+  else
+      ROS_ERROR("Failed to get param 'csvFilesStoringTime'");
+
+  position_controller_.SetLaunchFileParameters();
+
 }
 
 void PositionControllerNode::Publish(){
@@ -178,18 +206,18 @@ void PositionControllerNode::Publish(){
 void PositionControllerNode::IMUCallback(const sensor_msgs::ImuConstPtr& imu_msg) {
 
     ROS_INFO_ONCE("PositionController got first imu message.");
-    
+
     // Angular velocities data
     sensors_.gyro.x = imu_msg->angular_velocity.x;
     sensors_.gyro.y = imu_msg->angular_velocity.y;
     sensors_.gyro.z = imu_msg->angular_velocity.z;
-    
+
     // Linear acceleration data
     sensors_.acc.x = imu_msg->linear_acceleration.x;
     sensors_.acc.y = imu_msg->linear_acceleration.y;
     sensors_.acc.z = imu_msg->linear_acceleration.z;
 
-    imu_msg_head_stamp_ = imu_msg->header.stamp;	
+    imu_msg_head_stamp_ = imu_msg->header.stamp;
 
 }
 
@@ -231,7 +259,7 @@ void PositionControllerNode::OdometryCallback(const nav_msgs::OdometryConstPtr& 
       motor_velocity_reference_pub_.publish(actuator_msg);
 
     }
-   
+
 }
 
 // The attitude is estimated only if the waypoint has been published
@@ -271,7 +299,7 @@ void PositionControllerNode::CallbackIMUUpdate(const ros::TimerEvent& event){
 	    for (int i = 0; i < ref_rotor_velocities.size(); i++)
 	       actuator_msg->angular_velocities.push_back(ref_rotor_velocities[i]);
 	    actuator_msg->header.stamp = imu_msg_head_stamp_;
-	    
+
 	    motor_velocity_reference_pub_.publish(actuator_msg);
 
     }
@@ -283,9 +311,9 @@ void PositionControllerNode::CallbackIMUUpdate(const ros::TimerEvent& event){
 
 int main(int argc, char** argv){
     ros::init(argc, argv, "position_controller_node_with_stateEstimator");
-    
+
     ros::NodeHandle nh2;
-    
+
     rotors_control::PositionControllerNode position_controller_node;
 
     ros::spin();
