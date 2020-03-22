@@ -31,7 +31,7 @@ namespace rotors_control{
 CrazyflieOnboardController::CrazyflieOnboardController()
     : counter_(false),
     delta_psi_ki_(0),
-    p_command_ki_(0), 
+    p_command_ki_(0),
     q_command_ki_(0),
     p_command_(0),
     q_command_(0){
@@ -42,22 +42,22 @@ CrazyflieOnboardController::~CrazyflieOnboardController() {}
 
 // Make a copy of control signals and get them private
 void CrazyflieOnboardController::SetControlSignals(const control_s& control_t) {
-    
-    control_t_private_ = control_t;    
+
+    control_t_private_ = control_t;
 }
 
 // Make a copy of the drone state and get it private
 void CrazyflieOnboardController::SetDroneState(const state_s& state_t) {
-    
-    state_t_private_ = state_t;    
+
+    state_t_private_ = state_t;
 }
 
 // Set the controller gains as local global variables
 void CrazyflieOnboardController::SetControllerGains(PositionControllerParameters& controller_parameters_) {
-    
+
       attitude_gain_kp_private_ = Eigen::Vector2f(controller_parameters_.attitude_gain_kp_.x(), controller_parameters_.attitude_gain_kp_.y());
       attitude_gain_ki_private_ = Eigen::Vector2f(controller_parameters_.attitude_gain_ki_.x(), controller_parameters_.attitude_gain_ki_.y());
-  
+
       rate_gain_kp_private_ = Eigen::Vector3f(controller_parameters_.rate_gain_kp_.x(), controller_parameters_.rate_gain_kp_.y(), controller_parameters_.rate_gain_kp_.z());
       rate_gain_ki_private_ = Eigen::Vector3f(controller_parameters_.rate_gain_ki_.x(), controller_parameters_.rate_gain_ki_.y(), controller_parameters_.rate_gain_ki_.z());
 
@@ -66,14 +66,14 @@ void CrazyflieOnboardController::SetControllerGains(PositionControllerParameters
       ROS_DEBUG("Rate gains - Kp_phi: %f, Ki_phi: %f, Kp_theta: %f, Ki_theta: %f, Kp_psi: %f, Ki_psi: %f", rate_gain_kp_private_.x(),
                  rate_gain_ki_private_.x(), rate_gain_kp_private_.y(), rate_gain_ki_private_.y(), rate_gain_kp_private_.z(),
                  rate_gain_ki_private_.z());
-  
+
 }
 
 void CrazyflieOnboardController::RateController(double* delta_phi, double* delta_theta, double* delta_psi) {
     assert(delta_phi);
     assert(delta_theta);
     assert(delta_psi);
-    
+
     double p, q, r;
     p = state_t_private_.angularVelocity.x;
     q = state_t_private_.angularVelocity.y;
@@ -85,9 +85,9 @@ void CrazyflieOnboardController::RateController(double* delta_phi, double* delta
     // Update the p and q commands with a frequency rate of 250Hz. The rate controller works with a frequency rate of 500Hz
     if(counter_){
        AttitudeController(&p_command_, &q_command_);
-       counter_ = false;   
+       counter_ = false;
     }
-    else 
+    else
       counter_ = true;
 
     double p_error, q_error, r_error;
@@ -113,10 +113,10 @@ void CrazyflieOnboardController::RateController(double* delta_phi, double* delta
 // The attitude controller runs with a frequency rate of 250Hz
 void CrazyflieOnboardController::AttitudeController(double* p_command_internal, double* q_command_internal) {
     assert(p_command_internal);
-    assert(q_command_internal); 
+    assert(q_command_internal);
 
     double roll, pitch, yaw;
-    Quaternion2Euler(&roll, &pitch, &yaw);  
+    Quaternion2Euler(&roll, &pitch, &yaw);
 
     double theta_command, phi_command;
     theta_command = control_t_private_.pitch;
@@ -135,11 +135,11 @@ void CrazyflieOnboardController::AttitudeController(double* p_command_internal, 
     q_command_ki_ = q_command_ki_ + (attitude_gain_ki_private_.y() * theta_error * SAMPLING_TIME_ATTITUDE_CONTROLLER);
     *q_command_internal = q_command_kp + q_command_ki_;
 
-    ROS_INFO_ONCE("The p and q values have updated");
+    ROS_INFO_ONCE("The complementary is running");
 
     ROS_DEBUG("Phi_c: %f, Phi_e: %f, Theta_c: %f, Theta_e: %f", phi_command, phi_error, theta_command, theta_error);
     ROS_DEBUG("p_command: %f, q_command: %f", *p_command_internal, *q_command_internal);
-    
+
 }
 
 void CrazyflieOnboardController::Quaternion2Euler(double* roll, double* pitch, double* yaw) const {
@@ -153,11 +153,11 @@ void CrazyflieOnboardController::Quaternion2Euler(double* roll, double* pitch, d
     y = state_t_private_.attitudeQuaternion.y;
     z = state_t_private_.attitudeQuaternion.z;
     w = state_t_private_.attitudeQuaternion.w;
-    
+
     tf::Quaternion q(x, y, z, w);
     tf::Matrix3x3 m(q);
     m.getRPY(*roll, *pitch, *yaw);
-   
+
     ROS_DEBUG("Roll: %f, Pitch: %f, Yaw: %f", *roll, *pitch, *yaw);
 }
 
