@@ -8,11 +8,14 @@
   <arg name="paused" value="true"/>
   <arg name="debug" default="false"/>
   <arg name="gui" default="true"/>
+  <arg name="csvFilesStoring" default="false"/>
+  <arg name="csvFilesStoringTime" default="15.0"/> <!-- seconds -->
+  <arg name="user_account" default="giuseppe"/>
   <!-- The following line causes gzmsg and gzerr messages to be printed to the console
       (even when Gazebo is started through roslaunch) -->
   <arg name="verbose" default="false"/>
-  
-  <!-- The following lines simulate the world in Gazebo. The physic engine properties 
+
+  <!-- The following lines simulate the world in Gazebo. The physic engine properties
         are set up in the file "basic_crazyflie.world" file -->
   <env name="GAZEBO_MODEL_PATH" value="${GAZEBO_MODEL_PATH}:$(find rotors_gazebo)/models"/>
   <env name="GAZEBO_RESOURCE_PATH" value="${GAZEBO_RESOURCE_PATH}:$(find rotors_gazebo)/models"/>
@@ -37,6 +40,9 @@
    <!-- The Crazyflie position controller -->
    <node name="position_controller_node" pkg="rotors_control" type="position_controller_node" output="screen">
       <param name="enable_state_estimator" value="$(arg enable_state_estimator)" />
+      <param name="csvFilesStoring" value="$(arg csvFilesStoring)"/>
+      <param name="csvFilesStoringTime" value="$(arg csvFilesStoringTime)"/>
+      <param name="user_account" value="$(arg user_account)"/>
       <rosparam unless="$(arg enable_state_estimator)" command="load" file="$(find rotors_gazebo)/resource/controller_$(arg mav_name).yaml" />
       <rosparam if="$(arg enable_state_estimator)" command="load" file="$(find rotors_gazebo)/resource/controller_$(arg mav_name)_with_stateEstimator.yaml" />
       <rosparam command="load" file="$(find rotors_gazebo)/resource/$(arg mav_name).yaml" />
@@ -47,9 +53,6 @@
    <node name="quaternion_to_rpy" pkg="rotors_gazebo" type="quaternion_to_rpy" output="screen" >
        <remap from="odometry" to="odometry_sensor1/odometry" />
    </node>
-   <!-- The following lines start the real-time graphics on the Crazyflie's position and orientation -->
-   <node name="position_plot" pkg="rqt_plot" type="rqt_plot" args="--clear-config /$(arg mav_name)/odometry_sensor1/odometry/pose/pose/position" output="screen" />
-   <node name="orientation_plot" pkg="rqt_plot" type="rqt_plot" args="--clear-config /$(arg mav_name)/orientation_rpy" output="screen" />
 
   </group>
 </launch>
