@@ -1,6 +1,6 @@
 <package>
   <name>rotors_simulator</name>
-  <version>4.0.8</version>
+  <version>4.0.9</version>
   <description>CrazyS is an extension ROS package of RotorS aimed to modeling, developing and integrating the Crazyflie nano-quadcopter.</description>
 
   <maintainer email="giuseppe.silano@unisannio.it">Giuseppe Silano</maintainer>

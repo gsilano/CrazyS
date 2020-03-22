@@ -2,7 +2,13 @@
 Changelog for package rotors_gazebo
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-4.0.8 (2019-02-09)
+4.0.9 (2020-03-22)
+------------------
+* Add data saving features in crazyflie2_hovering_example.launch
+* Delete useless plots in crazyflie2_hovering_example.launch
+* Contributors: Giuseppe Silano
+
+4.0.8 (2020-02-09)
 ------------------
 * Add resource file for the Crazyflie's on-board controller when the joystick interface is active
 * Add lunch file for piloting the Crazyflie with the joystick
