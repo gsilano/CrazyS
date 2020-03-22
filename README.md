@@ -298,6 +298,12 @@ There are some basic launch files where you can load the different multicopters 
 
 The `world_name` argument looks for a .world file with a corresponding name in `~/catkin_ws/src/CrazyS/rotors_gazebo/worlds`. By default, all launch files, with the exception of those that have the world name explicitly included in the file name, use the empty world described in `basic.world`.
 
+Using the `csvFilesStoring` variable is possible to enable (true) or disable (false) the data storage. The log files are saved in the home directory (the path can be easily changed modifying the `position_controller.cpp` file). The recording time can be set via the `csvFilesStoringTime` while the user account can be set via the `user_account` variable. Of course, the log features can be used with and without the complementary filter.
+
+```console
+$ roslaunch rotors_gazebo crazyflie2_hovering_example.launch csvFilesStoring:=true
+```
+
 The package also provides a launch file for piloting the Crazyflie using a PC joystick. To run the simulation simple copy and paste the command in the following in a terminal window
 
 ```console
