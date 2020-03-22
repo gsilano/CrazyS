@@ -1,6 +1,6 @@
 <package>
   <name>rotors_gazebo_plugins</name>
-  <version>5.0.2</version>
+  <version>5.0.3</version>
   <description>The rotors_gazebo_plugins package</description>
 
   <maintainer email="giuseppe.silano@unisannio.it">Giuseppe Silano</maintainer>

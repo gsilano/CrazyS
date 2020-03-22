@@ -2,6 +2,9 @@
 Changelog for package rotors_joy_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.0.3 (2020-03-22)
+------------------
+
 5.0.2 (2020-02-09)
 ------------------
 * Add joystick interface for the Crazyflie

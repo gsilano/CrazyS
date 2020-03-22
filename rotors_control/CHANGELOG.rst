@@ -2,6 +2,11 @@
 Changelog for package rotors_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.0.3 (2020-03-22)
+------------------
+* Add data saving feature
+* Contributors: Giuseppe Silano
+
 5.0.2 (2020-02-09)
 ------------------
 * Fix typo in the position_controller_node with the enable_state_estimator variable #24
