@@ -9,7 +9,7 @@
   <arg name="debug" default="false"/>
   <arg name="gui" default="true"/>
   <arg name="csvFilesStoring" default="false"/>
-  <arg name="csvFilesStoringTime" default="25.0"/> <!-- seconds -->
+  <arg name="csvFilesStoringTime" default="15.0"/> <!-- seconds -->
   <arg name="user_account" default="giuseppe"/>
   <!-- The following line causes gzmsg and gzerr messages to be printed to the console
       (even when Gazebo is started through roslaunch) -->
@@ -53,6 +53,6 @@
    <node name="quaternion_to_rpy" pkg="rotors_gazebo" type="quaternion_to_rpy" output="screen" >
        <remap from="odometry" to="odometry_sensor1/odometry" />
    </node>
-   
+
   </group>
 </launch>
