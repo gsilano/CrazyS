@@ -23,6 +23,10 @@
 #include <mav_msgs/conversions.h>
 #include <mav_msgs/eigen_mav_msgs.h>
 
+#include <string>
+
+#include <ros/time.h>
+
 #include "common.h"
 #include "parameters.h"
 #include "stabilizer_types.h"
@@ -32,6 +36,8 @@
 #include "controller_parameters.h"
 
 #include <time.h>
+
+using namespace std;
 
 namespace rotors_control {
 
@@ -65,7 +71,6 @@ namespace rotors_control {
             EIGEN_MAKE_ALIGNED_OPERATOR_NEW
             bool controller_active_;
             bool state_estimator_active_;
-            bool dataStoring_active_;
 
             control_s control_t_;
 

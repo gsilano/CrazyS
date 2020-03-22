@@ -170,7 +170,12 @@ void PositionControllerNode::InitializeParams() {
   if (enable_state_estimator_)
     position_controller_.crazyflie_onboard_controller_.SetControllerGains(position_controller_.controller_parameters_);
 
-    if (pnh.getParam("user_account", user)){
+  //Reading the parameters come from the launch file
+  bool dataStoringActive;
+  double dataStoringTime;
+  std::string user;
+
+  if (pnh.getParam("user_account", user)){
 	  ROS_INFO("Got param 'user_account': %s", user.c_str());
 	  position_controller_.user_ = user;
   }

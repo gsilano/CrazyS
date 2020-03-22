@@ -35,6 +35,8 @@
 #include <sstream>
 #include <iterator>
 
+#include <inttypes.h>
+
 #include <nav_msgs/Odometry.h>
 #include <ros/console.h>
 
@@ -57,6 +59,7 @@ PositionController::PositionController()
     : controller_active_(false),
     state_estimator_active_(false),
     dataStoring_active_(false),
+    dataStoringTime_(0),
     phi_command_ki_(0),
     theta_command_ki_(0),
     p_command_ki_(0),
@@ -121,16 +124,16 @@ void PositionController::CallbackSaveData(const ros::TimerEvent& event){
 
       ROS_INFO("CallbackSavaData function is working. Time: %f seconds, %f nanoseconds", odometry_.timeStampSec, odometry_.timeStampNsec);
 
-      fileControllerGains.open("/home/" + user_ + "/PropellersVelocity.csv", std::ios_base::app);
-      fileControllerGains.open("/home/" + user_ + "/DroneAttiude.csv", std::ios_base::app);
-      fileControllerGains.open("/home/" + user_ + "/PWM.csv", std::ios_base::app);
-      fileControllerGains.open("/home/" + user_ + "/PWMComponents.csv", std::ios_base::app);
-      fileControllerGains.open("/home/" + user_ + "/CommandAttitude.csv", std::ios_base::app);
-      fileControllerGains.open("/home/" + user_ + "/RCommand.csv", std::ios_base::app);
-      fileControllerGains.open("/home/" + user_ + "/OmegaCommand.csv", std::ios_base::app);
-      fileControllerGains.open("/home/" + user_ + "/XeYe.csv", std::ios_base::app);
-      fileControllerGains.open("/home/" + user_ + "/DeltaCommands.csv", std::ios_base::app);
-      fileControllerGains.open("/home/" + user_ + "/PQCommands.csv", std::ios_base::app);
+      filePropellersVelocity.open("/home/" + user_ + "/PropellersVelocity.csv", std::ios_base::app);
+      fileDroneAttiude.open("/home/" + user_ + "/DroneAttiude.csv", std::ios_base::app);
+      filePWM.open("/home/" + user_ + "/PWM.csv", std::ios_base::app);
+      filePWMComponents.open("/home/" + user_ + "/PWMComponents.csv", std::ios_base::app);
+      fileCommandAttiude.open("/home/" + user_ + "/CommandAttitude.csv", std::ios_base::app);
+      fileRCommand.open("/home/" + user_ + "/RCommand.csv", std::ios_base::app);
+      fileOmegaCommand.open("/home/" + user_ + "/OmegaCommand.csv", std::ios_base::app);
+      fileXeYe.open("/home/" + user_ + "/XeYe.csv", std::ios_base::app);
+      fileDeltaCommands.open("/home/" + user_ + "/DeltaCommands.csv", std::ios_base::app);
+      filePQCommands.open("/home/" + user_ + "/PQCommands.csv", std::ios_base::app);
 
       // Saving control signals in a file
       for (unsigned n=0; n < listPropellersVelocity_.size(); ++n) {
@@ -149,7 +152,7 @@ void PositionController::CallbackSaveData(const ros::TimerEvent& event){
           filePWMComponents << listPWMComponents_.at( n );
       }
 
-      for (unsigned n=0; n < listCommandAttiude.size(); ++n) {
+      for (unsigned n=0; n < listCommandAttiude_.size(); ++n) {
           fileCommandAttiude << listCommandAttiude_.at( n );
       }
 
@@ -174,17 +177,16 @@ void PositionController::CallbackSaveData(const ros::TimerEvent& event){
       }
 
       // Closing all opened files
-      fileControllerGains.close();
-      filePropellersVelocity_.close();
-      fileDroneAttiude_.close();
-      filePWM_.close();
-      filePWMComponents_.close();
-      fileCommandAttiude_.close();
-      fileRCommand_.close();
-      fileOmegaCommand_.close();
-      fileXeYe_.close();
-      fileDeltaCommands_.close();
-      filePQCommands_.close();
+      filePropellersVelocity.close();
+      fileDroneAttiude.close();
+      filePWM.close();
+      filePWMComponents.close();
+      fileCommandAttiude.close();
+      fileRCommand.close();
+      fileOmegaCommand.close();
+      fileXeYe.close();
+      fileDeltaCommands.close();
+      filePQCommands.close();
 
       // To have a one shot storing
       dataStoring_active_ = false;
@@ -314,15 +316,6 @@ void PositionController::Quaternion2Euler(double* roll, double* pitch, double* y
     tf::Matrix3x3 m(q);
     m.getRPY(*roll, *pitch, *yaw);
 
-    if(dataStoring_active_){
-      // Saving drone attitude in a file
-      std::stringstream tempDroneAttitude;
-      tempDroneAttitude << *roll << "," << *pitch << "," << *yaw << ","
-              << odometry_.timeStampSec << "," << odometry_.timeStampNsec << "\n";
-
-      listDroneAttiude_.push_back(tempDroneAttitude.str());
-    }
-
     ROS_DEBUG("Roll: %f, Pitch: %f, Yaw: %f", *roll, *pitch, *yaw);
 
 }
@@ -417,6 +410,13 @@ void PositionController::XYController(double* theta_command, double* phi_command
               << odometry_.timeStampSec << "," << odometry_.timeStampNsec << "\n";
 
       listCommandAttiude_.push_back(tempCommandAttiude.str());
+
+      // Saving drone attitude in a file
+      std::stringstream tempXeYe;
+      tempXeYe << xe << "," << ye << "," << odometry_.timeStampSec << "," << odometry_.timeStampNsec << "\n";
+
+      listXeYe_.push_back(tempXeYe.str());
+
     }
 
      ROS_DEBUG("Theta_kp: %f, Theta_ki: %f", theta_command_kp, theta_command_ki_);
@@ -453,7 +453,7 @@ void PositionController::YawPositionController(double* r_command) {
      std::stringstream tempRCommand;
      tempRCommand << *r_command << "," << odometry_.timeStampSec << "," << odometry_.timeStampNsec << "\n";
 
-     listRCommand_.push_back(tempDroneAttitude.str());
+     listRCommand_.push_back(tempRCommand.str());
    }
 
 }
@@ -494,6 +494,14 @@ void PositionController::HoveringController(double* omega) {
        tempOmegaCommand << *omega << "," << odometry_.timeStampSec << "," << odometry_.timeStampNsec << "\n";
 
        listOmegaCommand_.push_back(tempOmegaCommand.str());
+
+       // Saving drone attitude in a file
+       std::stringstream tempDroneAttitude;
+       tempDroneAttitude << roll << "," << pitch << "," << yaw << ","
+               << odometry_.timeStampSec << "," << odometry_.timeStampNsec << "\n";
+
+       listDroneAttiude_.push_back(tempDroneAttitude.str());
+
      }
 
      ROS_DEBUG("Delta_omega_kp: %f, Delta_omega_ki: %f, Delta_omega_kd: %f", delta_omega_kp, delta_omega_ki_, delta_omega_kd);
@@ -523,14 +531,6 @@ void PositionController::ErrorBodyFrame(double* xe, double* ye) const {
     // Tracking error in the body frame
     *xe = x_error_ * cos(yaw) + y_error_ * sin(yaw);
     *ye = y_error_ * cos(yaw) - x_error_ * sin(yaw);
-
-    if(dataStoring_active_){
-      // Saving drone attitude in a file
-      std::stringstream tempXeYe;
-      tempXeYe << *xe << "," << *ye << "," << odometry_.timeStampSec << "," << odometry_.timeStampNsec << "\n";
-
-      listXeYe_.push_back(tempXeYe.str());
-    }
 
 }
 
