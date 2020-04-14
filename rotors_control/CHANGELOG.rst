@@ -4,6 +4,8 @@ Changelog for package rotors_control
 
 6.0.4 (2020-04-14)
 ------------------
+* Improvements in the include folder
+* Add INDI and Mellinger's controllers
 * Contributors: Ria Sonecha, Giuseppe Silano
 
 6.0.3 (2020-03-22)

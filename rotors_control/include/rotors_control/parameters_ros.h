@@ -1,3 +1,21 @@
+/*
+ * Copyright 2020 Ria Sonecha, Massachusetts Institute of Technology in Cambridge, MA, USA
+ * Copyright 2020 Giuseppe Silano, University of Sannio in Benevento, Italy
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
 #ifndef INCLUDE_ROTORS_CONTROL_PARAMETERS_ROS_H_
 #define INCLUDE_ROTORS_CONTROL_PARAMETERS_ROS_H_
 
@@ -72,6 +90,44 @@ inline void GetVehicleParameters(const ros::NodeHandle& nh, VehicleParameters* v
                   &vehicle_parameters->inertia_(2, 2));
   GetRotorConfiguration(nh, &vehicle_parameters->rotor_configuration_);
 }
+
+inline void GetFullVehicleParameters(const ros::NodeHandle& nh, VehicleParameters* vehicle_parameters) {
+  GetRosParameter(nh, "mass",
+                  vehicle_parameters->mass_,
+                  &vehicle_parameters->mass_);
+  GetRosParameter(nh, "inertia/xx",
+                  vehicle_parameters->inertia_(0, 0),
+                  &vehicle_parameters->inertia_(0, 0));
+  GetRosParameter(nh, "inertia/xy",
+                  vehicle_parameters->inertia_(0, 1),
+                  &vehicle_parameters->inertia_(0, 1));
+  vehicle_parameters->inertia_(1, 0) = vehicle_parameters->inertia_(0, 1);
+  GetRosParameter(nh, "inertia/xz",
+                  vehicle_parameters->inertia_(0, 2),
+                  &vehicle_parameters->inertia_(0, 2));
+  vehicle_parameters->inertia_(2, 0) = vehicle_parameters->inertia_(0, 2);
+  GetRosParameter(nh, "inertia/yy",
+                  vehicle_parameters->inertia_(1, 1),
+                  &vehicle_parameters->inertia_(1, 1));
+  GetRosParameter(nh, "inertia/yz",
+                  vehicle_parameters->inertia_(1, 2),
+                  &vehicle_parameters->inertia_(1, 2));
+  vehicle_parameters->inertia_(2, 1) = vehicle_parameters->inertia_(1, 2);
+  GetRosParameter(nh, "inertia/zz",
+                  vehicle_parameters->inertia_(2, 2),
+                  &vehicle_parameters->inertia_(2, 2));
+  GetRosParameter(nh, "bf",
+                 vehicle_parameters->bf_,
+                 &vehicle_parameters->bf_);
+  GetRosParameter(nh, "bm",
+                 vehicle_parameters->bm_,
+                 &vehicle_parameters->bm_);
+  GetRosParameter(nh, "l",
+                 vehicle_parameters->armLength_,
+                 &vehicle_parameters->armLength_);
+}
+
+
 }
 
 #endif /* INCLUDE_ROTORS_CONTROL_PARAMETERS_ROS_H_ */
