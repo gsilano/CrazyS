@@ -88,6 +88,7 @@ before_install:
   - sudo apt-get install ros-$ROS_DISTRO-desktop-full ros-$ROS_DISTRO-joy ros-$ROS_DISTRO-octomap-ros ros-$ROS_DISTRO-mavlink
   - sudo apt-get install python-wstool python-catkin-tools python-rosinstall build-essential
   - sudo apt-get install protobuf-compiler libgoogle-glog-dev python-rosinstall-generator
+  - if [[ "$ROS_DISTRO" == "melodic" ]]; then sudo apt-get install python-rosdep; fi
   # Prepare rosdep to install dependencies.
   - sudo rosdep init
   - rosdep update
