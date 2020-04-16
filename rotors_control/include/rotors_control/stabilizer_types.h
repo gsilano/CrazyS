@@ -1,6 +1,7 @@
 /*
- * Copyright 2018 Giuseppe Silano, University of Sannio in Benevento, Italy
+ * Copyright 2020 Giuseppe Silano, University of Sannio in Benevento, Italy
  * Copyright 2018 Luigi Iannelli, University of Sannio in Benevento, Italy
+ * Copyright 2020 Ria Sonecha, MIT, USA
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -121,7 +122,8 @@ typedef struct state_s {
   point_t position;                // m
   velocity_t angularVelocity;      // rad/s
   acc_t angularAcc;                // m/s^2
-  velocity_t linearVelocity;       //m/s 
+  acc_t linearAcceleration;        // m/s^2
+  velocity_t linearVelocity;       //m/s
 } state_t;
 
 typedef struct control_s {
