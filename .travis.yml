@@ -88,6 +88,7 @@ before_install:
   - sudo apt-get install ros-$ROS_DISTRO-desktop-full ros-$ROS_DISTRO-joy ros-$ROS_DISTRO-octomap-ros ros-$ROS_DISTRO-mavlink
   - sudo apt-get install python-wstool python-catkin-tools python-rosinstall build-essential
   - sudo apt-get install protobuf-compiler libgoogle-glog-dev python-rosinstall-generator
+  - if [[ "$ROS_DISTRO" == "melodic" ]]; then sudo apt-get install python-rosdep; fi
   # Prepare rosdep to install dependencies.
   - sudo rosdep init
   - rosdep update
@@ -107,6 +108,7 @@ install:
   - if [[ "$ROS_DISTRO" == "melodic" ]]; then git checkout dev/ros-melodic; fi
   - cd ~/catkin_ws/src/mav_comm
   - if [[ "$ROS_DISTRO" == "kinetic" ]]; then git checkout crazys; fi
+  - if [[ "$ROS_DISTRO" == "indigo" ]]; then git checkout crazys; fi
   - if [[ "$ROS_DISTRO" == "melodic" ]]; then git checkout med18_gazebo9; fi
   - cd ~/catkin_ws
   # Please, withe ROS Indigo follow what is reported at the link http://rosindex.github.io/p/mavros/#indigo
