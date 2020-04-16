@@ -2,7 +2,15 @@
 Changelog for package rotors_description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-5.0.2 (20XX-XX-XX)
+5.0.4 (2020-04-14)
+------------------
+* Add ideal imu sensor for the Crazyflie
+* Contributors: Ria Sonecha, Giuseppe Silano
+
+5.0.3 (2020-03-22)
+------------------
+
+5.0.2 (2020-02-09)
 ------------------
 
 5.0.1 (2019-12-28)
