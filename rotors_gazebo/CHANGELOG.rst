@@ -2,9 +2,25 @@
 Changelog for package rotors_gazebo
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.0.10 (2020-04-14)
+-------------------
+* Add INDI and Mellinger's controllers to the spaw_mav_crazyflie.launch file
+* Add spline trajectory generator
+* Add launch files to run the Internal Model and Mellinger's controllers
+* Add resource files for the above controllers and trajectory generator
+* Contributors: Ria Sonecha, Giuseppe Silano
 
-4.0.8 (20XX-XX-XX)
+4.0.9 (2020-03-22)
 ------------------
+* Add data saving features in crazyflie2_hovering_example.launch
+* Delete useless plots in crazyflie2_hovering_example.launch
+* Contributors: Giuseppe Silano
+
+4.0.8 (2020-02-09)
+------------------
+* Add resource file for the Crazyflie's on-board controller when the joystick interface is active
+* Add lunch file for piloting the Crazyflie with the joystick
+* Contributors: Giuseppe Silano
 
 4.0.7 (2019-12-28)
 ------------------
