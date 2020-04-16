@@ -2,13 +2,21 @@
 Changelog for package rotors_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.0.10 (2020-04-14)
+-------------------
+* Improvements in the include folder
+* Add INDI and Mellinger's controllers
+* Contributors: Ria Sonecha, Giuseppe Silano
 
-4.0.8 (20XX-XX-XX)
+4.0.9 (2020-03-22)
 ------------------
+* Add data saving features
+* Contributors: Giuseppe Silano
 
-4.0.8 (2020-01-18)
+4.0.8 (2020-02-09)
 ------------------
 * Fix typo in the position_controller_node with the enable_state_estimator variable #24
+* Add RollPitchYawRateThrust controller library for piloting the Crazyflie using the joystick #30
 * Contributors: Giuseppe Silano
 
 4.0.7 (2019-12-28)
