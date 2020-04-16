@@ -1,5 +1,7 @@
 <launch>
   <arg name="mav_name" default="crazyflie2"/>
+  <!-- Pay attention that the world sampling time is line with the one used in the
+       controller algorithm-->
   <arg name="world_name" default="basic"/>
   <arg name="enable_logging" default="false" />
   <arg name="enable_ground_truth" default="true" />
@@ -56,9 +58,6 @@
    <node name="quaternion_to_rpy" pkg="rotors_gazebo" type="quaternion_to_rpy" output="screen" >
        <remap from="odometry" to="odometry_sensor1/odometry" />
    </node>
-   <!-- The following lines start the real-time graphics on the Crazyflie's position and orientation -->
-   <node name="position_plot" pkg="rqt_plot" type="rqt_plot" args="--clear-config /$(arg mav_name)/odometry_sensor1/odometry/pose/pose/position" output="screen" />
-   <node name="orientation_plot" pkg="rqt_plot" type="rqt_plot" args="--clear-config /$(arg mav_name)/orientation_rpy" output="screen" />
 
   </group>
 </launch>

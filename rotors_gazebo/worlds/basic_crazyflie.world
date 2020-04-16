@@ -44,6 +44,7 @@
       <magnetic_field>6.0e-06 2.3e-05 -4.2e-05</magnetic_field>
       <gravity>0 0 -9.8</gravity>
     </physics>
+    <!--}-->
 
     <!-- turn off shadows {-->
     <scene>

@@ -464,7 +464,7 @@ void InternalModelController::AttitudeErrors(double* e_phi, double* e_theta, dou
    *e_theta = pitch_r - state_.attitude.pitch;
    *e_psi = psi_r - state_.attitude.yaw;
 
-   ROS_INFO("Angular Error: [%f %f %f]", state_.attitude.roll, state_.attitude.pitch, state_.attitude.yaw);
+   ROS_DEBUG("Angular Error: [%f %f %f]", state_.attitude.roll, state_.attitude.pitch, state_.attitude.yaw);
    ROS_DEBUG("Angular Error: [%f %f %f]", *e_phi, *e_theta, *e_psi);
 
 }

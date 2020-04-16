@@ -55,6 +55,7 @@ PositionControllerNode::PositionControllerNode() {
 
     InitializeParams();
 
+    // Topics subscribe
     if (!enable_mellinger_controller_ && !enable_internal_model_controller_){
 
       cmd_multi_dof_joint_trajectory_sub_ = nh.subscribe(mav_msgs::default_topics::COMMAND_TRAJECTORY, 1,
@@ -77,6 +78,7 @@ PositionControllerNode::PositionControllerNode() {
 
     }
 
+    // To publish the propellers angular velocities
     motor_velocity_reference_pub_ = nh.advertise<mav_msgs::Actuators>(mav_msgs::default_topics::COMMAND_ACTUATORS, 1);
 
     // The subscription to the IMU topic is made only if it is available, when simulating the Crazyflie dynamics considering the also IMU values
@@ -231,7 +233,171 @@ void PositionControllerNode::InitializeParams() {
      ROS_INFO_ONCE("[Position Controller] Set controller gains and vehicle parameters");
  }
 
-  position_controller_.SetControllerGains();
+ if(enable_mellinger_controller_){
+
+    // Parameters reading from rosparam.
+    GetRosParameter(pnh, "kp_xy/x",
+                    mellinger_controller_.controller_parameters_mellinger_.kpXYPositionController_.x(),
+                    &mellinger_controller_.controller_parameters_mellinger_.kpXYPositionController_.x());
+    GetRosParameter(pnh, "kp_xy/y",
+                    mellinger_controller_.controller_parameters_mellinger_.kpXYPositionController_.y(),
+                    &mellinger_controller_.controller_parameters_mellinger_.kpXYPositionController_.y());
+
+    GetRosParameter(pnh, "kd_xy/x",
+                    mellinger_controller_.controller_parameters_mellinger_.kdXYPositionController_.x(),
+                    &mellinger_controller_.controller_parameters_mellinger_.kdXYPositionController_.x());
+    GetRosParameter(pnh, "kd_xy/y",
+                    mellinger_controller_.controller_parameters_mellinger_.kdXYPositionController_.y(),
+                    &mellinger_controller_.controller_parameters_mellinger_.kdXYPositionController_.y());
+
+    GetRosParameter(pnh, "ki_xy/x",
+                    mellinger_controller_.controller_parameters_mellinger_.kiXYPositionController_.x(),
+                    &mellinger_controller_.controller_parameters_mellinger_.kiXYPositionController_.x());
+    GetRosParameter(pnh, "ki_xy/y",
+                    mellinger_controller_.controller_parameters_mellinger_.kiXYPositionController_.y(),
+                    &mellinger_controller_.controller_parameters_mellinger_.kiXYPositionController_.y());
+
+    GetRosParameter(pnh, "kp_z/z",
+                    mellinger_controller_.controller_parameters_mellinger_.kpZPositionController_,
+                    &mellinger_controller_.controller_parameters_mellinger_.kpZPositionController_);
+    GetRosParameter(pnh, "kd_z/z",
+                    mellinger_controller_.controller_parameters_mellinger_.kdZPositionController_,
+                    &mellinger_controller_.controller_parameters_mellinger_.kdZPositionController_);
+    GetRosParameter(pnh, "ki_z/z",
+                    mellinger_controller_.controller_parameters_mellinger_.kiZPositionController_,
+                    &mellinger_controller_.controller_parameters_mellinger_.kiZPositionController_);
+
+    GetRosParameter(pnh, "kr_xy/x",
+                    mellinger_controller_.controller_parameters_mellinger_.krXYPositionController_.x(),
+                    &mellinger_controller_.controller_parameters_mellinger_.krXYPositionController_.x());
+    GetRosParameter(pnh, "kr_xy/y",
+                    mellinger_controller_.controller_parameters_mellinger_.krXYPositionController_.y(),
+                    &mellinger_controller_.controller_parameters_mellinger_.krXYPositionController_.y());
+
+    GetRosParameter(pnh, "kw_xy/x",
+                    mellinger_controller_.controller_parameters_mellinger_.kwXYPositionController_.x(),
+                    &mellinger_controller_.controller_parameters_mellinger_.kwXYPositionController_.x());
+    GetRosParameter(pnh, "kw_xy/y",
+                    mellinger_controller_.controller_parameters_mellinger_.kwXYPositionController_.y(),
+                    &mellinger_controller_.controller_parameters_mellinger_.kwXYPositionController_.y());
+
+    GetRosParameter(pnh, "ki_m_xy/x",
+                    mellinger_controller_.controller_parameters_mellinger_.ki_mXYPositionController_.x(),
+                    &mellinger_controller_.controller_parameters_mellinger_.ki_mXYPositionController_.x());
+    GetRosParameter(pnh, "ki_m_xy/y",
+                    mellinger_controller_.controller_parameters_mellinger_.ki_mXYPositionController_.y(),
+                    &mellinger_controller_.controller_parameters_mellinger_.ki_mXYPositionController_.y());
+
+    GetRosParameter(pnh, "kr_z/z",
+                    mellinger_controller_.controller_parameters_mellinger_.krZPositionController_,
+                    &mellinger_controller_.controller_parameters_mellinger_.krZPositionController_);
+    GetRosParameter(pnh, "kw_z/z",
+                    mellinger_controller_.controller_parameters_mellinger_.kwZPositionController_,
+                    &mellinger_controller_.controller_parameters_mellinger_.kwZPositionController_);
+    GetRosParameter(pnh, "ki_m_z/z",
+                    mellinger_controller_.controller_parameters_mellinger_.ki_mZPositionController_,
+                    &mellinger_controller_.controller_parameters_mellinger_.ki_mZPositionController_);
+
+    GetRosParameter(pnh, "i_range_m_xy/x",
+                    mellinger_controller_.controller_parameters_mellinger_.iRangeMXY_.x(),
+                    &mellinger_controller_.controller_parameters_mellinger_.iRangeMXY_.x());
+    GetRosParameter(pnh, "i_range_m_xy/y",
+                    mellinger_controller_.controller_parameters_mellinger_.iRangeMXY_.y(),
+                    &mellinger_controller_.controller_parameters_mellinger_.iRangeMXY_.y());
+
+    GetRosParameter(pnh, "i_range_xy/x",
+                    mellinger_controller_.controller_parameters_mellinger_.iRangeXY_.x(),
+                    &mellinger_controller_.controller_parameters_mellinger_.iRangeXY_.x());
+    GetRosParameter(pnh, "i_range_xy/y",
+                    mellinger_controller_.controller_parameters_mellinger_.iRangeXY_.y(),
+                    &mellinger_controller_.controller_parameters_mellinger_.iRangeXY_.y());
+
+    GetRosParameter(pnh, "i_range_m_z/z",
+                    mellinger_controller_.controller_parameters_mellinger_.iRangeMZ_,
+                    &mellinger_controller_.controller_parameters_mellinger_.iRangeMZ_);
+    GetRosParameter(pnh, "i_range_z/z",
+                    mellinger_controller_.controller_parameters_mellinger_.iRangeZ_,
+                    &mellinger_controller_.controller_parameters_mellinger_.iRangeZ_);
+
+    GetRosParameter(pnh, "kd_omega_rp/r",
+                    mellinger_controller_.controller_parameters_mellinger_.kdOmegaRP_.x(),
+                    &mellinger_controller_.controller_parameters_mellinger_.kdOmegaRP_.x());
+    GetRosParameter(pnh, "kd_omega_rp/p",
+                    mellinger_controller_.controller_parameters_mellinger_.kdOmegaRP_.y(),
+                    &mellinger_controller_.controller_parameters_mellinger_.kdOmegaRP_.y());
+
+    mellinger_controller_.SetControllerGains();
+
+    //Analogously, the object "vehicle_parameters_" is created
+   GetFullVehicleParameters(pnh, &mellinger_controller_.vehicle_parameters_);
+   mellinger_controller_.SetVehicleParameters();
+   ROS_INFO_ONCE("[Mellinger Controller] Set controller gains and vehicle parameters");
+
+  }
+
+  if (enable_internal_model_controller_){
+    // Read parameters from rosparam. The parameters are read by the YAML file and they
+    // are used to create the "controller_parameters_" object
+    GetRosParameter(pnh, "beta_xy/beta_x",
+                    internal_model_controller_.controller_parameters_im_.beta_xy_.x(),
+                    &internal_model_controller_.controller_parameters_im_.beta_xy_.x());
+    GetRosParameter(pnh, "beta_xy/beta_y",
+                    internal_model_controller_.controller_parameters_im_.beta_xy_.y(),
+                    &internal_model_controller_.controller_parameters_im_.beta_xy_.y());
+    GetRosParameter(pnh, "beta_z/beta_z",
+                    internal_model_controller_.controller_parameters_im_.beta_z_,
+                    &internal_model_controller_.controller_parameters_im_.beta_z_);
+
+    GetRosParameter(pnh, "beta_phi/beta_phi",
+                    internal_model_controller_.controller_parameters_im_.beta_phi_,
+                    &internal_model_controller_.controller_parameters_im_.beta_phi_);
+    GetRosParameter(pnh, "beta_theta/beta_theta",
+                    internal_model_controller_.controller_parameters_im_.beta_theta_,
+                    &internal_model_controller_.controller_parameters_im_.beta_theta_);
+    GetRosParameter(pnh, "beta_psi/beta_psi",
+                    internal_model_controller_.controller_parameters_im_.beta_psi_,
+                    &internal_model_controller_.controller_parameters_im_.beta_psi_);
+
+    GetRosParameter(pnh, "mu_xy/mu_x",
+                    internal_model_controller_.controller_parameters_im_.mu_xy_.x(),
+                    &internal_model_controller_.controller_parameters_im_.mu_xy_.x());
+    GetRosParameter(pnh, "mu_xy/mu_y",
+                    internal_model_controller_.controller_parameters_im_.mu_xy_.y(),
+                    &internal_model_controller_.controller_parameters_im_.mu_xy_.y());
+    GetRosParameter(pnh, "mu_z/mu_z",
+                    internal_model_controller_.controller_parameters_im_.mu_z_,
+                    &internal_model_controller_.controller_parameters_im_.mu_z_);
+
+    GetRosParameter(pnh, "mu_phi/mu_phi",
+                    internal_model_controller_.controller_parameters_im_.mu_phi_,
+                    &internal_model_controller_.controller_parameters_im_.mu_phi_);
+    GetRosParameter(pnh, "mu_theta/mu_theta",
+                    internal_model_controller_.controller_parameters_im_.mu_theta_,
+                    &internal_model_controller_.controller_parameters_im_.mu_theta_);
+    GetRosParameter(pnh, "mu_psi/mu_psi",
+                    internal_model_controller_.controller_parameters_im_.mu_psi_,
+                    &internal_model_controller_.controller_parameters_im_.mu_psi_);
+
+    GetRosParameter(pnh, "U_xyz/U_x",
+                    internal_model_controller_.controller_parameters_im_.U_q_.x(),
+                    &internal_model_controller_.controller_parameters_im_.U_q_.x());
+    GetRosParameter(pnh, "U_xyz/U_y",
+                    internal_model_controller_.controller_parameters_im_.U_q_.y(),
+                    &internal_model_controller_.controller_parameters_im_.U_q_.y());
+    GetRosParameter(pnh, "U_xyz/U_z",
+                    internal_model_controller_.controller_parameters_im_.U_q_.z(),
+                    &internal_model_controller_.controller_parameters_im_.U_q_.z());
+
+    internal_model_controller_.SetControllerGains();
+
+    //Analogously, the object "vehicle_parameters_" is created
+    GetFullVehicleParameters(pnh, &internal_model_controller_.vehicle_parameters_);
+    internal_model_controller_.SetVehicleParameters();
+    ROS_INFO_ONCE("[Internal Model Controller] Set controller gains and vehicle parameters");
+
+
+  }
+
   if (enable_state_estimator_)
     position_controller_.crazyflie_onboard_controller_.SetControllerGains(position_controller_.controller_parameters_);
 
