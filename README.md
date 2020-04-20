@@ -203,6 +203,13 @@ $ catkin build
 $ source ~/.bashrc
 ```
 
+> **Note** In case the `ERROR[rotors_gazebo_plugins]` error is displayed, run the following commands
+>```console
+>$ sudo apt-get install ros-kinetic-gazebo9-plugins
+>$ sudo apt-get install apt ros-kinetic-gazebo9-ros
+>$ sudo apt-get install apt ros-kinetic-gazebo9-dev
+>```
+
 This guide can be used a basis for fixing what has been discussed in [ethz-asl/rotors_simulator#506](https://github.com/ethz-asl/rotors_simulator/pull/506).
 
 Installation Instructions - Ubuntu 14.04 with ROS Indigo
