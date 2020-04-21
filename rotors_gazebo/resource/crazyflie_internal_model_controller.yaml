@@ -1,12 +1,12 @@
 # Internal model controller parameters
-beta_xy: {beta_x: -26.4259, beta_y: -26.3627}
-beta_z: {beta_z: -27.2277}
-beta_phi: {beta_phi: -0.8757}
-beta_theta: {beta_theta: -0.8757}
-beta_psi: {beta_psi: -14.3431}
+beta_xy: {beta_x: -29.4694, beta_y: -29.5421}
+beta_z: {beta_z: -29.9832}
+beta_phi: {beta_phi: -16.2182}
+beta_theta: {beta_theta: -17.9029}
+beta_psi: {beta_psi: -16.0629}
 mu_xy: {mu_x: 1, mu_y: 1}
 mu_z: {mu_z: 1}
-mu_phi: {mu_phi: 0.0544}
-mu_theta: {mu_theta: 0.0543}
-mu_psi: {mu_psi: 0.44}
-U_xyz: {U_x: 1.1810, U_y: 1.1810, U_z: 4.6697}
+mu_phi: {mu_phi: 0.09}
+mu_theta: {mu_theta: 0.26}
+mu_psi: {mu_psi: 0.04}
+U_xyz: {U_x: 0.8299, U_y: 0.8299, U_z: 3.6697}
