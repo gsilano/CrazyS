@@ -424,7 +424,7 @@ int main(int argc, char** argv) {
   }
 
   // Trajectory message
-  mav_msgs::DroneState trajectory_msg;
+  mav_msgs::DroneState trajectory_msg, trajectory_msg_pre;
   trajectory_msg.header.stamp = ros::Time::now();
   mav_msgs::EigenDroneState eigen_reference;
   rotors_gazebo::HoveringExampleSpline hovering_example_spline_generator;
@@ -440,24 +440,39 @@ int main(int argc, char** argv) {
     hovering_example_spline_generator.InitializeParams();
   }
 
+  // Reading the final time. This is stop condition for the spline generator
+  double end_generation_time;
+  hovering_example_spline_generator.GetRosParameterHovering(nh_private, "time_final/time", end_generation_time, &end_generation_time);
+
   double initial_time, final_time;
   initial_time = START_SIMULATION_TIME;
 
-  // Publish the trajectory values until the final values is reached 
+  // Publish the trajectory values until the final values is reached
   while(true){
     final_time = ros::Time::now().toSec();
     hovering_example_spline_generator.TrajectoryCallback(&eigen_reference, &final_time, &initial_time);
 
     mav_msgs::eigenDroneFromStateToMsg(&eigen_reference, trajectory_msg);
-    trajectory_pub.publish(trajectory_msg);
+
+    // new message
+    if(eigen_reference.position_W[0] <= check_position_final[0] &&
+      eigen_reference.position_W[1] <= check_position_final[1] &&
+      eigen_reference.position_W[2] <= check_position_final[2]){
+      trajectory_pub.publish(trajectory_msg);
+      trajectory_msg_pre = trajectory_msg;
+    }
 
     ROS_DEBUG("Publishing waypoint from msg: [%f, %f, %f].", trajectory_msg.position.x, trajectory_msg.position.y, trajectory_msg.position.z);
     ROS_DEBUG("Publishing waypoint: [%f, %f, %f].", eigen_reference.position_W[0], eigen_reference.position_W[1], eigen_reference.position_W[2]);
 
     ros::Duration(SAMPLING_TIME).sleep();
 
-    if(eigen_reference.position_W[0] >= check_position_final[0] && eigen_reference.position_W[1] >= check_position_final[1] && eigen_reference.position_W[2] >= check_position_final[2])
-      break;
+    // Hold the message until the simulation ends
+    if(eigen_reference.position_W[0] > check_position_final[0] &&
+      eigen_reference.position_W[1] > check_position_final[1] &&
+      eigen_reference.position_W[2] > check_position_final[2])
+      trajectory_pub.publish(trajectory_msg_pre);
+
   }
 
   ros::spin();
