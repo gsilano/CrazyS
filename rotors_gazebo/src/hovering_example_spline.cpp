@@ -86,12 +86,12 @@ namespace rotors_gazebo {
 
     // Desired Position
     double x_component, y_component, z_component;
-    x_component = a0_.x() * pow(time_spline, 5) + a1_.x() * pow(time_spline, 4) + a2_.x() * pow(time_spline, 3) + a3_.x() * pow(time_spline, 2)
-                  + a4_.x() * time_spline + a5_.x();
-    x_component = a0_.y() * pow(time_spline, 5) + a1_.y() * pow(time_spline, 4) + a2_.y() * pow(time_spline, 3) + a3_.y() * pow(time_spline, 2)
-                  + a4_.y() * time_spline + a5_.y();
-    z_component = a0_.z() * pow(time_spline, 5) + a1_.z() * pow(time_spline, 4) + a2_.z() * pow(time_spline, 3) + a3_.z() * pow(time_spline, 2)
-                  + a4_.z() * time_spline + a5_.z();
+    x_component = a5_.x() * pow(time_spline, 5) + a4_.x() * pow(time_spline, 4) + a3_.x() * pow(time_spline, 3) + a2_.x() * pow(time_spline, 2)
+                  + a1_.x() * time_spline + a0_.x();
+    x_component = a5_.y() * pow(time_spline, 5) + a4_.y() * pow(time_spline, 4) + a3_.y() * pow(time_spline, 3) + a2_.y() * pow(time_spline, 2)
+                  + a1_.y() * time_spline + a0_.y();
+    z_component = a5_.z() * pow(time_spline, 5) + a4_.z() * pow(time_spline, 4) + a3_.z() * pow(time_spline, 3) + a2_.z() * pow(time_spline, 2)
+                  + a1_.z() * time_spline + a0_.z();
 
     ROS_DEBUG("Publishing position spline parameters along x-axis: [%f, %f, %f, %f, %f, %f].", a0_.x(), a1_.x(), a2_.x(), a3_.x(), a4_.x(), a5_.x());
     ROS_DEBUG("Publishing position spline parameters along y-axis: [%f, %f, %f, %f, %f, %f].", a0_.y(), a1_.y(), a2_.y(), a3_.y(), a4_.y(), a5_.y());
@@ -102,41 +102,41 @@ namespace rotors_gazebo {
     ROS_DEBUG("Publishing position waypoint: [%f, %f, %f].", x_component, y_component, z_component);
 
     // Desired Linear Velocity
-    x_component = b0_.x() * pow(time_spline, 4) + b1_.x() * pow(time_spline, 3) + b2_.x() * pow(time_spline, 2) + b3_.x() * time_spline
-                  + b4_.x();
-    y_component = b0_.y() * pow(time_spline, 4) + b1_.y() * pow(time_spline, 3) + b2_.y() * pow(time_spline, 2) + b3_.y() * time_spline
-                  + b4_.y();
-    z_component = b0_.z() * pow(time_spline, 4) + b1_.z() * pow(time_spline, 3) + b2_.z() * pow(time_spline, 2) + b3_.z() * time_spline
-                  + b4_.z();
+    x_component = b4_.x() * pow(time_spline, 4) + b3_.x() * pow(time_spline, 3) + b2_.x() * pow(time_spline, 2) + b1_.x() * time_spline
+                  + b0_.x();
+    y_component = b4_.y() * pow(time_spline, 4) + b3_.y() * pow(time_spline, 3) + b2_.y() * pow(time_spline, 2) + b1_.y() * time_spline
+                  + b0_.y();
+    z_component = b4_.z() * pow(time_spline, 4) + b3_.z() * pow(time_spline, 3) + b2_.z() * pow(time_spline, 2) + b1_.z() * time_spline
+                  + b0_.z();
 
-    ROS_DEBUG("Publishing velocity spline parameters along x-axis: [%f, %f, %f, %f, %f, %f].", b0_.x(), b1_.x(), b2_.x(), b3_.x(), b4_.x());
-    ROS_DEBUG("Publishing velocity spline parameters along y-axis: [%f, %f, %f, %f, %f, %f].", b0_.y(), b1_.y(), b2_.y(), b3_.y(), b4_.y());
-    ROS_DEBUG("Publishing velocity spline parameters along z-axis: [%f, %f, %f, %f, %f, %f].", b0_.z(), b1_.z(), b2_.z(), b3_.z(), b4_.z());
+    ROS_DEBUG("Publishing velocity spline parameters along x-axis: [%f, %f, %f, %f, %f].", b0_.x(), b1_.x(), b2_.x(), b3_.x(), b4_.x());
+    ROS_DEBUG("Publishing velocity spline parameters along y-axis: [%f, %f, %f, %f, %f].", b0_.y(), b1_.y(), b2_.y(), b3_.y(), b4_.y());
+    ROS_DEBUG("Publishing velocity spline parameters along z-axis: [%f, %f, %f, %f, %f].", b0_.z(), b1_.z(), b2_.z(), b3_.z(), b4_.z());
 
     odometry->velocity = Eigen::Vector3f(x_component, y_component, z_component);
 
     ROS_DEBUG("Publishing velocity waypoint: [%f, %f, %f].", x_component, y_component, z_component);
 
     // Desired Acceleration
-    x_component = c0_.x() * pow(time_spline, 3) + c1_.x() * pow(time_spline, 2) + c2_.x() * time_spline + c3_.x();
-    y_component = c0_.y() * pow(time_spline, 3) + c1_.y() * pow(time_spline, 2) + c2_.y() * time_spline + c3_.y();
-    z_component = c0_.z() * pow(time_spline, 3) + c1_.z() * pow(time_spline, 2) + c2_.z() * time_spline + c3_.z();
+    x_component = c3_.x() * pow(time_spline, 3) + c2_.x() * pow(time_spline, 2) + c1_.x() * time_spline + c0_.x();
+    y_component = c3_.y() * pow(time_spline, 3) + c2_.y() * pow(time_spline, 2) + c1_.y() * time_spline + c0_.y();
+    z_component = c3_.z() * pow(time_spline, 3) + c2_.z() * pow(time_spline, 2) + c1_.z() * time_spline + c0_.z();
 
-    ROS_DEBUG("Publishing acceleration spline parameters along y-axis: [%f, %f, %f, %f, %f, %f].", c0_.y(), c1_.y(), c2_.y(), c3_.y());
-    ROS_DEBUG("Publishing acceleration spline parameters along x-axis: [%f, %f, %f, %f, %f, %f].", c0_.x(), c1_.x(), c2_.x(), c3_.x());
-    ROS_DEBUG("Publishing acceleration spline parameters along z-axis: [%f, %f, %f, %f, %f, %f].", c0_.z(), c1_.z(), c2_.z(), c3_.z());
+    ROS_DEBUG("Publishing acceleration spline parameters along y-axis: [%f, %f, %f, %f].", c0_.y(), c1_.y(), c2_.y(), c3_.y());
+    ROS_DEBUG("Publishing acceleration spline parameters along x-axis: [%f, %f, %f, %f].", c0_.x(), c1_.x(), c2_.x(), c3_.x());
+    ROS_DEBUG("Publishing acceleration spline parameters along z-axis: [%f, %f, %f, %f].", c0_.z(), c1_.z(), c2_.z(), c3_.z());
 
     odometry->acceleration = Eigen::Vector3f(x_component, y_component, z_component);
 
     ROS_DEBUG("Publishing acceleration waypoint: [%f, %f, %f].", x_component, y_component, z_component);
 
     // Desired Attitute
-    rollDesRad_ = g0_.x() * pow(time_spline, 5) + g1_.x() * pow(time_spline, 4) + g2_.x() * pow(time_spline, 3) + g3_.x() * pow(time_spline, 2)
-                + g4_.x() * time_spline + g5_.x();
-    pitchDesRad_ = g0_.y() * pow(time_spline, 5) + g1_.y() * pow(time_spline, 4) + g2_.y() * pow(time_spline, 3) + g3_.y() * pow(time_spline, 2)
-                + g4_.y() * time_spline + g5_.y();
-    yawDesRad_ = g0_.z() * pow(time_spline, 5) + g1_.z() * pow(time_spline, 4) + g2_.z() * pow(time_spline, 3) + g3_.z() * pow(time_spline, 2)
-                + g4_.z() * time_spline + g5_.z();
+    rollDesRad_ = g5_.x() * pow(time_spline, 5) + g4_.x() * pow(time_spline, 4) + g3_.x() * pow(time_spline, 3) + g2_.x() * pow(time_spline, 2)
+                + g1_.x() * time_spline + g0_.x();
+    pitchDesRad_ = g5_.y() * pow(time_spline, 5) + g4_.y() * pow(time_spline, 4) + g3_.y() * pow(time_spline, 3) + g2_.y() * pow(time_spline, 2)
+                + g1_.y() * time_spline + g0_.y();
+    yawDesRad_ = g5_.z() * pow(time_spline, 5) + g4_.z() * pow(time_spline, 4) + g3_.z() * pow(time_spline, 3) + g2_.z() * pow(time_spline, 2)
+                + g1_.z() * time_spline + g0_.z();
 
     ROS_DEBUG("Publishing orientation spline parameters along x-axis: [%f, %f, %f, %f, %f, %f].", g0_.x(), g1_.x(), g2_.x(), g3_.x(), g4_.x(), g5_.x());
     ROS_DEBUG("Publishing orientation spline parameters along y-axis: [%f, %f, %f, %f, %f, %f].", g0_.y(), g1_.y(), g2_.y(), g3_.y(), g4_.y(), g5_.y());
@@ -151,13 +151,13 @@ namespace rotors_gazebo {
 
     // Desired Angular Velocity
     double roll_component, pitch_component, yaw_component;
-    roll_component = h0_.x() * pow(time_spline, 4) + h1_.x() * pow(time_spline, 3) + h2_.x() * pow(time_spline, 2) + h3_.x() * time_splin + h4_.x();
-    pitch_component = h0_.y() * pow(time_spline, 4) + h1_.y() * pow(time_spline, 3) + h2_.y() * pow(time_spline, 2) + h3_.y() * time_spline + h4_.y();
-    yaw_component = h0_.z() * pow(time_spline, 4) + h1_.z() * pow(time_spline, 3) + h2_.z() * pow(time_spline, 2) + h3_.z() * time_spline + h4_.z();
+    roll_component = h4_.x() * pow(time_spline, 4) + h3_.x() * pow(time_spline, 3) + h2_.x() * pow(time_spline, 2) + h1_.x() * time_spline + h0_.x();
+    pitch_component = h4_.y() * pow(time_spline, 4) + h3_.y() * pow(time_spline, 3) + h2_.y() * pow(time_spline, 2) + h1_.y() * time_spline + h0_.y();
+    yaw_component = h4_.z() * pow(time_spline, 4) + h3_.z() * pow(time_spline, 3) + h2_.z() * pow(time_spline, 2) + h1_.z() * time_spline + h0_.z();
 
     ROS_DEBUG("Publishing angular velocity waypoint: [%f, %f, %f].", roll_component, pitch_component, yaw_component);
 
-    double first_B, second_B, third_B;
+    double roll_component_B, pitch_component_B, yaw_component_B;
     roll_component_B = roll_component - sin(pitchDesRad_) * yaw_component;
     pitch_component_B = cos(rollDesRad_) * pitch_component + sin(rollDesRad_) * cos(pitchDesRad_) * yaw_component;
     yaw_component_B = -sin(rollDesRad_) * pitch_component + cos(rollDesRad_) * cos(pitchDesRad_) * yaw_component;
@@ -235,15 +235,15 @@ namespace rotors_gazebo {
 
       // The coefficients are used for having the velocity reference trajectory. The polynomial is computed
       // derivating the a one. In other words,
-      // a0 * x^5 + a1 * x^4 + a2 * x^3 + a3 * x^2 + a4 * x + a5
-      // 5 * a0 * x^4 + 4 * a1 * x^3 + 3 * a2 * x^2 + 2 * a3 * x + a4
-      // b0 = 5 * a0 -- b1 = 4 * a1 -- b2 = 3 * a2 - b3 = 2 * a3 - b4 = a4
+      // a5 * x^5 + a4 * x^4 + a3 * x^3 + a2 * x^2 + a1 * x + a0
+      // 5 * a5 * x^4 + 4 * a4 * x^3 + 3 * a3 * x^2 + 2 * a2 * x + a1
+      // b4 = 5 * a5 -- b3 = 4 * a4 -- b2 = 3 * a3 - b1 = 2 * a2 - b0 = a1
       // and so on
-      b0_ = 5 * a0_;
-      b1_ = 4 * a1_;
-      b2_ = 3 * a2_;
-      b3_ = 2 * a3_;
-      b4_ = a4_;
+      b4_ = 5 * a5_;
+      b3_ = 4 * a4_;
+      b2_ = 3 * a3_;
+      b1_ = 2 * a2_;
+      b0_ = a1_;
 
       ROS_DEBUG("Content of the b0 coefficient: [%f, %f, %f].", b0_[0], b0_[1], b0_[2]);
       ROS_DEBUG("Content of the b1 coefficient: [%f, %f, %f].", b1_[0], b1_[1], b1_[2]);
@@ -253,12 +253,12 @@ namespace rotors_gazebo {
 
       // The coefficients are used for having the acceleration reference trajectory. The polynomial is computed
       // derivating the b one. In other words,
-      // 4 * b0 * x^4 + 3 * b1 * x^3 + 2 * b2 * x^2 + b3 * x
-      // c0 = 4 * b0 -- c1 = 3 * b1 -- c2 = 2 * b2 - c3 = b3
-      c0_ = 4 * b0_;
-      c1_ = 3 * b1_;
-      c2_ = 2 * b2_;
-      c3_ = b3_;
+      // 4 * b4 * x^4 + 3 * b3 * x^3 + 2 * b2 * x^2 + b1 * x
+      // c3 = 4 * b4 -- c2 = 3 * b3 -- c1 = 2 * b2 - c0 = b1
+      c3_ = 4 * b4_;
+      c2_ = 3 * b3_;
+      c1_ = 2 * b2_;
+      c0_ = b1_;
 
       ROS_DEBUG("Content of the c0 coefficient: [%f, %f, %f].", c0_[0], c0_[1], c0_[2]);
       ROS_DEBUG("Content of the c1 coefficient: [%f, %f, %f].", c1_[0], c1_[1], c1_[2]);
@@ -330,15 +330,15 @@ namespace rotors_gazebo {
 
       // The coefficients are used for having the angular velocity reference trajectory. The polynomial is computed
       // derivating the g one. In other words,
-      // g0 * x^5 + g1 * x^4 + g2 * x^3 + g3 * x^2 + g4 * x + g5
-      // 5 * g0 * x^4 + 4 * g1 * x^3 + 3 * g2 * x^2 + 2 * g3 * x + g4
-      // h0 = 5 * g0 -- h1 = 4 * g1 -- h2 = 3 * g2 - h3 = 2 * g3 - h4 = g4
+      // g5 * x^5 + g4 * x^4 + g3 * x^3 + g2 * x^2 + g1 * x + g0
+      // 5 * g5 * x^4 + 4 * g4 * x^3 + 3 * g3 * x^2 + 2 * g2 * x + g1
+      // h4 = 5 * g5 -- h3 = 4 * g4 -- h2 = 3 * g3 - h1 = 2 * g2 - h0 = g1
       // and so on
-      h0_ = 5 * g0_;
-      h1_ = 4 * g1_;
-      h2_ = 3 * g2_;
-      h3_ = 2 * g3_;
-      h4_ = g4_;
+      h4_ = 5 * g5_;
+      h3_ = 4 * g4_;
+      h2_ = 3 * g3_;
+      h1_ = 2 * g2_;
+      h0_ = g1_;
 
       ROS_DEBUG("Content of the h0 coefficient: [%f, %f, %f].", h0_[0], h0_[1], h0_[2]);
       ROS_DEBUG("Content of the h1 coefficient: [%f, %f, %f].", h1_[0], h1_[1], h1_[2]);
@@ -348,12 +348,12 @@ namespace rotors_gazebo {
 
       // The coefficients are used for having the angular acceleration reference trajectory. The polynomial is computed
       // derivating the b one. In other words,
-      // 4 * h0 * x^4 + 3 * h1 * x^3 + 2 * h2 * x^2 + h3 * x
-      // i0 = 4 * h0 -- i1 = 3 * h1 -- i2 = 2 * h2 - i3 = h3
-      i0_ = 4 * h0_;
-      i1_ = 3 * h1_;
-      i2_ = 2 * h2_;
-      i3_ = h3_;
+      // 4 * h4 * x^4 + 3 * h3 * x^3 + 2 * h2 * x^2 + h1 * x
+      // i3 = 4 * h4 -- i2 = 3 * h3 -- i1 = 2 * h2 - i0 = h1
+      i3_ = 4 * h4_;
+      i2_ = 3 * h3_;
+      i1_ = 2 * h2_;
+      i0_ = h1_;
 
       ROS_DEBUG("Content of the i0 coefficient: [%f, %f, %f].", i0_[0], i0_[1], i0_[2]);
       ROS_DEBUG("Content of the i1 coefficient: [%f, %f, %f].", i1_[0], i1_[1], i1_[2]);
