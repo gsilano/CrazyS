@@ -1,0 +1,6 @@
+# Crazyflie vehicle parameters
+mass: 0.027
+inertia: {xx: 1.657171e-05, xy: 0.0, xz: 0.0, yy: 1.657171e-05, yz: 0.0, zz: 2.9261652e-05}
+bf: 1.28192e-08
+bm: 5.964552e-03
+l: 0.046

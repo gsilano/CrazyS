@@ -15,11 +15,10 @@
  * limitations under the License.
  */
 
+#ifndef INCLUDE_ROTORS_GAZEBO_PARAMETERS_H_
+#define INCLUDE_ROTORS_GAZEBO_PARAMETERS_H_
 
-#ifndef INCLUDE_ROTORS_CONTROL_PARAMETERS_H_
-#define INCLUDE_ROTORS_CONTROL_PARAMETERS_H_
-
-namespace rotors_control {
+namespace rotors_gazebo {
 // Default values for the Asctec Firefly rotor configuration.
 static constexpr double kDefaultRotor0Angle = 0.52359877559;
 static constexpr double kDefaultRotor1Angle = 1.57079632679;
@@ -87,26 +86,7 @@ struct RotorConfiguration {
   std::vector<Rotor> rotors;
 };
 
-class VehicleParameters {
- public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  VehicleParameters()
-      : mass_(kDefaultMass),
-        gravity_(kDefaultGravity),
-        inertia_(Eigen::Vector3d(kDefaultInertiaXx, kDefaultInertiaYy,
-                                 kDefaultInertiaZz).asDiagonal()),
-        bf_(kDefaultRotorForceConstant),
-        bm_(kDefaultRotorMomentConstant),
-        armLength_(kDefaultArmLength) {}
-  double mass_;
-  const double gravity_;
-  Eigen::Matrix3d inertia_;
-  double bm_;
-  double bf_;
-  double armLength_;
-  RotorConfiguration rotor_configuration_;
-};
 
 }
 
-#endif /* INCLUDE_ROTORS_CONTROL_PARAMETERS_H_ */
+#endif /* INCLUDE_ROTORS_GAZEBO_PARAMETERS_H_ */

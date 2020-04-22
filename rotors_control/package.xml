@@ -1,6 +1,6 @@
 <package>
   <name>rotors_control</name>
-  <version>6.0.3</version>
+  <version>6.0.4</version>
   <description>RotorS control package</description>
 
   <maintainer email="giuseppe.silano@unisannio.it">Giuseppe Silano</maintainer>
@@ -9,6 +9,7 @@
   <author>Giuseppe Silano</author>
   <author>Emanuele Aucone</author>
   <author>Benjamin Rodriguez</author>
+  <author>Ria Sonecha</author>
   <author>Luigi Iannelli</author>
 
   <license>ASL 2.0</license>

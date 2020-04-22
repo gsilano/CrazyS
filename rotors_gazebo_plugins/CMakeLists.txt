@@ -204,10 +204,10 @@ PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${msgs})
 add_library(mav_msgs SHARED ${PROTO_SRCS})
 target_link_libraries(mav_msgs ${PROTOBUF_LIBRARY} gazebo_msgs)
 
-# This causes mav_msgs to be linked with every created library in this file from this 
-# point forward. 
-# NOTE: This is deprecated, should be using target_link_libraries instead 
-link_libraries(mav_msgs) 
+# This causes mav_msgs to be linked with every created library in this file from this
+# point forward.
+# NOTE: This is deprecated, should be using target_link_libraries instead
+link_libraries(mav_msgs)
 
 # To solve the issue #506 on RotorS repository
 # https://github.com/ethz-asl/rotors_simulator/pull/506
@@ -367,7 +367,7 @@ if (BUILD_MAVLINK_INTERFACE_PLUGIN)
   endif()
 
   if(NOT MAVLINK_HEADERS_FOUND)
-    message(FATAL_ERROR "MAVLink headers were not found. They are required for building MavlinkInterfacePlugin.")
+    message(WARNING "MAVLink headers were not found. They are required for building MavlinkInterfacePlugin.")
   endif()
 
   # Note that this library includes TWO .cpp files.
@@ -520,4 +520,3 @@ if (BUILD_MAVLINK_INTERFACE)
 endif()
 
 #message(FATAL_ERROR "Reached EOF.")
-

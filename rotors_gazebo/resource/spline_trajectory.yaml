@@ -1,0 +1,14 @@
+# Spline trajectory parameters
+time_final: {time: 10} # Remember that the trajectory generation starts after 3 seconds. This is the time_initial value
+position_initial: {x: 0, y: 0, z: 0}
+position_final: {x: 0, y: 0, z: 1}
+velocity_initial: {x: 0, y: 0, z: 0}
+velocity_final: {x: 0, y: 0, z: 0}
+acceleration_initial: {x: 0, y: 0, z: 0}
+acceleration_final: {x: 0, y: 0, z: 0}
+orientation_initial: {roll: 0, pitch: 0, yaw: 0}
+orientation_final: {roll: 0, pitch: 0, yaw: 0}
+angularRate_initial: {roll: 0, pitch: 0, yaw: 0}
+angularRate_final: {roll: 0, pitch: 0, yaw: 0}
+angularDoubleRate_initial: {roll: 0, pitch: 0, yaw: 0}
+angularDoubleRate_final: {roll: 0, pitch: 0, yaw: 0}
