@@ -84,55 +84,63 @@ namespace rotors_gazebo {
 
     ROS_DEBUG("Publishing time_spline: %f", time_spline);
 
-    // Desidered Position
-    double first, second, third;
-    first = a0_.x() * pow(time_spline, 5) + a1_.x() * pow(time_spline, 4) + a2_.x() * pow(time_spline, 3) + a3_.x() * pow(time_spline, 2)
-                + a4_.x() * time_spline + a5_.x();
-    second = a0_.y() * pow(time_spline, 5) + a1_.y() * pow(time_spline, 4) + a2_.y() * pow(time_spline, 3) + a3_.y() * pow(time_spline, 2)
-                + a4_.y() * time_spline + a5_.y();
-    third = a0_.z() * pow(time_spline, 5) + a1_.z() * pow(time_spline, 4) + a2_.z() * pow(time_spline, 3) + a3_.z() * pow(time_spline, 2)
-                + a4_.z() * time_spline + a5_.z();
+    // Desired Position
+    double x_component, y_component, z_component;
+    x_component = a0_.x() * pow(time_spline, 5) + a1_.x() * pow(time_spline, 4) + a2_.x() * pow(time_spline, 3) + a3_.x() * pow(time_spline, 2)
+                  + a4_.x() * time_spline + a5_.x();
+    x_component = a0_.y() * pow(time_spline, 5) + a1_.y() * pow(time_spline, 4) + a2_.y() * pow(time_spline, 3) + a3_.y() * pow(time_spline, 2)
+                  + a4_.y() * time_spline + a5_.y();
+    z_component = a0_.z() * pow(time_spline, 5) + a1_.z() * pow(time_spline, 4) + a2_.z() * pow(time_spline, 3) + a3_.z() * pow(time_spline, 2)
+                  + a4_.z() * time_spline + a5_.z();
 
-    ROS_DEBUG("Publishing position spline parameters along x: [%f, %f, %f, %f, %f, %f].", a0_.x(), a1_.x(), a2_.x(), a3_.x(), a4_.x(), a5_.x());
-    ROS_DEBUG("Publishing position spline parameters along y: [%f, %f, %f, %f, %f, %f].", a0_.y(), a1_.y(), a2_.y(), a3_.y(), a4_.y(), a5_.y());
-    ROS_DEBUG("Publishing position spline parameters along z: [%f, %f, %f, %f, %f, %f].", a0_.z(), a1_.z(), a2_.z(), a3_.z(), a4_.z(), a5_.z());
+    ROS_DEBUG("Publishing position spline parameters along x-axis: [%f, %f, %f, %f, %f, %f].", a0_.x(), a1_.x(), a2_.x(), a3_.x(), a4_.x(), a5_.x());
+    ROS_DEBUG("Publishing position spline parameters along y-axis: [%f, %f, %f, %f, %f, %f].", a0_.y(), a1_.y(), a2_.y(), a3_.y(), a4_.y(), a5_.y());
+    ROS_DEBUG("Publishing position spline parameters along z-axis: [%f, %f, %f, %f, %f, %f].", a0_.z(), a1_.z(), a2_.z(), a3_.z(), a4_.z(), a5_.z());
 
-    odometry->position_W = Eigen::Vector3f(first, second, third);
+    odometry->position_W = Eigen::Vector3f(x_component, y_component, z_component);
 
-    ROS_DEBUG("Publishing position waypoint: [%f, %f, %f].", first, second, third);
+    ROS_DEBUG("Publishing position waypoint: [%f, %f, %f].", x_component, y_component, z_component);
 
-    // Desidered Linear Velocity
-    first = b0_.x() * pow(time_spline, 5) + b1_.x() * pow(time_spline, 4) + b2_.x() * pow(time_spline, 3) + b3_.x() * pow(time_spline, 2)
-                + b4_.x() * time_spline;
-    second = b0_.y() * pow(time_spline, 5) + b1_.y() * pow(time_spline, 4) + b2_.y() * pow(time_spline, 3) + b3_.y() * pow(time_spline, 2)
-                + b4_.y() * time_spline;
-    third = b0_.z() * pow(time_spline, 5) + b1_.z() * pow(time_spline, 4) + b2_.z() * pow(time_spline, 3) + b3_.z() * pow(time_spline, 2)
-                + b4_.z() * time_spline;
+    // Desired Linear Velocity
+    x_component = b0_.x() * pow(time_spline, 4) + b1_.x() * pow(time_spline, 3) + b2_.x() * pow(time_spline, 2) + b3_.x() * time_spline
+                  + b4_.x();
+    y_component = b0_.y() * pow(time_spline, 4) + b1_.y() * pow(time_spline, 3) + b2_.y() * pow(time_spline, 2) + b3_.y() * time_spline
+                  + b4_.y();
+    z_component = b0_.z() * pow(time_spline, 4) + b1_.z() * pow(time_spline, 3) + b2_.z() * pow(time_spline, 2) + b3_.z() * time_spline
+                  + b4_.z();
 
-    ROS_DEBUG("Publishing velocity spline parameters along x: [%f, %f, %f, %f, %f, %f].", b0_.x(), b1_.x(), b2_.x(), b3_.x(), b4_.x(), b5_.x());
-    ROS_DEBUG("Publishing velocity spline parameters along y: [%f, %f, %f, %f, %f, %f].", b0_.y(), b1_.y(), b2_.y(), b3_.y(), b4_.y(), b5_.y());
-    ROS_DEBUG("Publishing velocity spline parameters along z: [%f, %f, %f, %f, %f, %f].", b0_.z(), b1_.z(), b2_.z(), b3_.z(), b4_.z(), b5_.z());
+    ROS_DEBUG("Publishing velocity spline parameters along x-axis: [%f, %f, %f, %f, %f, %f].", b0_.x(), b1_.x(), b2_.x(), b3_.x(), b4_.x());
+    ROS_DEBUG("Publishing velocity spline parameters along y-axis: [%f, %f, %f, %f, %f, %f].", b0_.y(), b1_.y(), b2_.y(), b3_.y(), b4_.y());
+    ROS_DEBUG("Publishing velocity spline parameters along z-axis: [%f, %f, %f, %f, %f, %f].", b0_.z(), b1_.z(), b2_.z(), b3_.z(), b4_.z());
 
-    odometry->velocity = Eigen::Vector3f(first, second, third);
+    odometry->velocity = Eigen::Vector3f(x_component, y_component, z_component);
 
-    ROS_DEBUG("Publishing velocity waypoint: [%f, %f, %f].", first, second, third);
+    ROS_DEBUG("Publishing velocity waypoint: [%f, %f, %f].", x_component, y_component, z_component);
 
-    // Desidered Acceleration
-    first = c0_.x() * pow(time_spline, 5) + c1_.x() * pow(time_spline, 4) + c2_.x() * pow(time_spline, 3) + c3_.x() * pow(time_spline, 2);
-    second = c0_.y() * pow(time_spline, 5) + c1_.y() * pow(time_spline, 4) + c2_.y() * pow(time_spline, 3) + c3_.y() * pow(time_spline, 2);
-    third = c0_.z() * pow(time_spline, 5) + c1_.z() * pow(time_spline, 4) + c2_.z() * pow(time_spline, 3) + c3_.z() * pow(time_spline, 2);
+    // Desired Acceleration
+    x_component = c0_.x() * pow(time_spline, 3) + c1_.x() * pow(time_spline, 2) + c2_.x() * time_spline + c3_.x();
+    y_component = c0_.y() * pow(time_spline, 3) + c1_.y() * pow(time_spline, 2) + c2_.y() * time_spline + c3_.y();
+    z_component = c0_.z() * pow(time_spline, 3) + c1_.z() * pow(time_spline, 2) + c2_.z() * time_spline + c3_.z();
 
-    odometry->acceleration = Eigen::Vector3f(first, second, third);
+    ROS_DEBUG("Publishing acceleration spline parameters along y-axis: [%f, %f, %f, %f, %f, %f].", c0_.y(), c1_.y(), c2_.y(), c3_.y());
+    ROS_DEBUG("Publishing acceleration spline parameters along x-axis: [%f, %f, %f, %f, %f, %f].", c0_.x(), c1_.x(), c2_.x(), c3_.x());
+    ROS_DEBUG("Publishing acceleration spline parameters along z-axis: [%f, %f, %f, %f, %f, %f].", c0_.z(), c1_.z(), c2_.z(), c3_.z());
 
-    ROS_DEBUG("Publishing acceleration waypoint: [%f, %f, %f].", first, second, third);
+    odometry->acceleration = Eigen::Vector3f(x_component, y_component, z_component);
 
-    // Desidred Attitute
+    ROS_DEBUG("Publishing acceleration waypoint: [%f, %f, %f].", x_component, y_component, z_component);
+
+    // Desired Attitute
     rollDesRad_ = g0_.x() * pow(time_spline, 5) + g1_.x() * pow(time_spline, 4) + g2_.x() * pow(time_spline, 3) + g3_.x() * pow(time_spline, 2)
                 + g4_.x() * time_spline + g5_.x();
     pitchDesRad_ = g0_.y() * pow(time_spline, 5) + g1_.y() * pow(time_spline, 4) + g2_.y() * pow(time_spline, 3) + g3_.y() * pow(time_spline, 2)
                 + g4_.y() * time_spline + g5_.y();
     yawDesRad_ = g0_.z() * pow(time_spline, 5) + g1_.z() * pow(time_spline, 4) + g2_.z() * pow(time_spline, 3) + g3_.z() * pow(time_spline, 2)
                 + g4_.z() * time_spline + g5_.z();
+
+    ROS_DEBUG("Publishing orientation spline parameters along x-axis: [%f, %f, %f, %f, %f, %f].", g0_.x(), g1_.x(), g2_.x(), g3_.x(), g4_.x(), g5_.x());
+    ROS_DEBUG("Publishing orientation spline parameters along y-axis: [%f, %f, %f, %f, %f, %f].", g0_.y(), g1_.y(), g2_.y(), g3_.y(), g4_.y(), g5_.y());
+    ROS_DEBUG("Publishing orientation spline parameters along z-axis: [%f, %f, %f, %f, %f, %f].", g0_.z(), g1_.z(), g2_.z(), g3_.z(), g4_.z(), g5_.z());
 
     // Converts radians in quaternions
     double x, y, z, w;
@@ -141,22 +149,22 @@ namespace rotors_gazebo {
 
     ROS_DEBUG("Publishing attitude waypoint: [%f, %f, %f].", rollDesRad_, pitchDesRad_, yawDesRad_);
 
-    // Desidered Angular Velocity
-    first = h0_.x() * pow(time_spline, 5) + h1_.x() * pow(time_spline, 4) + h2_.x() * pow(time_spline, 3) + h3_.x() * pow(time_spline, 2)
-                + h4_.x() * time_spline + h5_.x();
-    second = h0_.y() * pow(time_spline, 5) + h1_.y() * pow(time_spline, 4) + h2_.y() * pow(time_spline, 3) + h3_.y() * pow(time_spline, 2)
-                + h4_.y() * time_spline + h5_.y();
-    third = h0_.z() * pow(time_spline, 5) + h1_.z() * pow(time_spline, 4) + h2_.z() * pow(time_spline, 3) + h3_.z() * pow(time_spline, 2)
-                + h4_.z() * time_spline + h5_.z();
+    // Desired Angular Velocity
+    double roll_component, pitch_component, yaw_component;
+    roll_component = h0_.x() * pow(time_spline, 4) + h1_.x() * pow(time_spline, 3) + h2_.x() * pow(time_spline, 2) + h3_.x() * time_splin + h4_.x();
+    pitch_component = h0_.y() * pow(time_spline, 4) + h1_.y() * pow(time_spline, 3) + h2_.y() * pow(time_spline, 2) + h3_.y() * time_spline + h4_.y();
+    yaw_component = h0_.z() * pow(time_spline, 4) + h1_.z() * pow(time_spline, 3) + h2_.z() * pow(time_spline, 2) + h3_.z() * time_spline + h4_.z();
+
+    ROS_DEBUG("Publishing angular velocity waypoint: [%f, %f, %f].", roll_component, pitch_component, yaw_component);
 
     double first_B, second_B, third_B;
-    first_B = first - sin(pitchDesRad_)*third;
-    second_B = cos(rollDesRad_)*second + sin(rollDesRad_)*cos(pitchDesRad_)*third;
-    third_B = -sin(rollDesRad_)*second + cos(rollDesRad_)*cos(pitchDesRad_)*third;
+    roll_component_B = roll_component - sin(pitchDesRad_) * yaw_component;
+    pitch_component_B = cos(rollDesRad_) * pitch_component + sin(rollDesRad_) * cos(pitchDesRad_) * yaw_component;
+    yaw_component_B = -sin(rollDesRad_) * pitch_component + cos(rollDesRad_) * cos(pitchDesRad_) * yaw_component;
 
-    odometry->angular_velocity_B = Eigen::Vector3f(first_B, second_B, third_B);
+    odometry->angular_velocity_B = Eigen::Vector3f(roll_component_B, pitch_component_B, yaw_component_B);
 
-    ROS_DEBUG("Publishing angular velocity waypoint: [%f, %f, %f].", first, second, third);
+    ROS_DEBUG("Publishing angular velocity waypoint in the body frame: [%f, %f, %f].", roll_component_B, pitch_component_B, yaw_component_B);
 
   }
 
