@@ -13,7 +13,7 @@ find_package(gazebo REQUIRED)
 
 if(${gazebo_VERSION_MAJOR} GREATER 2)
     message(STATUS "Building iris.sdf.")
-    
+
     set(enable_mavlink_interface "true")
     set(enable_ground_truth "false")
     set(enable_logging "false")
@@ -21,7 +21,7 @@ if(${gazebo_VERSION_MAJOR} GREATER 2)
     set(enable_wind "false")
     set(rotors_description_dir "${CMAKE_CURRENT_SOURCE_DIR}/models/rotors_description")
     set(scripts_dir "${CMAKE_CURRENT_SOURCE_DIR}/scripts")
-    
+
     # Creates shell commands to generate .sdf file
     add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/models/iris/iris.sdf
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -42,7 +42,7 @@ if(NO_ROS)
   message(STATUS "NO_ROS = true, not building waypoint publisher or hovering example, returning now.")
   return()
 endif()
- 
+
 
 find_package(catkin REQUIRED COMPONENTS
   gazebo_msgs
@@ -82,6 +82,10 @@ add_executable(hovering_example src/hovering_example.cpp)
 target_link_libraries(hovering_example ${catkin_LIBRARIES})
 add_dependencies(hovering_example ${catkin_EXPORTED_TARGETS})
 
+add_executable(hovering_example_spline src/hovering_example_spline.cpp)
+target_link_libraries(hovering_example_spline ${catkin_LIBRARIES})
+add_dependencies(hovering_example_spline ${catkin_EXPORTED_TARGETS})
+
 add_executable(quaternion_to_rpy src/quaternion_to_rpy.cpp)
 target_link_libraries(quaternion_to_rpy ${catkin_LIBRARIES})
 add_dependencies(quaternion_to_rpy ${catkin_EXPORTED_TARGETS})
@@ -91,14 +95,14 @@ foreach(dir launch models resource worlds)
       DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/${dir})
 endforeach(dir)
 
-install(TARGETS waypoint_publisher waypoint_publisher_file hovering_example quaternion_to_rpy
+install(TARGETS waypoint_publisher waypoint_publisher_file hovering_example quaternion_to_rpy hovering_example_spline
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 install(
-  DIRECTORY include/${PROJECT_NAME}/
+  DIRECTORY include/${PROJECT_NAME}/ 
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
   FILES_MATCHING PATTERN "*.h"
 )

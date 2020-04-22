@@ -1,6 +1,6 @@
 <package>
   <name>rotors_gazebo</name>
-  <version>5.0.3</version>
+  <version>5.0.4</version>
   <description>The rotors_gazebo package</description>
 
   <maintainer email="giuseppe.silano@unisannio.it">Giuseppe Silano</maintainer>
@@ -10,6 +10,7 @@
   <author>Emanuele Aucone</author>
   <author>Benjamin Rodriguez</author>
   <author>Luigi Iannelli</author>
+  <author>Ria Sonecha</author>
 
   <license>ASL 2.0</license>
 
