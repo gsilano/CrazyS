@@ -4,7 +4,7 @@ Changelog for package rotors_gazebo
 
 5.0.4 (2020-04-14)
 ------------------
-* Add INDI and Mellinger's controllers to the spaw_mav_crazyflie.launch file
+* Add INDI and Mellinger's (it does not work yet) controllers to the spaw_mav_crazyflie.launch file
 * Add spline trajectory generator
 * Add launch files to run the Internal Model and Mellinger's controllers
 * Add resource files for the above controllers and trajectory generator
