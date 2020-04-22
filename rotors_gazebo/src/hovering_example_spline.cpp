@@ -56,11 +56,12 @@ namespace rotors_gazebo {
 
     // Parameters initializion
     a0_.setZero(); a1_.setZero(); a2_.setZero(); a3_.setZero(); a4_.setZero(); a5_.setZero();
-    b0_.setZero(); b1_.setZero(); b2_.setZero(); b3_.setZero(); b4_.setZero(); b5_.setZero();
-    c0_.setZero(); c1_.setZero(); c2_.setZero(); c3_.setZero(); c4_.setZero(); c5_.setZero();
+    b0_.setZero(); b1_.setZero(); b2_.setZero(); b3_.setZero(); b4_.setZero();
+    c0_.setZero(); c1_.setZero(); c2_.setZero(); c3_.setZero();
 
     g0_.setZero(); g1_.setZero(); g2_.setZero(); g3_.setZero(); g4_.setZero(); g5_.setZero();
-    h0_.setZero(); h1_.setZero(); h2_.setZero(); h3_.setZero(); h4_.setZero(); h5_.setZero();
+    h0_.setZero(); h1_.setZero(); h2_.setZero(); h3_.setZero(); h4_.setZero();
+    i0_.setZero(); i1_.setZero(); i2_.setZero(); i3_.setZero();
 
   }
 
@@ -102,11 +103,11 @@ namespace rotors_gazebo {
 
     // Desidered Linear Velocity
     first = b0_.x() * pow(time_spline, 5) + b1_.x() * pow(time_spline, 4) + b2_.x() * pow(time_spline, 3) + b3_.x() * pow(time_spline, 2)
-                + b4_.x() * time_spline + b5_.x();
+                + b4_.x() * time_spline;
     second = b0_.y() * pow(time_spline, 5) + b1_.y() * pow(time_spline, 4) + b2_.y() * pow(time_spline, 3) + b3_.y() * pow(time_spline, 2)
-                + b4_.y() * time_spline + b5_.y();
+                + b4_.y() * time_spline;
     third = b0_.z() * pow(time_spline, 5) + b1_.z() * pow(time_spline, 4) + b2_.z() * pow(time_spline, 3) + b3_.z() * pow(time_spline, 2)
-                + b4_.z() * time_spline + b5_.z();
+                + b4_.z() * time_spline;
 
     ROS_DEBUG("Publishing velocity spline parameters along x: [%f, %f, %f, %f, %f, %f].", b0_.x(), b1_.x(), b2_.x(), b3_.x(), b4_.x(), b5_.x());
     ROS_DEBUG("Publishing velocity spline parameters along y: [%f, %f, %f, %f, %f, %f].", b0_.y(), b1_.y(), b2_.y(), b3_.y(), b4_.y(), b5_.y());
@@ -117,12 +118,9 @@ namespace rotors_gazebo {
     ROS_DEBUG("Publishing velocity waypoint: [%f, %f, %f].", first, second, third);
 
     // Desidered Acceleration
-    first = c0_.x() * pow(time_spline, 5) + c1_.x() * pow(time_spline, 4) + c2_.x() * pow(time_spline, 3) + c3_.x() * pow(time_spline, 2)
-                + c4_.x() * time_spline + c5_.x();
-    second = c0_.y() * pow(time_spline, 5) + c1_.y() * pow(time_spline, 4) + c2_.y() * pow(time_spline, 3) + c3_.y() * pow(time_spline, 2)
-                + c4_.y() * time_spline + c5_.y();
-    third = c0_.z() * pow(time_spline, 5) + c1_.z() * pow(time_spline, 4) + c2_.z() * pow(time_spline, 3) + c3_.z() * pow(time_spline, 2)
-                + c4_.z() * time_spline + c5_.z();
+    first = c0_.x() * pow(time_spline, 5) + c1_.x() * pow(time_spline, 4) + c2_.x() * pow(time_spline, 3) + c3_.x() * pow(time_spline, 2);
+    second = c0_.y() * pow(time_spline, 5) + c1_.y() * pow(time_spline, 4) + c2_.y() * pow(time_spline, 3) + c3_.y() * pow(time_spline, 2);
+    third = c0_.z() * pow(time_spline, 5) + c1_.z() * pow(time_spline, 4) + c2_.z() * pow(time_spline, 3) + c3_.z() * pow(time_spline, 2);
 
     odometry->acceleration = Eigen::Vector3f(first, second, third);
 
@@ -165,137 +163,194 @@ namespace rotors_gazebo {
   void HoveringExampleSpline::ComputeSplineParameters(double* time_spline){
       assert(time_spline);
 
-      // Parameters used for the position and its derivatives
+      /*        POSITION       */
+      // Parameters used for the position and its derivatives. The coefficient
+      // refers to the x, y and z-avis
       a0_ = position_initial_;
 
       ROS_DEBUG("Publishing position initial: [%f, %f, %f].", position_initial_[0], position_initial_[1], position_initial_[2]);
+      ROS_DEBUG("Content of the a0 coefficient: [%f, %f, %f].", a0_[0], a0_[1], a0_[2]);
 
       a1_ = velocity_initial_;
+
+      ROS_DEBUG("Publishing velocity initial: [%f, %f, %f].", velocity_initial_[0], velocity_initial_[1], velocity_initial_[2]);
+      ROS_DEBUG("Content of the a1 coefficient: [%f, %f, %f].", a1_[0], a1_[1], a1_[2]);
 
       a2_.x() = acceleration_initial_.x() * DELTA_1;
       a2_.y() = acceleration_initial_.y() * DELTA_1;
       a2_.z() = acceleration_initial_.z() * DELTA_1;
 
       ROS_DEBUG("Publishing acceleration initial: [%f, %f, %f].", acceleration_initial_[0], acceleration_initial_[1], acceleration_initial_[2]);
+      ROS_DEBUG("Content of the a2 coefficient: [%f, %f, %f].", a2_[0], a2_[1], a2_[2]);
 
-      a3_.x() = (1/(ALPHA_1*pow(*time_spline,3))) * (ALPHA_2 * (position_final_.x() - position_initial_.x()) - (ALPHA_3 * velocity_final_.x() + ALPHA_4 * velocity_initial_.x()) * *time_spline
-                - (ALPHA_5 * acceleration_final_.x() - acceleration_initial_.x()) * pow(*time_spline, 2));
-      a3_.y() = (1/(ALPHA_1*pow(*time_spline,3))) * (ALPHA_2 * (position_final_.y() - position_initial_.y()) - (ALPHA_3 * velocity_final_.y() + ALPHA_4 * velocity_initial_.y()) * *time_spline
-                - (ALPHA_5 * acceleration_final_.y() - acceleration_initial_.y()) * pow(*time_spline, 2));
-      a3_.z() = (1/(ALPHA_1*pow(*time_spline,3))) * (ALPHA_2 * (position_final_.z() - position_initial_.z()) - (ALPHA_3 * velocity_final_.z() + ALPHA_4 * velocity_initial_.z()) * *time_spline
-                - (ALPHA_5 * acceleration_final_.z() - acceleration_initial_.z()) * pow(*time_spline, 2));
+      a3_.x() = (1/(ALPHA_1*pow(*time_spline,3))) * (ALPHA_2 * (position_final_.x() - position_initial_.x()) -
+                (ALPHA_3 * velocity_final_.x() + ALPHA_4 * velocity_initial_.x()) * *time_spline -
+                (ALPHA_5 * acceleration_final_.x() - acceleration_initial_.x()) * pow(*time_spline, 2));
 
-      a4_.x() = (1/(ALPHA_1*pow(*time_spline,4))) * (BETA_1 * (position_initial_.x() - position_final_.x()) + (BETA_2 * velocity_final_.x() + BETA_3 * velocity_initial_.x()) * *time_spline
-                + (BETA_4 * acceleration_final_.x() - 2 * acceleration_initial_.x()) * pow(*time_spline, 2));
-      a4_.y() = (1/(ALPHA_1*pow(*time_spline,4))) * (BETA_1 * (position_initial_.y() - position_final_.y()) + (BETA_2 * velocity_final_.y() + BETA_3 * velocity_initial_.y()) * *time_spline
-                + (BETA_4 * acceleration_final_.y() - 2 * acceleration_initial_.y()) * pow(*time_spline, 2));
-      a4_.z() = (1/(ALPHA_1*pow(*time_spline,4))) * (BETA_1 * (position_initial_.z() - position_final_.z()) + (BETA_2 * velocity_final_.z() + BETA_3 * velocity_initial_.z()) * *time_spline
-                + (BETA_4 * acceleration_final_.z() - 2 * acceleration_initial_.z()) * pow(*time_spline, 2));
+      a3_.y() = (1/(ALPHA_1*pow(*time_spline,3))) * (ALPHA_2 * (position_final_.y() - position_initial_.y()) -
+                (ALPHA_3 * velocity_final_.y() + ALPHA_4 * velocity_initial_.y()) * *time_spline -
+                (ALPHA_5 * acceleration_final_.y() - acceleration_initial_.y()) * pow(*time_spline, 2));
 
-      a5_.x() = (1/(ALPHA_1*pow(*time_spline,5))) * (GAMMA_1 * (position_final_.x() - position_initial_.x()) - GAMMA_2 * (velocity_final_.x() + velocity_initial_.x()) * *time_spline
-                - (acceleration_final_.x() - acceleration_initial_.x()) * pow(*time_spline, 2));
-      a5_.y() = (1/(ALPHA_1*pow(*time_spline,5))) * (GAMMA_1 * (position_final_.y() - position_initial_.y()) - GAMMA_2 * (velocity_final_.y() + velocity_initial_.y()) * *time_spline
-                - (acceleration_final_.y() - acceleration_initial_.y()) * pow(*time_spline, 2));
-      a5_.z() = (1/(ALPHA_1*pow(*time_spline,5))) * (GAMMA_1 * (position_final_.z() - position_initial_.z()) - GAMMA_2 * (velocity_final_.z() + velocity_initial_.z()) * *time_spline
-                - (acceleration_final_.z() - acceleration_initial_.z()) * pow(*time_spline, 2));
-      //b
-      b0_.x() = 0;
-      b0_.y() = 0;
-      b0_.z() = 0;
+      a3_.z() = (1/(ALPHA_1*pow(*time_spline,3))) * (ALPHA_2 * (position_final_.z() - position_initial_.z()) -
+                (ALPHA_3 * velocity_final_.z() + ALPHA_4 * velocity_initial_.z()) * *time_spline -
+                (ALPHA_5 * acceleration_final_.z() - acceleration_initial_.z()) * pow(*time_spline, 2));
 
-      b1_.x() = 5*a0_.x();
-      b1_.y() = 5*a0_.y();
-      b1_.z() = 5*a0_.z();
+      ROS_DEBUG("Content of the a3 coefficient: [%f, %f, %f].", a3_[0], a3_[1], a3_[2]);
 
-      b2_.x() = 4*a1_.x();
-      b2_.y() = 4*a1_.y();
-      b2_.z() = 4*a1_.z();
+      a4_.x() = (1/(ALPHA_1*pow(*time_spline,4))) * (BETA_1 * (position_initial_.x() - position_final_.x()) +
+                (BETA_2 * velocity_final_.x() + BETA_3 * velocity_initial_.x()) * *time_spline +
+                (BETA_3 * acceleration_final_.x() - BETA_4 * acceleration_initial_.x()) * pow(*time_spline, 2));
 
-      b3_.x() = 3*a2_.x();
-      b3_.y() = 3*a2_.y();
-      b3_.z() = 3*a2_.z();
+      a4_.y() = (1/(ALPHA_1*pow(*time_spline,4))) * (BETA_1 * (position_initial_.y() - position_final_.y()) +
+                (BETA_2 * velocity_final_.y() + BETA_3 * velocity_initial_.y()) * *time_spline +
+                (BETA_3 * acceleration_final_.y() - BETA_4 * acceleration_initial_.y()) * pow(*time_spline, 2));
 
-      b4_.x() = 2*a3_.x();
-      b4_.y() = 2*a3_.y();
-      b4_.z() = 2*a3_.z();
+      a4_.z() = (1/(ALPHA_1*pow(*time_spline,4))) * (BETA_1 * (position_initial_.z() - position_final_.z()) +
+                (BETA_2 * velocity_final_.z() + BETA_3 * velocity_initial_.z()) * *time_spline +
+                (BETA_3 * acceleration_final_.z() - BETA_4 * acceleration_initial_.z()) * pow(*time_spline, 2));
 
-      b5_ = a4_;
+      ROS_DEBUG("Content of the a4 coefficient: [%f, %f, %f].", a4_[0], a4_[1], a4_[2]);
 
-      //c
-      c0_.x() = 0;
-      c0_.y() = 0;
-      c0_.z() = 0;
+      a5_.x() = (1/(ALPHA_1*pow(*time_spline,5))) * (GAMMA_1 * (position_final_.x() - position_initial_.x()) -
+                GAMMA_2 * (velocity_final_.x() + velocity_initial_.x()) * *time_spline -
+                (acceleration_final_.x() - acceleration_initial_.x()) * pow(*time_spline, 2));
 
-      c1_.x() = 0;
-      c1_.y() = 0;
-      c1_.z() = 0;
+      a5_.y() = (1/(ALPHA_1*pow(*time_spline,5))) * (GAMMA_1 * (position_final_.y() - position_initial_.y()) -
+                GAMMA_2 * (velocity_final_.y() + velocity_initial_.y()) * *time_spline -
+                (acceleration_final_.y() - acceleration_initial_.y()) * pow(*time_spline, 2));
 
-      c2_.x() = 4*b1_.x();
-      c2_.y() = 4*b1_.y();
-      c2_.z() = 4*b1_.z();
+      a5_.z() = (1/(ALPHA_1*pow(*time_spline,5))) * (GAMMA_1 * (position_final_.z() - position_initial_.z()) -
+                GAMMA_2 * (velocity_final_.z() + velocity_initial_.z()) * *time_spline -
+                (acceleration_final_.z() - acceleration_initial_.z()) * pow(*time_spline, 2));
 
-      c3_.x() = 3*b2_.x();
-      c3_.y() = 3*b2_.y();
-      c3_.z() = 3*b2_.z();
+      ROS_DEBUG("Content of the a5 coefficient: [%f, %f, %f].", a5_[0], a5_[1], a5_[2]);
 
-      c4_.x() = 2*b3_.x();
-      c4_.y() = 2*b3_.y();
-      c4_.z() = 2*b3_.z();
+      // The coefficients are used for having the velocity reference trajectory. The polynomial is computed
+      // derivating the a one. In other words,
+      // a0 * x^5 + a1 * x^4 + a2 * x^3 + a3 * x^2 + a4 * x + a5
+      // 5 * a0 * x^4 + 4 * a1 * x^3 + 3 * a2 * x^2 + 2 * a3 * x + a4
+      // b0 = 5 * a0 -- b1 = 4 * a1 -- b2 = 3 * a2 - b3 = 2 * a3 - b4 = a4
+      // and so on
+      b0_ = 5 * a0_;
+      b1_ = 4 * a1_;
+      b2_ = 3 * a2_;
+      b3_ = 2 * a3_;
+      b4_ = a4_;
 
-      c5_ = b4_;
+      ROS_DEBUG("Content of the b0 coefficient: [%f, %f, %f].", b0_[0], b0_[1], b0_[2]);
+      ROS_DEBUG("Content of the b1 coefficient: [%f, %f, %f].", b1_[0], b1_[1], b1_[2]);
+      ROS_DEBUG("Content of the b2 coefficient: [%f, %f, %f].", b2_[0], b2_[1], b2_[2]);
+      ROS_DEBUG("Content of the b3 coefficient: [%f, %f, %f].", b3_[0], b3_[1], b3_[2]);
+      ROS_DEBUG("Content of the b4 coefficient: [%f, %f, %f].", b4_[0], b4_[1], b4_[2]);
 
-      // Parameters used for the orientation and its derivatives
+      // The coefficients are used for having the acceleration reference trajectory. The polynomial is computed
+      // derivating the b one. In other words,
+      // 4 * b0 * x^4 + 3 * b1 * x^3 + 2 * b2 * x^2 + b3 * x
+      // c0 = 4 * b0 -- c1 = 3 * b1 -- c2 = 2 * b2 - c3 = b3
+      c0_ = 4 * b0_;
+      c1_ = 3 * b1_;
+      c2_ = 2 * b2_;
+      c3_ = b3_;
+
+      ROS_DEBUG("Content of the c0 coefficient: [%f, %f, %f].", c0_[0], c0_[1], c0_[2]);
+      ROS_DEBUG("Content of the c1 coefficient: [%f, %f, %f].", c1_[0], c1_[1], c1_[2]);
+      ROS_DEBUG("Content of the c2 coefficient: [%f, %f, %f].", c2_[0], c2_[1], c2_[2]);
+      ROS_DEBUG("Content of the c3 coefficient: [%f, %f, %f].", c3_[0], c3_[1], c3_[2]);
+
+      /*        ORIENTATION      */
+      // Parameters used for the orientation and its derivatives. The coefficient
+      // refers to the ROLL (X), PITCH (Y) and YAW (Z)
       g0_ = orientation_initial_;
 
+      ROS_DEBUG("Publishing orientation initial: [%f, %f, %f].", orientation_initial_[0], orientation_initial_[1], orientation_initial_[2]);
+      ROS_DEBUG("Content of the g0 coefficient: [%f, %f, %f].", g0_[0], g0_[1], g0_[2]);
+
       g1_ = angular_velocity_initial_;
+
+      ROS_DEBUG("Publishing angular rate initial: [%f, %f, %f].", angular_velocity_initial_[0], angular_velocity_initial_[1], angular_velocity_initial_[2]);
+      ROS_DEBUG("Content of the g1 coefficient: [%f, %f, %f].", g1_[0], g1_[1], g1_[2]);
 
       g2_.x() = angular_acceleration_initial_.x() * DELTA_1;
       g2_.y() = angular_acceleration_initial_.y() * DELTA_1;
       g2_.z() = angular_acceleration_initial_.z() * DELTA_1;
 
-      g3_.x() = (1/(ALPHA_1*pow(*time_spline,3))) * (ALPHA_2 * (orientation_final_.x() - orientation_initial_.x()) - (ALPHA_3 * angular_velocity_final_.x() + ALPHA_4 *
-                angular_velocity_initial_.x()) * *time_spline - (ALPHA_5 * angular_acceleration_final_.x() - angular_acceleration_initial_.x()) * pow(*time_spline, 2));
-      g3_.y() = (1/(ALPHA_1*pow(*time_spline,3))) * (ALPHA_2 * (orientation_final_.y() - orientation_initial_.y()) - (ALPHA_3 * angular_velocity_final_.y() + ALPHA_4 *
-                angular_velocity_initial_.y()) * *time_spline - (ALPHA_5 * angular_acceleration_final_.y() - angular_acceleration_initial_.y()) * pow(*time_spline, 2));
-      g3_.z() = (1/(ALPHA_1*pow(*time_spline,3))) * (ALPHA_2 * (orientation_final_.z() - orientation_initial_.z()) - (ALPHA_3 * angular_velocity_final_.z() + ALPHA_4 *
-                angular_velocity_initial_.z()) * *time_spline - (ALPHA_5 * angular_acceleration_final_.z() - angular_acceleration_initial_.z()) * pow(*time_spline, 2));
+      ROS_DEBUG("Publishing angular acceleration initial: [%f, %f, %f].", angular_acceleration_initial_[0], angular_acceleration_initial_[1],
+                angular_acceleration_initial_[2]);
+      ROS_DEBUG("Content of the g2 coefficient: [%f, %f, %f].", g2_[0], g2_[1], g2_[2]);
 
-      g4_.x() = (1/(ALPHA_1*pow(*time_spline,4))) * (BETA_1 * (orientation_initial_.x() - orientation_final_.x()) + (BETA_2 * angular_velocity_final_.x() + BETA_3 *
-                angular_velocity_initial_.x()) * *time_spline + (BETA_4 * angular_acceleration_final_.x() - 2 * angular_acceleration_initial_.x()) * pow(*time_spline, 2));
-      g4_.y() = (1/(ALPHA_1*pow(*time_spline,4))) * (BETA_1 * (orientation_initial_.y() - orientation_final_.y()) + (BETA_2 * angular_velocity_final_.y() + BETA_3 *
-                angular_velocity_initial_.y()) * *time_spline + (BETA_4 * angular_acceleration_final_.y() - 2 * angular_acceleration_initial_.y()) * pow(*time_spline, 2));
-      g4_.z() = (1/(ALPHA_1*pow(*time_spline,4))) * (BETA_1 * (orientation_initial_.z() - orientation_final_.z()) + (BETA_2 * angular_velocity_final_.z() + BETA_3 *
-                angular_velocity_initial_.z()) * *time_spline + (BETA_4 * angular_acceleration_final_.z() - 2 * angular_acceleration_initial_.z()) * pow(*time_spline, 2));
+      g3_.x() = (1/(ALPHA_1*pow(*time_spline,3))) * (ALPHA_2 * (orientation_final_.x() - orientation_initial_.x()) -
+                (ALPHA_3 * angular_velocity_final_.x() + ALPHA_4 * angular_velocity_initial_.x()) * *time_spline -
+                (ALPHA_5 * angular_acceleration_final_.x() - angular_acceleration_initial_.x()) * pow(*time_spline, 2));
 
-      g5_.x() = (1/(ALPHA_1*pow(*time_spline,5))) * (GAMMA_1 * (orientation_final_.x() - orientation_initial_.x()) - GAMMA_2 * (angular_velocity_final_.x() +
-                angular_velocity_initial_.x()) * *time_spline - (angular_acceleration_final_.x() - angular_acceleration_initial_.x()) * pow(*time_spline, 2));
-      g5_.y() = (1/(ALPHA_1*pow(*time_spline,5))) * (GAMMA_1 * (orientation_final_.y() - orientation_initial_.y()) - GAMMA_2 * (angular_velocity_final_.y() +
-                angular_velocity_initial_.y()) * *time_spline - (angular_acceleration_final_.y() - angular_acceleration_initial_.y()) * pow(*time_spline, 2));
-      g5_.z() = (1/(ALPHA_1*pow(*time_spline,5))) * (GAMMA_1 * (orientation_final_.z() - orientation_initial_.z()) - GAMMA_2 * (angular_velocity_final_.z() +
-                angular_velocity_initial_.z()) * *time_spline - (angular_acceleration_final_.z() - angular_acceleration_initial_.z()) * pow(*time_spline, 2));
+      g3_.y() = (1/(ALPHA_1*pow(*time_spline,3))) * (ALPHA_2 * (orientation_final_.y() - orientation_initial_.y()) -
+                (ALPHA_3 * angular_velocity_final_.y() + ALPHA_4 * angular_velocity_initial_.y()) * *time_spline -
+                (ALPHA_5 * angular_acceleration_final_.y() - angular_acceleration_initial_.y()) * pow(*time_spline, 2));
 
-      //h
-      h0_.x() = 0;
-      h0_.y() = 0;
-      h0_.z() = 0;
+      g3_.z() = (1/(ALPHA_1*pow(*time_spline,3))) * (ALPHA_2 * (orientation_final_.z() - orientation_initial_.z()) -
+                (ALPHA_3 * angular_velocity_final_.z() + ALPHA_4 * angular_velocity_initial_.z()) * *time_spline -
+                (ALPHA_5 * angular_acceleration_final_.z() - angular_acceleration_initial_.z()) * pow(*time_spline, 2));
 
-      h1_.x() = 5*g0_.x();
-      h1_.y() = 5*g0_.y();
-      h1_.z() = 5*g0_.z();
+      ROS_DEBUG("Content of the g3 coefficient: [%f, %f, %f].", g3_[0], g3_[1], g3_[2]);
 
-      h2_.x() = 4*g1_.x();
-      h2_.y() = 4*g1_.y();
-      h2_.z() = 4*g1_.z();
+      g4_.x() = (1/(ALPHA_1*pow(*time_spline,4))) * (BETA_1 * (orientation_initial_.x() - orientation_final_.x()) +
+                (BETA_2 * angular_velocity_final_.x() + BETA_3 * angular_velocity_initial_.x()) * *time_spline +
+                (BETA_3 * angular_acceleration_final_.x() - BETA_4 * angular_acceleration_initial_.x()) * pow(*time_spline, 2));
 
-      h3_.x() = 3*g2_.x();
-      h3_.y() = 3*g2_.y();
-      h3_.z() = 3*g2_.z();
+      g4_.y() = (1/(ALPHA_1*pow(*time_spline,4))) * (BETA_1 * (orientation_initial_.y() - orientation_final_.y()) +
+                (BETA_2 * angular_velocity_final_.y() + BETA_3 * angular_velocity_initial_.y()) * *time_spline +
+                (BETA_3 * angular_acceleration_final_.y() - BETA_4 * angular_acceleration_initial_.y()) * pow(*time_spline, 2));
 
-      h4_.x() = 2*g3_.x();
-      h4_.y() = 2*g3_.y();
-      h4_.z() = 2*g3_.z();
+      g4_.z() = (1/(ALPHA_1*pow(*time_spline,4))) * (BETA_1 * (orientation_initial_.z() - orientation_final_.z()) +
+                (BETA_2 * angular_velocity_final_.z() + BETA_3 * angular_velocity_initial_.z()) * *time_spline +
+                (BETA_3 * angular_acceleration_final_.z() - BETA_4 * angular_acceleration_initial_.z()) * pow(*time_spline, 2));
 
-      h5_ = g4_;
+      ROS_DEBUG("Content of the g4 coefficient: [%f, %f, %f].", g4_[0], g4_[1], g4_[2]);
+
+      g5_.x() = (1/(ALPHA_1*pow(*time_spline,5))) * (GAMMA_1 * (orientation_final_.x() - orientation_initial_.x()) -
+                GAMMA_2 * (angular_velocity_final_.x() + angular_velocity_initial_.x()) * *time_spline -
+                (angular_acceleration_final_.x() - angular_acceleration_initial_.x()) * pow(*time_spline, 2));
+
+      g5_.y() = (1/(ALPHA_1*pow(*time_spline,5))) * (GAMMA_1 * (orientation_final_.y() - orientation_initial_.y()) -
+                GAMMA_2 * (angular_velocity_final_.y() + angular_velocity_initial_.y()) * *time_spline -
+                (angular_acceleration_final_.y() - angular_acceleration_initial_.y()) * pow(*time_spline, 2));
+
+      g5_.z() = (1/(ALPHA_1*pow(*time_spline,5))) * (GAMMA_1 * (orientation_final_.z() - orientation_initial_.z()) -
+                GAMMA_2 * (angular_velocity_final_.z() + angular_velocity_initial_.z()) * *time_spline -
+                (angular_acceleration_final_.z() - angular_acceleration_initial_.z()) * pow(*time_spline, 2));
+
+      ROS_DEBUG("Content of the g5 coefficient: [%f, %f, %f].", g5_[0], g5_[1], g5_[2]);
+
+      // The coefficients are used for having the angular velocity reference trajectory. The polynomial is computed
+      // derivating the g one. In other words,
+      // g0 * x^5 + g1 * x^4 + g2 * x^3 + g3 * x^2 + g4 * x + g5
+      // 5 * g0 * x^4 + 4 * g1 * x^3 + 3 * g2 * x^2 + 2 * g3 * x + g4
+      // h0 = 5 * g0 -- h1 = 4 * g1 -- h2 = 3 * g2 - h3 = 2 * g3 - h4 = g4
+      // and so on
+      h0_ = 5 * g0_;
+      h1_ = 4 * g1_;
+      h2_ = 3 * g2_;
+      h3_ = 2 * g3_;
+      h4_ = g4_;
+
+      ROS_DEBUG("Content of the h0 coefficient: [%f, %f, %f].", h0_[0], h0_[1], h0_[2]);
+      ROS_DEBUG("Content of the h1 coefficient: [%f, %f, %f].", h1_[0], h1_[1], h1_[2]);
+      ROS_DEBUG("Content of the h2 coefficient: [%f, %f, %f].", h2_[0], h2_[1], h2_[2]);
+      ROS_DEBUG("Content of the h3 coefficient: [%f, %f, %f].", h3_[0], h3_[1], h3_[2]);
+      ROS_DEBUG("Content of the h4 coefficient: [%f, %f, %f].", h4_[0], h4_[1], h4_[2]);
+
+      // The coefficients are used for having the angular acceleration reference trajectory. The polynomial is computed
+      // derivating the b one. In other words,
+      // 4 * h0 * x^4 + 3 * h1 * x^3 + 2 * h2 * x^2 + h3 * x
+      // i0 = 4 * h0 -- i1 = 3 * h1 -- i2 = 2 * h2 - i3 = h3
+      i0_ = 4 * h0_;
+      i1_ = 3 * h1_;
+      i2_ = 2 * h2_;
+      i3_ = h3_;
+
+      ROS_DEBUG("Content of the i0 coefficient: [%f, %f, %f].", i0_[0], i0_[1], i0_[2]);
+      ROS_DEBUG("Content of the i1 coefficient: [%f, %f, %f].", i1_[0], i1_[1], i1_[2]);
+      ROS_DEBUG("Content of the i2 coefficient: [%f, %f, %f].", i2_[0], i2_[1], i2_[2]);
+      ROS_DEBUG("Content of the i3 coefficient: [%f, %f, %f].", i3_[0], i3_[1], i3_[2]);
 
   }
 
