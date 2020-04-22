@@ -203,6 +203,13 @@ $ catkin build
 $ source ~/.bashrc
 ```
 
+> **Note** In case the `ERROR[rotors_gazebo_plugins]` error is displayed, run the following commands
+>```console
+>$ sudo apt-get install ros-kinetic-gazebo9-plugins
+>$ sudo apt-get install apt ros-kinetic-gazebo9-ros
+>$ sudo apt-get install apt ros-kinetic-gazebo9-dev
+>```
+
 This guide can be used a basis for fixing what has been discussed in [ethz-asl/rotors_simulator#506](https://github.com/ethz-asl/rotors_simulator/pull/506).
 
 Installation Instructions - Ubuntu 14.04 with ROS Indigo
@@ -297,6 +304,26 @@ The whole process is the following: the desired trajectory coordinates (x_r, y_r
 There are some basic launch files where you can load the different multicopters with additional sensors. They can all be found in `~/catkin_ws/src/CrazyS/rotors_gazebo/launch`. Such scenarios are better explained in the [RotorS](https://github.com/ethz-asl/rotors_simulator) repository.
 
 The `world_name` argument looks for a .world file with a corresponding name in `~/catkin_ws/src/CrazyS/rotors_gazebo/worlds`. By default, all launch files, with the exception of those that have the world name explicitly included in the file name, use the empty world described in `basic.world`.
+
+Using the `csvFilesStoring` variable is possible to enable (true) or disable (false) the data storage. The log files are saved in the home directory (the path can be easily changed modifying the `position_controller.cpp` file). The recording time can be set via the `csvFilesStoringTime` while the user account can be set via the `user_account` variable. Of course, the log features can be used with and without the complementary filter.
+
+```console
+$ roslaunch rotors_gazebo crazyflie2_hovering_example.launch csvFilesStoring:=true
+```
+
+An alternative controller is available on the repository. For running the simulation by using the Internal Model Control as described in #27, #28 and #29, simply run
+
+```console
+$ roslaunch rotors_gazebo crazyflie2_crazyflie2_internal_model_controller.luanch
+```
+
+> **Note** There is also a draft of the Mellinger's controller implementation in the package. This is a NOT WORKING example. As soon as the problems are resolved, a working version will be made available.
+
+The package also provides a launch file for piloting the Crazyflie using a PC joystick. To run the simulation simple copy and paste the command in the following in a terminal window
+
+```console
+$ roslaunch rotors_gazebo crazyflie2_with_joy.launch
+```
 
 Gazebo Version
 --------------
