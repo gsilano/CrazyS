@@ -20,7 +20,8 @@ catkin_package(
   INCLUDE_DIRS include ${Eigen_INCLUDE_DIRS}
   LIBRARIES lee_position_controller position_controller crazyflie_onboard_controller
     roll_pitch_yawrate_thrust_controller sensfusion6 crazyflie_complementary_filter
-    mellinger_controller internal_model_controller
+    mellinger_controller internal_model_controller 
+    roll_pitch_yawrate_thrust_controller_crazyflie
   CATKIN_DEPENDS geometry_msgs mav_msgs nav_msgs roscpp sensor_msgs
   DEPENDS Eigen
 )
@@ -48,7 +49,7 @@ add_library(roll_pitch_yawrate_thrust_controller
   src/library/roll_pitch_yawrate_thrust_controller.cpp
 )
 
-add_library(roll_pitch_yawrate_thrust_crazyflie
+add_library(roll_pitch_yawrate_thrust_controller_crazyflie
   src/library/roll_pitch_yawrate_thrust_crazyflie.cpp
 )
 
@@ -83,8 +84,8 @@ add_dependencies(internal_model_controller ${catkin_EXPORTED_TARGETS})
 target_link_libraries(roll_pitch_yawrate_thrust_controller ${catkin_LIBRARIES})
 add_dependencies(roll_pitch_yawrate_thrust_controller ${catkin_EXPORTED_TARGETS})
 
-target_link_libraries(roll_pitch_yawrate_thrust_crazyflie ${catkin_LIBRARIES})
-add_dependencies(roll_pitch_yawrate_thrust_crazyflie ${catkin_EXPORTED_TARGETS})
+target_link_libraries(roll_pitch_yawrate_thrust_controller_crazyflie ${catkin_LIBRARIES})
+add_dependencies(roll_pitch_yawrate_thrust_controller_crazyflie ${catkin_EXPORTED_TARGETS})
 
 target_link_libraries(crazyflie_onboard_controller ${catkin_LIBRARIES})
 add_dependencies(crazyflie_onboard_controller ${catkin_EXPORTED_TARGETS})
@@ -112,8 +113,15 @@ add_dependencies(roll_pitch_yawrate_thrust_controller_node ${catkin_EXPORTED_TAR
 target_link_libraries(roll_pitch_yawrate_thrust_controller_node
   roll_pitch_yawrate_thrust_controller ${catkin_LIBRARIES})
 
+add_executable(roll_pitch_yawrate_thrust_crazyflie_node 
+  src/nodes/roll_pitch_yawrate_thrust_crazyflie_node.cpp)
+add_dependencies(roll_pitch_yawrate_thrust_crazyflie_node ${catkin_EXPORTED_TARGETS})
+target_link_libraries(roll_pitch_yawrate_thrust_crazyflie_node
+  roll_pitch_yawrate_thrust_controller_crazyflie ${catkin_LIBRARIES})
+
 install(TARGETS lee_position_controller position_controller crazyflie_onboard_controller
   roll_pitch_yawrate_thrust_controller mellinger_controller internal_model_controller
+  roll_pitch_yawrate_thrust_controller_crazyflie
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )
 
