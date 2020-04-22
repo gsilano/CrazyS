@@ -121,7 +121,7 @@ class InternalModelControllerParameters {
             double mu_x_, mu_y_, mu_z_;
             double mu_phi_, mu_theta_, mu_psi_;
 
-	          double lambda_x_, lambda_y_, lambda_z_;
+	          double U_q_x_, U_q_y_, U_q_z_;
 	          double K_x_1_, K_x_2_;
 	          double K_y_1_, K_y_2_;
 	          double K_z_1_, K_z_2_;

@@ -150,6 +150,9 @@ void PositionControllerNode::MultiDofJointTrajectoryMellingerCallback(const mav_
     else
       internal_model_controller_.SetTrajectoryPoint(eigen_reference);
 
+    ROS_DEBUG("Drone desired position [x_d: %f, y_d: %f, z_d: %f]", eigen_reference.position_W[0],
+            eigen_reference.position_W[1], eigen_reference.position_W[2]);
+
     if (drone_state_msg.position.z > 0) {
       waypointHasBeenPublished_ = true;
       if (enable_mellinger_controller_)
@@ -231,7 +234,7 @@ void PositionControllerNode::InitializeParams() {
     position_controller_.SetControllerGains();
 
      ROS_INFO_ONCE("[Position Controller] Set controller gains and vehicle parameters");
- }
+   }
 
  if(enable_mellinger_controller_){
 
@@ -329,11 +332,11 @@ void PositionControllerNode::InitializeParams() {
     mellinger_controller_.SetControllerGains();
 
     //Analogously, the object "vehicle_parameters_" is created
-   GetFullVehicleParameters(pnh, &mellinger_controller_.vehicle_parameters_);
-   mellinger_controller_.SetVehicleParameters();
-   ROS_INFO_ONCE("[Mellinger Controller] Set controller gains and vehicle parameters");
+    GetFullVehicleParameters(pnh, &mellinger_controller_.vehicle_parameters_);
+    mellinger_controller_.SetVehicleParameters();
+    ROS_INFO_ONCE("[Mellinger Controller] Set controller gains and vehicle parameters");
 
-  }
+    }
 
   if (enable_internal_model_controller_){
     // Read parameters from rosparam. The parameters are read by the YAML file and they
@@ -394,7 +397,6 @@ void PositionControllerNode::InitializeParams() {
     GetFullVehicleParameters(pnh, &internal_model_controller_.vehicle_parameters_);
     internal_model_controller_.SetVehicleParameters();
     ROS_INFO_ONCE("[Internal Model Controller] Set controller gains and vehicle parameters");
-
 
   }
 

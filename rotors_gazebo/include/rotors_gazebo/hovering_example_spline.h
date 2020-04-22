@@ -59,11 +59,12 @@
              bool enable_parameter_computation_ = true;
              //polynomial coefficients
              Eigen::Vector3f a0_, a1_, a2_, a3_, a4_, a5_;
-             Eigen::Vector3f b0_, b1_, b2_, b3_, b4_, b5_;
-             Eigen::Vector3f c0_, c1_, c2_, c3_, c4_, c5_;
+             Eigen::Vector3f b0_, b1_, b2_, b3_, b4_;
+             Eigen::Vector3f c0_, c1_, c2_, c3_;
 
              Eigen::Vector3f g0_, g1_, g2_, g3_, g4_, g5_;
-             Eigen::Vector3f h0_, h1_, h2_, h3_, h4_, h5_;
+             Eigen::Vector3f h0_, h1_, h2_, h3_, h4_;
+             Eigen::Vector3f i0_, i1_, i2_, i3_;
 
              // Desidred drone orientation expressed in radians
              double rollDesRad_, pitchDesRad_, yawDesRad_;
