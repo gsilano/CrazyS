@@ -1,5 +1,5 @@
 # Spline trajectory parameters
-time_final: {time: 15} # Remember that the trajectory generation starts after 3 seconds. This is the time_initial value
+time_final: {time: 10} # Remember that the trajectory generation starts after 3 seconds. This is the time_initial value
 position_initial: {x: 0, y: 0, z: 0}
 position_final: {x: 0, y: 0, z: 1}
 velocity_initial: {x: 0, y: 0, z: 0}

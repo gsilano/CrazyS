@@ -493,6 +493,7 @@ void InternalModelController::AttitudeErrors(double* e_phi, double* e_theta, dou
 
    ROS_DEBUG("Drone attitude: [roll: %f, pitch: %f, yaw: %f]", state_.attitude.roll, state_.attitude.pitch, state_.attitude.yaw);
    ROS_DEBUG("Angular Error: [e_phi: %f, e_pitch: %f, e_psi: %f]", *e_phi, *e_theta, *e_psi);
+   ROS_DEBUG("Desired Attitude: [phi_d: %f, pitch_d: %f, psi_d: %f]", roll_r, pitch_r, psi_r);
 
 }
 
@@ -528,6 +529,8 @@ void InternalModelController::AngularVelocityErrors(double* dot_e_phi, double* d
    *dot_e_phi = dot_e_phi_W_d - dot_e_phi_W_s;
    *dot_e_theta =  dot_e_theta_W_d - dot_e_theta_W_s;
    *dot_e_psi = dot_e_psi_W_d - dot_e_psi_W_s;
+
+    ROS_DEBUG("Desired Attitude Rate: [phi_d_dot: %f, pitch_d_dot: %f, psi_d_dot: %f]", dot_e_phi_W_d, dot_e_theta_W_d, dot_e_psi_W_d);
 
 }
 
