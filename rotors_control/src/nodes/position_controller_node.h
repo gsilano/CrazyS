@@ -1,5 +1,6 @@
 /*
- * Copyright 2018 Giuseppe Silano, University of Sannio in Benevento, Italy
+ * Copyright 2020 Giuseppe Silano, University of Sannio in Benevento, Italy
+ * Copyright 2020 Ria Sonecha, MIT, USA
  * Copyright 2018 Emanuele Aucone, University of Sannio in Benevento, Italy
  * Copyright 2018 Benjamin Rodriguez, MIT, USA
  * Copyright 2018 Luigi Iannelli, University of Sannio in Benevento, Italy
@@ -26,6 +27,7 @@
 
 #include <geometry_msgs/PoseStamped.h>
 #include <mav_msgs/Actuators.h>
+#include <mav_msgs/DroneState.h>
 #include <mav_msgs/AttitudeThrust.h>
 #include <mav_msgs/eigen_mav_msgs.h>
 #include <nav_msgs/Odometry.h>
@@ -38,6 +40,8 @@
 
 #include "rotors_control/common.h"
 #include "rotors_control/position_controller.h"
+#include "rotors_control/mellinger_controller.h"
+#include "rotors_control/internal_model_controller.h"
 #include "rotors_control/crazyflie_complementary_filter.h"
 
 
@@ -47,16 +51,20 @@ namespace rotors_control {
         public:
             PositionControllerNode();
             ~PositionControllerNode();
-             
+
             void InitializeParams();
             void Publish();
 
         private:
 
             bool waypointHasBeenPublished_ = false;
-            bool enable_state_estimator_;
+            bool enable_state_estimator_ = false;
+            bool enable_mellinger_controller_ = false;
+            bool enable_internal_model_controller_ = false;
 
             PositionController position_controller_;
+            MellingerController mellinger_controller_;
+            InternalModelController internal_model_controller_;
             sensorData_t sensors_;
             ros::Time imu_msg_head_stamp_;
 
@@ -71,11 +79,13 @@ namespace rotors_control {
             void CallbackAttitudeEstimation(const ros::TimerEvent& event);
             void CallbackHightLevelControl(const ros::TimerEvent& event);
             void CallbackIMUUpdate(const ros::TimerEvent& event);
- 
+
             //subscribers
             ros::Subscriber cmd_multi_dof_joint_trajectory_sub_;
+            ros::Subscriber cmd_multi_dof_joint_trajectory_spline_sub_;
             ros::Subscriber odometry_sub_;
             ros::Subscriber imu_sub_;
+            ros::Subscriber imu_ideal_sub_;
 
             //publisher
             ros::Publisher motor_velocity_reference_pub_;
@@ -85,10 +95,13 @@ namespace rotors_control {
             ros::Timer command_timer_;
 
             void MultiDofJointTrajectoryCallback(const trajectory_msgs::MultiDOFJointTrajectoryConstPtr& trajectory_reference_msg);
+            void MultiDofJointTrajectoryMellingerCallback(const mav_msgs::DroneState& drone_state_msg);
 
             void OdometryCallback(const nav_msgs::OdometryConstPtr& odometry_msg);
+            void MellingerOdometryCallback(const nav_msgs::OdometryConstPtr& odometry_msg);
 
             void IMUCallback(const sensor_msgs::ImuConstPtr& imu_msg);
+            void IMUMellingerCallback(const sensor_msgs::ImuConstPtr& imu_msg); //When the Mellinger's controller is on
 
     };
 }

@@ -1,6 +1,6 @@
 <package>
   <name>rotors_joy_interface</name>
-  <version>4.0.9</version>
+  <version>4.0.10</version>
   <description>The rotors_joy_interface package to control MAVs with a joystick</description>
 
   <maintainer email="giuseppe.silano@unisannio.it">Giuseppe Silano</maintainer>

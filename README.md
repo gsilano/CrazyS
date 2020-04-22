@@ -311,6 +311,14 @@ Using the `csvFilesStoring` variable is possible to enable (true) or disable (fa
 $ roslaunch rotors_gazebo crazyflie2_hovering_example.launch csvFilesStoring:=true
 ```
 
+An alternative controller is available on the repository. For running the simulation by using the Internal Model Control as described in #27, #28 and #29, simply run
+
+```console
+$ roslaunch rotors_gazebo crazyflie2_crazyflie2_internal_model_controller.luanch
+```
+
+> **Note** There is also a draft of the Mellinger's controller implementation in the package. This is a NOT WORKING example. As soon as the problems are resolved, a working version will be made available.
+
 The package also provides a launch file for piloting the Crazyflie using a PC joystick. To run the simulation simple copy and paste the command in the following in a terminal window
 
 ```console
