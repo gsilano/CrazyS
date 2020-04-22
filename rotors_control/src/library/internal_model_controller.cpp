@@ -93,9 +93,9 @@ InternalModelController::InternalModelController()
       K_x_2_(0),
       K_y_2_(0),
       K_z_2_(0),
-      lambda_x_(0),
-      lambda_y_(0),
-      lambda_z_(0),
+      U_q_x_(0),
+      U_q_y_(0),
+      U_q_z_(0),
       control_({0,0,0,0}), //roll, pitch, yaw rate, thrust
       state_({0,  //Position.x
               0,  //Position.y
@@ -112,14 +112,19 @@ InternalModelController::InternalModelController()
               0}) //Angular velocity z)
               {
 
-			          // Command signals initialization
-            		command_trajectory_.position_W[0] = 0;
-            		command_trajectory_.position_W[1] = 0;
-            		command_trajectory_.position_W[2] = 0;
+			// Command signals initialization - position
+      command_trajectory_.position_W[0] = 0;
+      command_trajectory_.position_W[1] = 0;
+      command_trajectory_.position_W[2] = 0;
 
-            	  // Timers set the outer and inner loops working frequency
-            		timer1_ = n1_.createTimer(ros::Duration(TsA), &InternalModelController::CallbackAttitude, this, false, true);
-            		timer2_ = n2_.createTimer(ros::Duration(TsP), &InternalModelController::CallbackPosition, this, false, true);
+      // velocity
+      command_trajectory_.velocity[0] = 0;
+      command_trajectory_.velocity[1] = 0;
+      command_trajectory_.velocity[2] = 0;
+
+      // Timers set the outer and inner loops working frequency
+      timer1_ = n1_.createTimer(ros::Duration(TsA), &InternalModelController::CallbackAttitude, this, false, true);
+      timer2_ = n2_.createTimer(ros::Duration(TsP), &InternalModelController::CallbackPosition, this, false, true);
 
 
 }
@@ -131,56 +136,60 @@ InternalModelController::~InternalModelController() {}
 // These variables will be employed during the simulation
 void InternalModelController::SetControllerGains(){
 
-      beta_x_ = controller_parameters_im_.beta_xy_.x();
-      beta_y_ = controller_parameters_im_.beta_xy_.y();
-      beta_z_ = controller_parameters_im_.beta_z_;
+    beta_x_ = controller_parameters_im_.beta_xy_.x();
+    beta_y_ = controller_parameters_im_.beta_xy_.y();
+    beta_z_ = controller_parameters_im_.beta_z_;
 
-      beta_phi_ = controller_parameters_im_.beta_phi_;
-      beta_theta_ = controller_parameters_im_.beta_theta_;
-      beta_psi_ = controller_parameters_im_.beta_psi_;
+    beta_phi_ = controller_parameters_im_.beta_phi_;
+    beta_theta_ = controller_parameters_im_.beta_theta_;
+    beta_psi_ = controller_parameters_im_.beta_psi_;
 
-      alpha_x_ = 1 - beta_x_;
-      alpha_y_ = 1 - beta_y_;
-      alpha_z_ = 1 - beta_z_;
+    alpha_x_ = 1 - beta_x_;
+    alpha_y_ = 1 - beta_y_;
+    alpha_z_ = 1 - beta_z_;
 
-      alpha_phi_ = 1 - beta_phi_;
-      alpha_theta_ = 1 - beta_theta_;
-      alpha_psi_ = 1 - beta_psi_;
+    alpha_phi_ = 1 - beta_phi_;
+    alpha_theta_ = 1 - beta_theta_;
+    alpha_psi_ = 1 - beta_psi_;
 
-      mu_x_ = controller_parameters_im_.mu_xy_.x();
-      mu_y_ = controller_parameters_im_.mu_xy_.y();
-      mu_z_ = controller_parameters_im_.mu_z_;
+    mu_x_ = controller_parameters_im_.mu_xy_.x();
+    mu_y_ = controller_parameters_im_.mu_xy_.y();
+    mu_z_ = controller_parameters_im_.mu_z_;
 
-      mu_phi_ = controller_parameters_im_.mu_phi_;
-      mu_theta_ = controller_parameters_im_.mu_theta_;
-      mu_psi_ = controller_parameters_im_.mu_psi_;
+    mu_phi_ = controller_parameters_im_.mu_phi_;
+    mu_theta_ = controller_parameters_im_.mu_theta_;
+    mu_psi_ = controller_parameters_im_.mu_psi_;
 
-      lambda_x_ = controller_parameters_im_.U_q_.x();
-      lambda_y_ = controller_parameters_im_.U_q_.y();
-      lambda_z_ = controller_parameters_im_.U_q_.z();
+    U_q_x_ = controller_parameters_im_.U_q_.x();
+    U_q_y_ = controller_parameters_im_.U_q_.y();
+    U_q_z_ = controller_parameters_im_.U_q_.z();
 
-      K_x_1_ = 1/mu_x_;
-      K_x_2_ = -2 * (beta_x_/mu_x_);
+    K_x_1_ = 1/mu_x_;
+    K_x_2_ = -2 * (beta_x_/mu_x_);
 
-      K_y_1_ = 1/mu_y_;
-      K_y_2_ = -2 * (beta_y_/mu_y_);
+    K_y_1_ = 1/mu_y_;
+    K_y_2_ = -2 * (beta_y_/mu_y_);
 
-      K_z_1_ = 1/mu_z_;
-      K_z_2_ = -2 * (beta_z_/mu_z_);
+    K_z_1_ = 1/mu_z_;
+    K_z_2_ = -2 * (beta_z_/mu_z_);
+
+    ROS_INFO_ONCE("[Internal Model Controller] Controller gains successful setup");
 
 }
 
 // As SetControllerGains, the function is used to set the vehicle parameters into private variables of the class
 void InternalModelController::SetVehicleParameters(){
 
-      bf_ = vehicle_parameters_.bf_;
-      l_ = vehicle_parameters_.armLength_;
-      bm_ = vehicle_parameters_.bm_;
-      m_ = vehicle_parameters_.mass_;
-      g_ = vehicle_parameters_.gravity_;
-      Ix_ = vehicle_parameters_.inertia_(0,0);
-      Iy_ = vehicle_parameters_.inertia_(1,1);
-      Iz_ = vehicle_parameters_.inertia_(2,2);
+    bf_ = vehicle_parameters_.bf_;
+    l_ = vehicle_parameters_.armLength_;
+    bm_ = vehicle_parameters_.bm_;
+    m_ = vehicle_parameters_.mass_;
+    g_ = vehicle_parameters_.gravity_;
+    Ix_ = vehicle_parameters_.inertia_(0,0);
+    Iy_ = vehicle_parameters_.inertia_(1,1);
+    Iz_ = vehicle_parameters_.inertia_(2,2);
+
+    ROS_INFO_ONCE("[Internal Model Controller] Vehicle parameters successful setup");
 
 }
 
@@ -223,12 +232,26 @@ void InternalModelController::SetOdometryWithoutStateEstimator(const EigenOdomet
     state_.linearVelocity.y = odometry_.velocity[1];
     state_.linearVelocity.z = odometry_.velocity[2];
 
+    ROS_DEBUG("Drone position [x: %f, y: %f, z: %f]", state_.position.x, state_.position.y, state_.position.z);
+    ROS_DEBUG("Drone attitude [roll: %f, pitch: %f, yaw: %f]", state_.attitude.roll, state_.attitude.pitch, state_.attitude.yaw);
+    ROS_DEBUG("Drone linear velocity [x: %f, y: %f, z: %f]", state_.linearVelocity.x, state_.linearVelocity.y, state_.linearVelocity.z);
+
 }
 
 // The function sets the filter trajectory points
 void InternalModelController::SetTrajectoryPoint(const mav_msgs::EigenDroneState& command_trajectory) {
 
     command_trajectory_ = command_trajectory;
+
+    double psi_r, roll_r, pitch_r;
+    Quaternion2EulerCommandTrajectory(&roll_r, &pitch_r, &psi_r);
+
+    ROS_DEBUG("Drone desired position [x_d: %f, y_d: %f, z_d: %f]",  command_trajectory_.position_W[0],
+            command_trajectory_.position_W[1], command_trajectory_.position_W[2]);
+    ROS_DEBUG("Drone desired attitude [roll_d: %f, pitch_d: %f, yaw_d: %f]", roll_r, pitch_r, psi_r);
+    ROS_DEBUG("Drone desired linear velocity [x_d_dot: %f, y_d_dot: %f, z_d_dot: %f]", command_trajectory_.velocity[0],
+          command_trajectory_.velocity[1], command_trajectory_.velocity[2]);
+
 
 }
 
@@ -245,6 +268,8 @@ void InternalModelController::CalculateRotorVelocities(Eigen::Vector4d* rotor_ve
     double u_phi, u_theta, u_psi;
     double u_x, u_y, u_z, u_Terr;
     AttitudeController(&u_phi, &u_theta, &u_psi);
+    // control_.roll = phi_r, desired roll angle
+    // control_.pitch = theta_r, desired pitch angle
 	  PosController(&control_.thrust, &control_.roll, &control_.pitch, &u_x, &u_y, &u_z, &u_Terr);
 
     ROS_DEBUG("Thrust: %f U_phi: %f U_theta: %f U_psi: %f", control_.thrust, u_phi, u_theta, u_psi);
@@ -261,7 +286,7 @@ void InternalModelController::CalculateRotorVelocities(Eigen::Vector4d* rotor_ve
     not_saturated_3 = first + second + third - fourth;
     not_saturated_4 = first + second - third + fourth;
 
-    // The propellers velocities is limited by taking into account the physical constrains
+    // The propellers velocity is limited by taking into account the physical constrains
     double motorMin=not_saturated_1, motorMax=not_saturated_1, motorFix=0;
 
     if(not_saturated_2 < motorMin) motorMin = not_saturated_2;
@@ -335,6 +360,8 @@ void InternalModelController::VelocityErrors(double* dot_e_x, double* dot_e_y, d
    psi = state_.attitude.yaw;
    phi = state_.attitude.roll;
 
+   // The linear and angular velocity provided as outputs by the ideal odometry sensor are expressed
+   // in the body-frame. Therefore, such measurements have to be rotated before computing the error
    dot_x = (cos(theta) * cos(psi) * state_.linearVelocity.x) +
              ( ( (sin(phi) * sin(theta) * cos(psi) ) - ( cos(phi) * sin(psi) ) ) * state_.linearVelocity.y) +
              ( ( (cos(phi) * sin(theta) * cos(psi) ) + ( sin(phi) * sin(psi) ) ) *  state_.linearVelocity.z);
@@ -361,7 +388,7 @@ void InternalModelController::PositionErrors(double* e_x, double* e_y, double* e
    *e_y = command_trajectory_.position_W[1] - state_.position.y;
    *e_z = command_trajectory_.position_W[2] - state_.position.z;
 
-   ROS_DEBUG("Position Error components: [%f %f]", command_trajectory_.position_W[2], state_.position.z);
+   ROS_DEBUG("Position Error components along the z-axis: [z_d: %f, z: %f]", command_trajectory_.position_W[2], state_.position.z);
    ROS_DEBUG("Position Error: [%f %f %f]", *e_x, *e_y, *e_z);
 
 }
@@ -377,7 +404,7 @@ void InternalModelController::PosController(double* u_T, double* phi_r, double* 
    assert(u_Terr);
 
    //u_x computing
-   *u_x = ( (e_x_ * K_x_1_ * K_x_2_)/lambda_x_ ) + ( (dot_e_x_ * K_x_2_)/lambda_x_ );
+   *u_x = ( (e_x_ * K_x_1_ * K_x_2_)/U_q_x_ ) + ( (dot_e_x_ * K_x_2_)/U_q_x_ );
 
    if (*u_x > 1 || *u_x <-1)
 	   if (*u_x > 1)
@@ -385,7 +412,7 @@ void InternalModelController::PosController(double* u_T, double* phi_r, double* 
 	   else
 		   *u_x = -1;
 
-   *u_x = (*u_x * 1/2) + ( (K_x_1_/lambda_x_) * dot_e_x_ );
+   *u_x = (*u_x * 1/2) + ( (K_x_1_/U_q_x_) * dot_e_x_ );
 
    if (*u_x > 1 || *u_x <-1)
 	   if (*u_x > 1)
@@ -393,10 +420,10 @@ void InternalModelController::PosController(double* u_T, double* phi_r, double* 
 	   else
 		   *u_x = -1;
 
-   *u_x = m_ * (*u_x * lambda_x_);
+   *u_x = m_ * (*u_x * U_q_x_);
 
    //u_y computing
-   *u_y = ( (e_y_ * K_y_1_ * K_y_2_)/lambda_y_ ) + ( (dot_e_y_ * K_y_2_)/lambda_y_ );
+   *u_y = ( (e_y_ * K_y_1_ * K_y_2_)/U_q_y_ ) + ( (dot_e_y_ * K_y_2_)/U_q_y_ );
 
    if (*u_y > 1 || *u_y <-1)
 	   if (*u_y > 1)
@@ -404,7 +431,7 @@ void InternalModelController::PosController(double* u_T, double* phi_r, double* 
 	   else
 		   *u_y = -1;
 
-   *u_y = (*u_y * 1/2) + ( (K_y_1_/lambda_y_) * dot_e_y_ );
+   *u_y = (*u_y * 1/2) + ( (K_y_1_/U_q_y_) * dot_e_y_ );
 
    if (*u_y > 1 || *u_y <-1)
 	   if (*u_y > 1)
@@ -412,10 +439,10 @@ void InternalModelController::PosController(double* u_T, double* phi_r, double* 
 	   else
 		   *u_y = -1;
 
-   *u_y = m_* ( *u_y * lambda_y_);
+   *u_y = m_* ( *u_y * U_q_y_);
 
    //u_z computing
-   *u_z = ( (e_z_ * K_z_1_ * K_z_2_)/lambda_z_ ) + ( (dot_e_z_ * K_z_2_)/lambda_z_ );
+   *u_z = ( (e_z_ * K_z_1_ * K_z_2_)/U_q_z_ ) + ( (dot_e_z_ * K_z_2_)/U_q_z_ );
 
    if (*u_z > 1 || *u_z <-1)
 	   if (*u_z > 1)
@@ -423,7 +450,7 @@ void InternalModelController::PosController(double* u_T, double* phi_r, double* 
 	   else
 		   *u_z = -1;
 
-   *u_z = (*u_z * 1/2) + ( (K_z_1_/lambda_z_) * dot_e_z_ );
+   *u_z = (*u_z * 1/2) + ( (K_z_1_/U_q_z_) * dot_e_z_ );
 
    if (*u_z > 1 || *u_z <-1)
 	   if (*u_z > 1)
@@ -431,7 +458,7 @@ void InternalModelController::PosController(double* u_T, double* phi_r, double* 
 	   else
 		   *u_z = -1;
 
-   *u_z = m_* ( *u_z * lambda_z_);
+   *u_z = m_* ( *u_z * U_q_z_);
 
    //u_Terr computing
    *u_Terr = *u_z + (m_ * g_);
@@ -439,7 +466,7 @@ void InternalModelController::PosController(double* u_T, double* phi_r, double* 
    //u_T computing
    *u_T = sqrt( pow(*u_x,2) + pow(*u_y,2) + pow(*u_Terr,2) );
 
-   ROS_DEBUG("Position Control Signals: [%f %f %f %f]", *u_x, *u_y, *u_z, *u_T);
+   ROS_DEBUG("Position Control Signals: [%f %f %f %f %f]", *u_x, *u_y, *u_z, *u_T, *u_Terr);
 
 
    double psi_r, temp_a, temp_b;
@@ -457,15 +484,16 @@ void InternalModelController::AttitudeErrors(double* e_phi, double* e_theta, dou
    assert(e_theta);
    assert(e_psi);
 
-   double psi_r, roll_r, pitch_r;
+   double roll_r, pitch_r, psi_r;
    Quaternion2EulerCommandTrajectory(&roll_r, &pitch_r, &psi_r);
 
    *e_phi = roll_r - state_.attitude.roll;
    *e_theta = pitch_r - state_.attitude.pitch;
    *e_psi = psi_r - state_.attitude.yaw;
 
-   ROS_DEBUG("Angular Error: [%f %f %f]", state_.attitude.roll, state_.attitude.pitch, state_.attitude.yaw);
-   ROS_DEBUG("Angular Error: [%f %f %f]", *e_phi, *e_theta, *e_psi);
+   ROS_DEBUG("Drone attitude: [roll: %f, pitch: %f, yaw: %f]", state_.attitude.roll, state_.attitude.pitch, state_.attitude.yaw);
+   ROS_DEBUG("Angular Error: [e_phi: %f, e_pitch: %f, e_psi: %f]", *e_phi, *e_theta, *e_psi);
+   ROS_DEBUG("Desired Attitude: [phi_d: %f, pitch_d: %f, psi_d: %f]", roll_r, pitch_r, psi_r);
 
 }
 
@@ -480,26 +508,29 @@ void InternalModelController::AngularVelocityErrors(double* dot_e_phi, double* d
 
    double dot_e_phi_W_s, dot_e_theta_W_s, dot_e_psi_W_s, dot_e_phi_W_d, dot_e_theta_W_d, dot_e_psi_W_d;
 
-
+  // Drone angular rate rotated from body to fixed frame
    dot_e_phi_W_s = state_.angularVelocity.x + (sin(state_.attitude.roll) * tan(state_.attitude.pitch) * state_.angularVelocity.y)
                    + (cos(state_.attitude.roll) * tan(state_.attitude.pitch) * state_.angularVelocity.z);
 
-   dot_e_theta_W_s = (cos(state_.attitude.roll) * state_.angularVelocity.y) - (sin(state_.attitude.roll) * state_.angularVelocity.z);
+   dot_e_theta_W_s = cos(state_.attitude.roll) * state_.angularVelocity.y - sin(state_.attitude.roll) * state_.angularVelocity.z;
 
-   dot_e_psi_W_s = ( ( sin(state_.attitude.roll) * state_.angularVelocity.y) / cos(state_.attitude.pitch) ) +
-		               ( ( cos(state_.attitude.roll) * state_.angularVelocity.z) / cos(state_.attitude.pitch) );
+   dot_e_psi_W_s = ( sin(state_.attitude.roll) * state_.angularVelocity.y) / cos(state_.attitude.pitch) +
+		               ( cos(state_.attitude.roll) * state_.angularVelocity.z) / cos(state_.attitude.pitch);
 
+   // Desired angular rate rotated from body to fixed frame
    dot_e_phi_W_d = command_trajectory_.angular_velocity_B[0] + (sin(roll_r) * tan(pitch_r) * command_trajectory_.angular_velocity_B[1])
                    + (cos(roll_r) * tan(pitch_r) * command_trajectory_.angular_velocity_B[2]);
 
-   dot_e_theta_W_d = (cos(roll_r) * command_trajectory_.angular_velocity_B[1]) - (sin(roll_r) * command_trajectory_.angular_velocity_B[2]);
+   dot_e_theta_W_d = cos(roll_r) * command_trajectory_.angular_velocity_B[1] - sin(roll_r) * command_trajectory_.angular_velocity_B[2];
 
-   dot_e_psi_W_d = ( ( sin(roll_r) * command_trajectory_.angular_velocity_B[1]) / cos(pitch_r) ) +
-		               ( ( cos(roll_r) * command_trajectory_.angular_velocity_B[2]) / cos(pitch_r) );
+   dot_e_psi_W_d = ( sin(roll_r) * command_trajectory_.angular_velocity_B[1]) / cos(pitch_r) +
+		               ( cos(roll_r) * command_trajectory_.angular_velocity_B[2]) / cos(pitch_r);
 
    *dot_e_phi = dot_e_phi_W_d - dot_e_phi_W_s;
    *dot_e_theta =  dot_e_theta_W_d - dot_e_theta_W_s;
    *dot_e_psi = dot_e_psi_W_d - dot_e_psi_W_s;
+
+    ROS_DEBUG("Desired Attitude Rate: [phi_d_dot: %f, pitch_d_dot: %f, psi_d_dot: %f]", dot_e_phi_W_d, dot_e_theta_W_d, dot_e_psi_W_d);
 
 }
 
@@ -529,26 +560,24 @@ void InternalModelController::AttitudeController(double* u_phi, double* u_theta,
    assert(u_theta);
    assert(u_psi);
 
-   *u_phi = Ix_ *   ( ( ( (alpha_phi_/mu_phi_    ) * dot_e_phi_  ) - ( (beta_phi_/pow(mu_phi_,2)    ) * e_phi_  ) ) - ( ( (Iy_ - Iz_)/(Ix_ * mu_theta_ * mu_psi_) ) * e_theta_ * e_psi_) );
-   *u_theta = Iy_ * ( ( ( (alpha_theta_/mu_theta_) * dot_e_theta_) - ( (beta_theta_/pow(mu_theta_,2)) * e_theta_) ) - ( ( (Iz_ - Ix_)/(Iy_ * mu_phi_ * mu_psi_  ) ) * e_phi_   * e_psi_) );
-   *u_psi = Iz_ *   ( ( ( (alpha_psi_/mu_psi_    ) * dot_e_psi_  ) - ( (beta_psi_/pow(mu_psi_,2)    ) * e_psi_  ) ) - ( ( (Ix_ - Iy_)/(Iz_ * mu_theta_ * mu_phi_) ) * e_theta_ * e_phi_) );
+   *u_phi = Ix_ *   ( ( ( (alpha_phi_/mu_phi_    ) * dot_e_phi_  ) - ( (beta_phi_/pow(mu_phi_,2)    ) * e_phi_  ) ) -
+            ( ( (Iy_ - Iz_)/(Ix_ * mu_theta_ * mu_psi_) ) * e_theta_ * e_psi_) );
+   *u_theta = Iy_ * ( ( ( (alpha_theta_/mu_theta_) * dot_e_theta_) - ( (beta_theta_/pow(mu_theta_,2)) * e_theta_) ) -
+            ( ( (Iz_ - Ix_)/(Iy_ * mu_phi_ * mu_psi_  ) ) * e_phi_   * e_psi_) );
+   *u_psi = Iz_ *   ( ( ( (alpha_psi_/mu_psi_    ) * dot_e_psi_  ) - ( (beta_psi_/pow(mu_psi_,2)    ) * e_psi_  ) ) -
+            ( ( (Ix_ - Iy_)/(Iz_ * mu_theta_ * mu_phi_) ) * e_theta_ * e_phi_) );
 
 }
 
 
-//The function every TsA computes the attitude and angular velocity errors. When the data storing is active, the data are saved into csv files
+//Every TsA this function computes the attitude and the angular rate errors
 void InternalModelController::CallbackAttitude(const ros::TimerEvent& event){
 
      AttitudeErrors(&e_phi_, &e_theta_, &e_psi_);
      AngularVelocityErrors(&dot_e_phi_, &dot_e_theta_, &dot_e_psi_);
 }
 
-//The function every TsP:
-//	* the next point to follow has generated (the output of the waypoint filter)
-//	* the output of the waypoint filter is put into the command_trajectory_ data structure
-//  * the EKF is used to estimate the drone attitude and linear velocity
-//  * the position and velocity errors are computed
-//  * the last part is used to store the data into csv files if the data storing is active
+//Every TsP this function computes the position and velocity errors
 void InternalModelController::CallbackPosition(const ros::TimerEvent& event){
 
      PositionErrors(&e_x_, &e_y_, &e_z_);
