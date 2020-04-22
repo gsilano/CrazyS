@@ -157,6 +157,8 @@ namespace rotors_gazebo {
 
     ROS_DEBUG("Publishing angular velocity waypoint: [%f, %f, %f].", roll_component, pitch_component, yaw_component);
 
+    // The angular rates are rotated from the inertial to the body frame
+    // https://home.aero.polimi.it/trainelli/downloads/Bottasso_ThreeDimensionalRotations.pdf, eqs. 1.206 and 1.208
     double roll_component_B, pitch_component_B, yaw_component_B;
     roll_component_B = roll_component - sin(pitchDesRad_) * yaw_component;
     pitch_component_B = cos(rollDesRad_) * pitch_component + sin(rollDesRad_) * cos(pitchDesRad_) * yaw_component;
