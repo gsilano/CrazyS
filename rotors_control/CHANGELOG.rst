@@ -2,6 +2,11 @@
 Changelog for package rotors_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.0.11 (2020-04-23)
+-------------------
+* Contributors: fix missing input error when running the control algorithm
+* Contributors: Giuseppe Silano
+
 4.0.10 (2020-04-14)
 -------------------
 * Improvements in the include folder

@@ -24,7 +24,7 @@
   <!-- Instantiate crazyflie2 "mechanics" -->
   <xacro:include filename="$(find rotors_description)/urdf/crazyflie2.xacro" />
 
-  <!-- Instantiate a controller. -->
+  <!-- Instantiate a controller.  -->
   <xacro:controller_plugin_macro namespace="${namespace}" imu_sub_topic="imu" />
 
   <!-- Enable the MAVLink interface. It is useful for the HIL (Hardware-in-the-loop) tests -->
@@ -44,7 +44,7 @@
   </xacro:if>
 
   <!-- Mount a generic odometry sensor. -->
-  <xacro:crazyflie2_odometry namespace="${namespace}" parent_link="${namespace}/base_link" />
+  <xacro:crazyflie2_odometry namespace="${namespace}" parent_link="${namespace}/base_link"  />
 
   <!-- Mount a generic odometry sensor employed as ground truth -->
   <xacro:if value="$(arg enable_ground_truth)">
@@ -56,7 +56,8 @@
     <xacro:bag_plugin_macro
       namespace="${namespace}"
       bag_file="$(arg log_file)"
-      rotor_velocity_slowdown_sim="${rotor_velocity_slowdown_sim}" />
+      rotor_velocity_slowdown_sim="${rotor_velocity_slowdown_sim}"
+      wait_to_record_bag="$(arg wait_to_record_bag)" />
   </xacro:if>
 
 </robot>

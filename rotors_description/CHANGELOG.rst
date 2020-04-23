@@ -2,6 +2,12 @@
 Changelog for package rotors_description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.0.11 (2020-04-23)
+------------------
+* Fix issue according to https://github.com/gsilano/CrazyS/issues/44
+* Changed the "measurement_divisor" (from 10 to 1) at line 895 in the component_snippets.xacro file
+* Contributors: Giuseppe Silano
+
 4.0.10 (2020-04-14)
 ------------------
 * Add ideal imu sensor for the Crazyflie

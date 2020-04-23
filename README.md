@@ -317,6 +317,12 @@ An alternative controller is available on the repository. For running the simula
 $ roslaunch rotors_gazebo crazyflie2_crazyflie2_internal_model_controller.luanch
 ```
 
+while a simple swarm example is available at
+
+```console
+$ roslaunch rotors_gazebo crazyflie2_swarm_hovering_example.luanch
+```
+
 > **Note** There is also a draft of the Mellinger's controller implementation in the package. This is a NOT WORKING example. As soon as the problems are resolved, a working version will be made available.
 
 The package also provides a launch file for piloting the Crazyflie using a PC joystick. To run the simulation simple copy and paste the command in the following in a terminal window
