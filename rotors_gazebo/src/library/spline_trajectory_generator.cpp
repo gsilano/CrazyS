@@ -33,7 +33,7 @@
 #include <std_srvs/Empty.h>
 #include <trajectory_msgs/MultiDOFJointTrajectory.h>
 #include <math.h>
-#include "rotors_gazebo/hovering_example_spline.h"
+#include "rotors_gazebo/spline_trajectory_generator.h"
 
 #define DELTA_1   0.5
 #define ALPHA_1   2
@@ -52,7 +52,7 @@
 
 namespace rotors_gazebo {
 
-  HoveringExampleSpline::HoveringExampleSpline(){
+  SplineTrajectoryGenerator::SplineTrajectoryGenerator(){
 
     // Parameters initializion
     a0_.setZero(); a1_.setZero(); a2_.setZero(); a3_.setZero(); a4_.setZero(); a5_.setZero();
@@ -65,9 +65,9 @@ namespace rotors_gazebo {
 
   }
 
-  HoveringExampleSpline::~HoveringExampleSpline(){}
+  SplineTrajectoryGenerator::~SplineTrajectoryGenerator(){}
 
-  void HoveringExampleSpline::TrajectoryCallback(mav_msgs::EigenDroneState* odometry, double* time_final, double* time_init) {
+  void SplineTrajectoryGenerator::TrajectoryCallback(mav_msgs::EigenDroneState* odometry, double* time_final, double* time_init) {
     assert(odometry);
     assert(time_final);
     assert(time_init);
@@ -170,7 +170,7 @@ namespace rotors_gazebo {
 
   }
 
-  void HoveringExampleSpline::ComputeSplineParameters(double* time_spline){
+  void SplineTrajectoryGenerator::ComputeSplineParameters(double* time_spline){
       assert(time_spline);
 
       /*        POSITION       */
@@ -364,7 +364,7 @@ namespace rotors_gazebo {
 
   }
 
-  void HoveringExampleSpline::Euler2QuaternionCommandTrajectory(double* x, double* y, double* z, double* w) const {
+  void SplineTrajectoryGenerator::Euler2QuaternionCommandTrajectory(double* x, double* y, double* z, double* w) const {
       assert(x);
       assert(y);
       assert(z);
@@ -386,7 +386,7 @@ namespace rotors_gazebo {
       ROS_DEBUG("x Trajectory: %f, y Trajectory: %f, z Trajectory: %f, w Trajectory: %f", *x, *y, *z, *w);
     }
 
-   void HoveringExampleSpline::InitializeParams(){
+   void SplineTrajectoryGenerator::InitializeParams(){
 
      ros::NodeHandle pnh("~");
 
@@ -442,7 +442,7 @@ namespace rotors_gazebo {
 
    }
 
-   template<typename T> inline void HoveringExampleSpline::GetRosParameterHovering(const ros::NodeHandle& nh,
+   template<typename T> inline void SplineTrajectoryGenerator::GetRosParameterHovering(const ros::NodeHandle& nh,
                                                             const std::string& key,
                                                             const T& default_value,
                                                             T* value) {
@@ -456,91 +456,4 @@ namespace rotors_gazebo {
      }
    }
 
-}
-
-
-int main(int argc, char** argv) {
-  ros::init(argc, argv, "hovering_example_spline");
-  ros::NodeHandle nh;
-  // Create a private node handle for accessing node parameters.
-  ros::NodeHandle nh_private("~");
-  ros::Publisher trajectory_pub =
-      nh.advertise<mav_msgs::DroneState>(
-          mav_msgs::default_topics::DRONE_STATE, 10);
-  ROS_INFO("Started hovering example with spline.");
-
-  std_srvs::Empty srv;
-  bool unpaused = ros::service::call("/gazebo/unpause_physics", srv);
-  unsigned int i = 0;
-
-  // Trying to unpause Gazebo for 10 seconds.
-  while (i <= 10 && !unpaused) {
-    ROS_INFO("Wait for 1 second before trying to unpause Gazebo again.");
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    unpaused = ros::service::call("/gazebo/unpause_physics", srv);
-    ++i;
-  }
-
-  if (!unpaused) {
-    ROS_FATAL("Could not wake up Gazebo.");
-    return -1;
-  } else {
-    ROS_INFO("Unpaused the Gazebo simulation.");
-  }
-
-  // Trajectory message
-  mav_msgs::DroneState trajectory_msg, trajectory_msg_pre;
-  trajectory_msg.header.stamp = ros::Time::now();
-  mav_msgs::EigenDroneState eigen_reference;
-  rotors_gazebo::HoveringExampleSpline hovering_example_spline_generator;
-
-  Eigen::Vector3f check_position_final;
-  hovering_example_spline_generator.GetRosParameterHovering(nh_private, "position_final/x", check_position_final.x(), &check_position_final.x());
-  hovering_example_spline_generator.GetRosParameterHovering(nh_private, "position_final/y", check_position_final.y(), &check_position_final.y());
-  hovering_example_spline_generator.GetRosParameterHovering(nh_private, "position_final/z", check_position_final.z(), &check_position_final.z());
-
-  // Wait for 5 seconds to let the Gazebo GUI show up.
-  if (ros::Time::now().toSec() < START_SIMULATION_TIME){
-    ros::Duration(START_SIMULATION_TIME).sleep();
-    hovering_example_spline_generator.InitializeParams();
-  }
-
-  // Reading the final time. This is stop condition for the spline generator
-  double end_generation_time;
-  hovering_example_spline_generator.GetRosParameterHovering(nh_private, "time_final/time", end_generation_time, &end_generation_time);
-
-  double initial_time, final_time;
-  initial_time = START_SIMULATION_TIME;
-
-  // Publish the trajectory values until the final values is reached
-  while(true){
-    final_time = ros::Time::now().toSec();
-    hovering_example_spline_generator.TrajectoryCallback(&eigen_reference, &final_time, &initial_time);
-
-    mav_msgs::eigenDroneFromStateToMsg(&eigen_reference, trajectory_msg);
-
-    // new message
-    if(eigen_reference.position_W[0] <= check_position_final[0] &&
-      eigen_reference.position_W[1] <= check_position_final[1] &&
-      eigen_reference.position_W[2] <= check_position_final[2]){
-      trajectory_pub.publish(trajectory_msg);
-      trajectory_msg_pre = trajectory_msg;
-    }
-
-    ROS_DEBUG("Publishing waypoint from msg: [%f, %f, %f].", trajectory_msg.position.x, trajectory_msg.position.y, trajectory_msg.position.z);
-    ROS_DEBUG("Publishing waypoint: [%f, %f, %f].", eigen_reference.position_W[0], eigen_reference.position_W[1], eigen_reference.position_W[2]);
-
-    ros::Duration(SAMPLING_TIME).sleep();
-
-    // Hold the message until the simulation ends
-    if(eigen_reference.position_W[0] > check_position_final[0] &&
-      eigen_reference.position_W[1] > check_position_final[1] &&
-      eigen_reference.position_W[2] > check_position_final[2])
-      trajectory_pub.publish(trajectory_msg_pre);
-
-  }
-
-  ros::spin();
-
-  return 0;
 }

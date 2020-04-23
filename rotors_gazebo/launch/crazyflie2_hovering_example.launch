@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <launch>
   <arg name="mav_name" default="crazyflie2"/>
   <arg name="world_name" default="basic"/>
