@@ -60,6 +60,7 @@ find_package(
 
 catkin_package(
   INCLUDE_DIRS include ${Eigen_INCLUDE_DIRS}
+  LIBRARIES spline_trajectory_generator
   CATKIN_DEPENDS geometry_msgs mav_msgs nav_msgs roscpp sensor_msgs gazebo_msgs
   DEPENDS Eigen
 )
@@ -70,23 +71,31 @@ include_directories(
   ${Eigen_INCLUDE_DIRS}
 )
 
-add_executable(waypoint_publisher src/waypoint_publisher.cpp)
+add_library(spline_trajectory_generator
+  src/library/spline_trajectory_generator.cpp
+)
+
+add_executable(waypoint_publisher src/nodes/waypoint_publisher.cpp)
 target_link_libraries(waypoint_publisher ${catkin_LIBRARIES})
 add_dependencies(waypoint_publisher ${catkin_EXPORTED_TARGETS})
 
-add_executable(waypoint_publisher_file src/waypoint_publisher_file.cpp)
+add_executable(waypoint_publisher_file src/nodes/waypoint_publisher_file.cpp)
 target_link_libraries(waypoint_publisher_file ${catkin_LIBRARIES})
 add_dependencies(waypoint_publisher_file ${catkin_EXPORTED_TARGETS})
 
-add_executable(hovering_example src/hovering_example.cpp)
+add_executable(hovering_example src/nodes/hovering_example.cpp)
 target_link_libraries(hovering_example ${catkin_LIBRARIES})
 add_dependencies(hovering_example ${catkin_EXPORTED_TARGETS})
 
-add_executable(hovering_example_spline src/hovering_example_spline.cpp)
-target_link_libraries(hovering_example_spline ${catkin_LIBRARIES})
+add_executable(hovering_example_spline src/nodes/hovering_example_spline.cpp)
+target_link_libraries(hovering_example_spline spline_trajectory_generator ${catkin_LIBRARIES})
 add_dependencies(hovering_example_spline ${catkin_EXPORTED_TARGETS})
 
-add_executable(quaternion_to_rpy src/quaternion_to_rpy.cpp)
+add_executable(hovering_example_spline_swarm src/nodes/hovering_example_spline_swarm.cpp)
+target_link_libraries(hovering_example_spline_swarm spline_trajectory_generator ${catkin_LIBRARIES})
+add_dependencies(hovering_example_spline_swarm ${catkin_EXPORTED_TARGETS})
+
+add_executable(quaternion_to_rpy src/nodes/quaternion_to_rpy.cpp)
 target_link_libraries(quaternion_to_rpy ${catkin_LIBRARIES})
 add_dependencies(quaternion_to_rpy ${catkin_EXPORTED_TARGETS})
 
@@ -95,14 +104,15 @@ foreach(dir launch models resource worlds)
       DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/${dir})
 endforeach(dir)
 
-install(TARGETS waypoint_publisher waypoint_publisher_file hovering_example quaternion_to_rpy hovering_example_spline
+install(TARGETS waypoint_publisher waypoint_publisher_file hovering_example
+  quaternion_to_rpy hovering_example_spline hovering_example_spline_swarm
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 install(
-  DIRECTORY include/${PROJECT_NAME}/ 
+  DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
   FILES_MATCHING PATTERN "*.h"
 )
