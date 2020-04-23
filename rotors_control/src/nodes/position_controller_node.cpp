@@ -170,30 +170,30 @@ void PositionControllerNode::InitializeParams() {
 
     // Parameters reading from rosparam.
     GetRosParameter(pnh, "xy_gain_kp/x",
-                    position_controller_.controller_parameters_.xy_gain_kp_.x(),
-                    &position_controller_.controller_parameters_.xy_gain_kp_.x());
+                   position_controller_.controller_parameters_.xy_gain_kp_.x(),
+                   &position_controller_.controller_parameters_.xy_gain_kp_.x());
     GetRosParameter(pnh, "xy_gain_kp/y",
-                    position_controller_.controller_parameters_.xy_gain_kp_.y(),
-                    &position_controller_.controller_parameters_.xy_gain_kp_.y());
+                   position_controller_.controller_parameters_.xy_gain_kp_.y(),
+                   &position_controller_.controller_parameters_.xy_gain_kp_.y());
     GetRosParameter(pnh, "xy_gain_ki/x",
-                    position_controller_.controller_parameters_.xy_gain_ki_.x(),
-                    &position_controller_.controller_parameters_.xy_gain_ki_.x());
+                   position_controller_.controller_parameters_.xy_gain_ki_.x(),
+                   &position_controller_.controller_parameters_.xy_gain_ki_.x());
     GetRosParameter(pnh, "xy_gain_ki/y",
-                    position_controller_.controller_parameters_.xy_gain_ki_.y(),
-                    &position_controller_.controller_parameters_.xy_gain_ki_.y());
+                   position_controller_.controller_parameters_.xy_gain_ki_.y(),
+                   &position_controller_.controller_parameters_.xy_gain_ki_.y());
 
     GetRosParameter(pnh, "attitude_gain_kp/phi",
-                    position_controller_.controller_parameters_.attitude_gain_kp_.x(),
-                    &position_controller_.controller_parameters_.attitude_gain_kp_.x());
+                   position_controller_.controller_parameters_.attitude_gain_kp_.x(),
+                   &position_controller_.controller_parameters_.attitude_gain_kp_.x());
     GetRosParameter(pnh, "attitude_gain_kp/phi",
-                    position_controller_.controller_parameters_.attitude_gain_kp_.y(),
-                    &position_controller_.controller_parameters_.attitude_gain_kp_.y());
+                   position_controller_.controller_parameters_.attitude_gain_kp_.y(),
+                   &position_controller_.controller_parameters_.attitude_gain_kp_.y());
     GetRosParameter(pnh, "attitude_gain_ki/theta",
-                    position_controller_.controller_parameters_.attitude_gain_ki_.x(),
-                    &position_controller_.controller_parameters_.attitude_gain_ki_.x());
+                   position_controller_.controller_parameters_.attitude_gain_ki_.x(),
+                   &position_controller_.controller_parameters_.attitude_gain_ki_.x());
     GetRosParameter(pnh, "attitude_gain_ki/theta",
-                    position_controller_.controller_parameters_.attitude_gain_ki_.y(),
-                    &position_controller_.controller_parameters_.attitude_gain_ki_.y());
+                   position_controller_.controller_parameters_.attitude_gain_ki_.y(),
+                   &position_controller_.controller_parameters_.attitude_gain_ki_.y());
 
     GetRosParameter(pnh, "rate_gain_kp/p",
                     position_controller_.controller_parameters_.rate_gain_kp_.x(),
@@ -233,7 +233,36 @@ void PositionControllerNode::InitializeParams() {
 
     position_controller_.SetControllerGains();
 
-     ROS_INFO_ONCE("[Position Controller] Set controller gains and vehicle parameters");
+    ROS_INFO_ONCE("[Position Controller] Set controller gains and vehicle parameters");
+
+    //Reading the parameters come from the launch file
+    bool dataStoringActive;
+    double dataStoringTime;
+    std::string user;
+
+    if (pnh.getParam("user_account", user)){
+    ROS_INFO("Got param 'user_account': %s", user.c_str());
+    position_controller_.user_ = user;
+    }
+    else
+       ROS_ERROR("Failed to get param 'user'");
+
+    if (pnh.getParam("csvFilesStoring", dataStoringActive)){
+    ROS_INFO("Got param 'csvFilesStoring': %d", dataStoringActive);
+    position_controller_.dataStoring_active_ = dataStoringActive;
+    }
+    else
+       ROS_ERROR("Failed to get param 'csvFilesStoring'");
+
+    if (pnh.getParam("csvFilesStoringTime", dataStoringTime)){
+    ROS_INFO("Got param 'csvFilesStoringTime': %f", dataStoringTime);
+    position_controller_.dataStoringTime_ = dataStoringTime;
+    }
+    else
+       ROS_ERROR("Failed to get param 'csvFilesStoringTime'");
+
+    position_controller_.SetLaunchFileParameters();
+
    }
 
  if(enable_mellinger_controller_){
@@ -402,34 +431,6 @@ void PositionControllerNode::InitializeParams() {
 
   if (enable_state_estimator_)
     position_controller_.crazyflie_onboard_controller_.SetControllerGains(position_controller_.controller_parameters_);
-
-  //Reading the parameters come from the launch file
-  bool dataStoringActive;
-  double dataStoringTime;
-  std::string user;
-
-  if (pnh.getParam("user_account", user)){
-	  ROS_INFO("Got param 'user_account': %s", user.c_str());
-	  position_controller_.user_ = user;
-  }
-  else
-      ROS_ERROR("Failed to get param 'user'");
-
-  if (pnh.getParam("csvFilesStoring", dataStoringActive)){
-	  ROS_INFO("Got param 'csvFilesStoring': %d", dataStoringActive);
-	  position_controller_.dataStoring_active_ = dataStoringActive;
-  }
-  else
-      ROS_ERROR("Failed to get param 'csvFilesStoring'");
-
-  if (pnh.getParam("csvFilesStoringTime", dataStoringTime)){
-	  ROS_INFO("Got param 'csvFilesStoringTime': %f", dataStoringTime);
-	  position_controller_.dataStoringTime_ = dataStoringTime;
-  }
-  else
-      ROS_ERROR("Failed to get param 'csvFilesStoringTime'");
-
-  position_controller_.SetLaunchFileParameters();
 
 }
 

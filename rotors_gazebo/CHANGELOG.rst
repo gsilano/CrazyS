@@ -2,6 +2,13 @@
 Changelog for package rotors_gazebo
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.0.5 (2020-04-23)
+------------------
+* Add a swarm example with the Crazyflie 2.0
+* The spline trajectory generator now is a shared library
+* Add a trajectory generator when using splines for the swarm example
+* Contributors: Giuseppe Silano
+
 6.0.4 (2020-04-14)
 ------------------
 * Add INDI and Mellinger's (it does not work yet) controllers to the spaw_mav_crazyflie.launch file

@@ -42,11 +42,11 @@
 
  namespace rotors_gazebo {
 
-     class HoveringExampleSpline{
+     class SplineTrajectoryGenerator{
          public:
 
-           HoveringExampleSpline();
-           ~HoveringExampleSpline();
+           SplineTrajectoryGenerator();
+           ~SplineTrajectoryGenerator();
 
            void TrajectoryCallback(mav_msgs::EigenDroneState* odometry, double* time_final, double* time_init);
            void InitializeParams();
