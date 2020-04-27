@@ -66,10 +66,11 @@ If the problem does not fall in one of the following categories you might need t
 
 #### Missing `libmav_msgs`
 
-As a result of using `catkin build` (instead of `catkin_make`), it is possible that the dependency for `libmav_msgs` is not satisfied. If `libmav_msgs.so` is not present in `devel/lib/` you need to copy it there or link to it from `build/rotors_gazebo_plugins/libmav_msgs.so`. Use the following line to create a soft link to the shared object
+As a result of using `catkin build` (instead of `catkin_make`), it is possible that the dependency for `libmav_msgs` is not satisfied. If `libmav_msgs.so` is not present in `devel/lib/` you need to copy it there or link to it from `build/rotors_gazebo_plugins/libmav_msgs.so`. Use the following commands to create a soft link to the shared object.
 
 ```console
-ln -s build/rotors_gazebo_plugins/libmav_msgs.so devel/lib/
+cd ~/catkin_wc
+ln -s build/rotors_gazebo_plugins/libmav_msgs.so devel/lib/libmav_msgs.so
 ```
 
 #### Dependency on an older library version
