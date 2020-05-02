@@ -4,6 +4,9 @@ Changelog for package rotors_gazebo
 
 6.0.6 (2020-05-02)
 ------------------
+* Add launch file for simulating the Crazyflie 2.0 with a VI sensor. In addition, an RVIZ configuration file allows to see
+the camera images and point cloud data
+* Contributors: Giuseppe Silano
 
 6.0.5 (2020-04-23)
 ------------------

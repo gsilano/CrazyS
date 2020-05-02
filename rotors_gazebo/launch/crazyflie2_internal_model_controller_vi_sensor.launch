@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="mav_name" default="crazyflie2"/>
+  <!-- Pay attention that the world sampling time is line with the one used in the
+       controller algorithm-->
+  <arg name="world_name" default="basic"/>
+  <arg name="enable_logging" default="false" />
+  <arg name="enable_ground_truth" default="true" />
+  <arg name="log_file" default="$(arg mav_name)" />
+  <arg name="paused" value="true"/>
+  <arg name="debug" default="false"/>
+  <arg name="gui" default="true"/>
+  <arg name="enable_vi_sensor" default="true"/>
+  <!-- The following line causes gzmsg and gzerr messages to be printed to the console
+      (even when Gazebo is started through roslaunch) -->
+  <arg name="verbose" default="false"/>
+  <!-- Enables the Internal Model Controller disabling the Mellinger and the Position ones -->
+  <arg name="enable_internal_model_controller" default="true"/>
+  <arg name="debug_rviz" default="false" />
+  <arg name="config" default="true" />
+  <arg unless="$(arg debug_rviz)" name="launch_prefix" value="" />
+  <arg     if="$(arg debug_rviz)" name="launch_prefix" value="gdb --ex run --args" />
+  <arg unless="$(arg config)" name="command_args" value="" />
+  <arg     if="$(arg config)" name="command_args" value="-d $(find rotors_gazebo)/rviz/crazyflie_vi_sensor.rviz" />
+
+  <!-- The following lines simulate the world in Gazebo. The physic engine properties
+        are set up in the file "basic_crazyflie.world" file -->
+  <env name="GAZEBO_MODEL_PATH" value="${GAZEBO_MODEL_PATH}:$(find rotors_gazebo)/models"/>
+  <env name="GAZEBO_RESOURCE_PATH" value="${GAZEBO_RESOURCE_PATH}:$(find rotors_gazebo)/models"/>
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find rotors_gazebo)/worlds/$(arg world_name)_crazyflie.world" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="gui" value="$(arg gui)" />
+    <arg name="verbose" value="$(arg verbose)"/>
+  </include>
+
+  <group ns="$(arg mav_name)">
+  <!-- The following lines simulate the Crazyflie dynamics -->
+    <include file="$(find rotors_gazebo)/launch/spawn_mav_crazyflie.launch">
+      <arg name="mav_name" value="$(arg mav_name)" />
+      <arg name="model" value="$(find rotors_description)/urdf/mav_generic_odometry_sensor.gazebo" />
+      <arg name="enable_logging" value="$(arg enable_logging)" />
+      <arg name="enable_ground_truth" value="$(arg enable_ground_truth)" />
+      <arg name="enable_vi_sensor" value="$(arg enable_vi_sensor)"/>
+      <!-- As for the Mellinger and Position controllers in the "crazyflie2_hovering_example.launch" file -->
+      <arg name="enable_internal_model_controller" value="$(arg enable_internal_model_controller)" />
+      <arg name="log_file" value="$(arg log_file)"/>
+    </include>
+   <!-- The Crazyflie controller -->
+   <node name="position_controller_node" pkg="rotors_control" type="position_controller_node" output="screen">
+      <!-- Enabling internal model controller-->
+      <param name="enable_internal_model_controller" value="$(arg enable_internal_model_controller)"  />
+      <!-- Crazyflie file parameters used within the Internal Model Controller controller -->
+      <rosparam command="load" file="$(find rotors_gazebo)/resource/crazyflie_parameters.yaml" />
+      <rosparam command="load" file="$(find rotors_gazebo)/resource/$(arg mav_name).yaml" />
+      <!-- Loading Internal Model Controller's parameters -->
+      <rosparam command="load" file="$(find rotors_gazebo)/resource/crazyflie_internal_model_controller.yaml" />
+   </node>
+   <!-- Enable/Disable the trajectory generator - If the position_controller is activated, the hovering_example will be executed,
+        otherwise the spline generator and the Mellinger's controller will be run-->
+   <node name="hovering_example_spline" pkg="rotors_gazebo" type="hovering_example_spline" output="screen" >
+     <rosparam command="load" file="$(find rotors_gazebo)/resource/spline_trajectory.yaml" />
+   </node>
+   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+   <node name="quaternion_to_rpy" pkg="rotors_gazebo" type="quaternion_to_rpy" output="screen" >
+       <remap from="odometry" to="odometry_sensor1/odometry" />
+   </node>
+
+  <!-- Visualisation RVIZ -->
+  <node name="$(anon rviz)" launch-prefix="$(arg launch_prefix)" pkg="rviz" type="rviz" respawn="false"
+	args="$(arg command_args)" output="screen" />
+
+  </group>
+</launch>
