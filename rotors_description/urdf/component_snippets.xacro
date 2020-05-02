@@ -954,8 +954,92 @@
     accelerometer_turn_on_bias_sigma="0">
     <inertia ixx="0.00001" ixy="0.0" ixz="0.0" iyy="0.00001" iyz="0.0" izz="0.00001" />
     <origin xyz="0 0 0" rpy="0 0 0" />
-  </xacro:imu_plugin_macro>
-</xacro:macro>
+   </xacro:imu_plugin_macro>
+  </xacro:macro>
+
+  <!-- VI-Sensor Macro Without Visual Part -->
+  <xacro:macro name="vi_sensor_macro_without_visual" params="namespace parent_link enable_cameras enable_depth enable_ground_truth *origin">
+    <!-- Vi Sensor Link -->
+    <link name="${namespace}/vi_sensor_link" />
+    <joint name="${namespace}_vi_sensor_joint" type="fixed">
+      <xacro:insert_block name="origin" />
+      <parent link="${parent_link}" />
+      <child link="${namespace}/vi_sensor_link" />
+    </joint>
+    <!-- Cameras -->
+    <xacro:if value="${enable_cameras}">
+      <!-- Insert stereo pair. -->
+      <xacro:vi_sensor_stereo_camera_macro
+        namespace="${namespace}" parent_link="${namespace}/vi_sensor_link"
+        frame_rate="30.0" origin_offset_x="0.015" baseline_y="${0.055*2}"
+        origin_offset_z="0.0065" max_range="30.0">
+      </xacro:vi_sensor_stereo_camera_macro>
+    </xacro:if>
+
+    <!-- Depth Sensor -->
+    <xacro:if value="${enable_depth}">
+      <xacro:vi_sensor_depth_macro
+        namespace="${namespace}" parent_link="${namespace}/vi_sensor_link"
+        camera_suffix="depth" frame_rate="30.0" max_range="10.0">
+        <origin xyz="0.015 0.055 0.0065" rpy="0 0 0" />
+      </xacro:vi_sensor_depth_macro>
+    </xacro:if>
+
+    <!-- Groundtruth -->
+    <xacro:if value="${enable_ground_truth}">
+      <!-- Odometry Sensor -->
+      <xacro:odometry_plugin_macro
+        namespace="${namespace}/ground_truth"
+        odometry_sensor_suffix=""
+        parent_link="${namespace}/vi_sensor_link"
+        pose_topic="pose"
+        pose_with_covariance_topic="pose_with_covariance"
+        position_topic="position"
+        transform_topic="transform"
+        odometry_topic="odometry"
+        parent_frame_id="world"
+        child_frame_id="${namespace}/base_link"
+        mass_odometry_sensor="0.00001"
+        measurement_divisor="1"
+        measurement_delay="0"
+        unknown_delay="0.0"
+        noise_normal_position="0 0 0"
+        noise_normal_quaternion="0 0 0"
+        noise_normal_linear_velocity="0 0 0"
+        noise_normal_angular_velocity="0 0 0"
+        noise_uniform_position="0 0 0"
+        noise_uniform_quaternion="0 0 0"
+        noise_uniform_linear_velocity="0 0 0"
+        noise_uniform_angular_velocity="0 0 0"
+        enable_odometry_map="false"
+        odometry_map=""
+        image_scale="">
+        <inertia ixx="0.00001" ixy="0.0" ixz="0.0" iyy="0.00001" iyz="0.0" izz="0.00001" /> <!-- [kg m^2] [kg m^2] [kg m^2] [kg m^2] [kg m^2] [kg m^2] -->
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+      </xacro:odometry_plugin_macro>
+    </xacro:if>
+
+   <!-- Mount an MPU-9250 IMU. -->
+    <xacro:imu_plugin_macro
+      namespace="${namespace}"
+      imu_suffix=""
+      parent_link="${parent_link}"
+      imu_topic="imu"
+      measurement_delay="0"
+      measurement_divisor="1"
+      mass_imu_sensor="0.00001"
+      gyroscope_noise_density="0.000175"
+      gyroscope_random_walk="0.0105"
+      gyroscope_bias_correlation_time="1000.0"
+      gyroscope_turn_on_bias_sigma= "0.09"
+      accelerometer_noise_density="0.003"
+      accelerometer_random_walk="0.18"
+      accelerometer_bias_correlation_time="300.0"
+      accelerometer_turn_on_bias_sigma="0.588">
+      <inertia ixx="0.00001" ixy="0.0" ixz="0.0" iyy="0.00001" iyz="0.0" izz="0.00001" />
+      <origin xyz="0 0 0" rpy="0 0 0" />
+    </xacro:imu_plugin_macro>
+  </xacro:macro>
 
   <xacro:macro name="default_gps" params="namespace parent_link">
     <!-- Default GPS. -->
