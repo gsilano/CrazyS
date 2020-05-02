@@ -2,6 +2,11 @@
 Changelog for package rotors_description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.0.12 (2020-05-02)
+-------------------
+* Add a VI sensor for the Crazyflie without shape and visual part
+* Contributors: Giuseppe Silano
+
 4.0.11 (2020-04-23)
 ------------------
 * Fix issue according to https://github.com/gsilano/CrazyS/issues/44
