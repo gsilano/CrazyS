@@ -1,6 +1,6 @@
 <package>
   <name>rotors_comm</name>
-  <version>6.0.5</version>
+  <version>6.0.6</version>
   <description>RotorS specific messages and services.</description>
 
   <maintainer email="giuseppe.silano@unisannio.it">Giuseppe Silano</maintainer>

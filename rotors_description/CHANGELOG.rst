@@ -2,6 +2,9 @@
 Changelog for package rotors_description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.0.6 (2020-05-02)
+------------------
+
 6.0.5 (2020-04-23)
 ------------------
 * Fix issue according to https://github.com/gsilano/CrazyS/issues/44
