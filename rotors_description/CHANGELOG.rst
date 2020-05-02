@@ -2,9 +2,13 @@
 Changelog for package rotors_description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-5.0.5 (2020-04-23)
+5.0.6 (2020-05-02)
 ------------------
 * Add a VI sensor for the Crazyflie without shape and visual part
+* Contributors: Giuseppe Silano
+
+5.0.5 (2020-04-23)
+------------------
 * Fix issue according to https://github.com/gsilano/CrazyS/issues/44
 * Changed the "measurement_divisor" (from 10 to 1) at line 895 in the component_snippets.xacro file
 * Contributors: Giuseppe Silano

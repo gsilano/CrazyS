@@ -2,10 +2,14 @@
 Changelog for package rotors_gazebo
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-5.0.5 (2020-04-23)
+5.0.6 (2020-05-02)
 ------------------
 * Add launch file for simulating the Crazyflie 2.0 with a VI sensor. In addition, an RVIZ configuration file allows to see
-the camera images and pointcloud data
+the camera images and point cloud data
+* Contributors: Giuseppe Silano
+
+5.0.5 (2020-04-23)
+------------------
 * Add a swarm example with the Crazyflie 2.0
 * The spline trajectory generator now is a shared library
 * Add a trajectory generator when using splines for the swarm example
