@@ -88,7 +88,7 @@ namespace rotors_gazebo {
     double x_component, y_component, z_component;
     x_component = a5_.x() * pow(time_spline, 5) + a4_.x() * pow(time_spline, 4) + a3_.x() * pow(time_spline, 3) + a2_.x() * pow(time_spline, 2)
                   + a1_.x() * time_spline + a0_.x();
-    x_component = a5_.y() * pow(time_spline, 5) + a4_.y() * pow(time_spline, 4) + a3_.y() * pow(time_spline, 3) + a2_.y() * pow(time_spline, 2)
+    y_component = a5_.y() * pow(time_spline, 5) + a4_.y() * pow(time_spline, 4) + a3_.y() * pow(time_spline, 3) + a2_.y() * pow(time_spline, 2)
                   + a1_.y() * time_spline + a0_.y();
     z_component = a5_.z() * pow(time_spline, 5) + a4_.z() * pow(time_spline, 4) + a3_.z() * pow(time_spline, 3) + a2_.z() * pow(time_spline, 2)
                   + a1_.z() * time_spline + a0_.z();
