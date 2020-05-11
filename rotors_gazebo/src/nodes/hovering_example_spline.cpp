@@ -95,6 +95,9 @@ int main(int argc, char** argv) {
   GetRosParameterHovering(nh_private, "position_final/z", check_position_final.z(),
     &check_position_final.z());
 
+  ROS_DEBUG("[Node] Position final x: %f, y: %f, z :%f", check_position_final.x(),
+    check_position_final.y(), check_position_final.z());
+
   // Wait for 5 seconds to let the Gazebo GUI show up.
   if (ros::Time::now().toSec() < START_SIMULATION_TIME){
     ros::Duration(START_SIMULATION_TIME).sleep();
@@ -117,9 +120,9 @@ int main(int argc, char** argv) {
     mav_msgs::eigenDroneFromStateToMsg(&eigen_reference, trajectory_msg);
 
     // new message
-    if(eigen_reference.position_W[0] <= check_position_final[0] &&
-      eigen_reference.position_W[1] <= check_position_final[1] &&
-      eigen_reference.position_W[2] <= check_position_final[2]){
+    if(eigen_reference.position_W[0] <= check_position_final.x() &&
+      eigen_reference.position_W[1] <= check_position_final.y() &&
+      eigen_reference.position_W[2] <= check_position_final.z()){
       trajectory_pub.publish(trajectory_msg);
       trajectory_msg_pre = trajectory_msg;
     }
@@ -130,9 +133,9 @@ int main(int argc, char** argv) {
     ros::Duration(SAMPLING_TIME).sleep();
 
     // Hold the message until the simulation ends
-    if(eigen_reference.position_W[0] > check_position_final[0] &&
-      eigen_reference.position_W[1] > check_position_final[1] &&
-      eigen_reference.position_W[2] > check_position_final[2])
+    if(eigen_reference.position_W[0] > check_position_final.x() &&
+      eigen_reference.position_W[1] > check_position_final.y() &&
+      eigen_reference.position_W[2] > check_position_final.z())
       trajectory_pub.publish(trajectory_msg_pre);
 
   }

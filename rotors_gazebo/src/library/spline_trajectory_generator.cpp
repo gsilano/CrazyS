@@ -88,7 +88,7 @@ namespace rotors_gazebo {
     double x_component, y_component, z_component;
     x_component = a5_.x() * pow(time_spline, 5) + a4_.x() * pow(time_spline, 4) + a3_.x() * pow(time_spline, 3) + a2_.x() * pow(time_spline, 2)
                   + a1_.x() * time_spline + a0_.x();
-    x_component = a5_.y() * pow(time_spline, 5) + a4_.y() * pow(time_spline, 4) + a3_.y() * pow(time_spline, 3) + a2_.y() * pow(time_spline, 2)
+    y_component = a5_.y() * pow(time_spline, 5) + a4_.y() * pow(time_spline, 4) + a3_.y() * pow(time_spline, 3) + a2_.y() * pow(time_spline, 2)
                   + a1_.y() * time_spline + a0_.y();
     z_component = a5_.z() * pow(time_spline, 5) + a4_.z() * pow(time_spline, 4) + a3_.z() * pow(time_spline, 3) + a2_.z() * pow(time_spline, 2)
                   + a1_.z() * time_spline + a0_.z();
@@ -399,6 +399,9 @@ namespace rotors_gazebo {
      GetRosParameter(pnh, "position_final/x", position_final_.x(), &position_final_.x());
      GetRosParameter(pnh, "position_final/y", position_final_.y(), &position_final_.y());
      GetRosParameter(pnh, "position_final/z", position_final_.z(), &position_final_.z());
+
+     ROS_DEBUG("[Library] Position final x: %f, y: %f, z :%f", position_final_.x(), position_final_.y(),
+       position_final_.z());
 
      GetRosParameter(pnh, "velocity_initial/x", velocity_initial_.x(), &velocity_initial_.x());
      GetRosParameter(pnh, "velocity_initial/y", velocity_initial_.y(), &velocity_initial_.y());
