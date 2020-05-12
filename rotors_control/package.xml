@@ -1,6 +1,6 @@
 <package>
   <name>rotors_control</name>
-  <version>4.0.12</version>
+  <version>4.0.13</version>
   <description>RotorS control package</description>
 
   <maintainer email="giuseppe.silano@unisannio.it">Giuseppe Silano</maintainer>
