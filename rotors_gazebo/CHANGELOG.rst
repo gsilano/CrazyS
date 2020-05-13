@@ -2,8 +2,9 @@
 Changelog for package rotors_gazebo
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-5.0.7 (2020-05-12)
+5.0.7 (2020-05-13)
 ------------------
+* Add a simple Octomap scenario for the Crazyflie #49
 * Fixed issue related to the world file #50
 * Contributors: Giuseppe Silano
 
