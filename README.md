@@ -314,13 +314,13 @@ $ roslaunch rotors_gazebo crazyflie2_hovering_example.launch csvFilesStoring:=tr
 An alternative controller is available on the repository. For running the simulation by using the Internal Model Control as described in #27, #28, #29, and #48 simply run
 
 ```console
-$ roslaunch rotors_gazebo crazyflie2_crazyflie2_internal_model_controller.launch
+$ roslaunch rotors_gazebo crazyflie2_internal_model_controller.launch
 ```
 
 or 
 
 ```console
-$ roslaunch rotors_gazebo crazyflie2_crazyflie2_internal_model_controller_vi_sensor.launch
+$ roslaunch rotors_gazebo crazyflie2_internal_model_controller_vi_sensor.launch
 ```
 
 while a simple swarm example is available at
