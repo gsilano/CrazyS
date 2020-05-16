@@ -311,7 +311,7 @@ Using the `csvFilesStoring` variable is possible to enable (true) or disable (fa
 $ roslaunch rotors_gazebo crazyflie2_hovering_example.launch csvFilesStoring:=true
 ```
 
-An alternative controller is available on the repository. For running the simulation by using the Internal Model Control as described in #27, #28, #29, and #48 simply run
+An alternative controller is available on the repository. For running the simulation by using the Internal Model Control as described in [#27](https://github.com/gsilano/CrazyS/issues/27), [#28](https://github.com/gsilano/CrazyS/issues/28), [#29](https://github.com/gsilano/CrazyS/issues/29), and [#48](https://github.com/gsilano/CrazyS/issues/48) simply run
 
 ```console
 $ roslaunch rotors_gazebo crazyflie2_internal_model_controller.launch
