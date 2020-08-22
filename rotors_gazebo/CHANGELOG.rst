@@ -2,6 +2,9 @@
 Changelog for package rotors_gazebo
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.0.14 (2020-08-22)
+-------------------
+
 4.0.13 (2020-05-13)
 -------------------
 * Add a simple scenario in which using the Octomap plugin with the Crazyflie 2.0
