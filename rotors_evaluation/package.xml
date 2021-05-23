@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <package>
   <name>rotors_evaluation</name>
-  <version>5.0.8</version>
+  <version>5.0.9</version>
   <description>The dataset evaluation package for the RotorS simulator.</description>
 
-  <maintainer email="giuseppe.silano@unisannio.it">Giuseppe Silano</maintainer>
+  <maintainer email="giuseppe.silano@fel.cvut.cz">Giuseppe Silano</maintainer>
   <maintainer email="luigi.iannelli@unisannio.it">Luigi Iannelli</maintainer>
 
   <author>Giuseppe Silano</author>
