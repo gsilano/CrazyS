@@ -52,7 +52,7 @@ jobs:
             sudo apt-get install -y ros-$ROS_DISTRO-pointcloud-to-laserscan ros-$ROS_DISTRO-octovis
             sudo apt-get install -y ros-$ROS_DISTRO-joy ros-$ROS_DISTRO-control-toolbox
             sudo apt-get install -y libeigen3-dev ros-$ROS_DISTRO-image-view ros-$ROS_DISTRO-parrot-arsdk libprotobuf-dev 
-            suod apt-get install -y libprotoc-dev ros-$ROS_DISTRO-joy-teleop ros-$ROS_DISTRO-nav-msgs ros-$ROS_DISTRO-mav-msgs 
+            sudo apt-get install -y libprotoc-dev ros-$ROS_DISTRO-joy-teleop ros-$ROS_DISTRO-nav-msgs ros-$ROS_DISTRO-mav-msgs 
             sudo apt-get install -y libyaml-cpp-dev ros-$ROS_DISTRO-nodelet ros-$ROS_DISTRO-mav-planning-msgs ros-$ROS_DISTRO-urdf 
             sudo apt-get install -y ros-$ROS_DISTRO-image-transport ros-$ROS_DISTRO-roslint ros-$ROS_DISTRO-angles ros-$ROS_DISTRO-cv-bridge 
             sudo apt-get install -y ros-$ROS_DISTRO-tf2-geometry-msgs ros-$ROS_DISTRO-xacro ffmpeg libavcodec-dev libavformat-dev 
