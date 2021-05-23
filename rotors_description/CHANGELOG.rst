@@ -2,6 +2,9 @@
 Changelog for package rotors_description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.0.9 (2021-05-23)
+------------------
+
 6.0.8 (2020-08-22)
 ------------------
 * Add crazyflie2_forster.xacro file with Forster's parameters as described in #56

@@ -1,9 +1,9 @@
 <package>
   <name>rqt_rotors</name>
-  <version>6.0.8</version>
+  <version>6.0.9</version>
   <description>The rqt_rotors package</description>
 
-  <maintainer email="giuseppe.silano@unisannio.it">Giuseppe Silano</maintainer>
+  <maintainer email="giuseppe.silano@fel.cvut.cz">Giuseppe Silano</maintainer>
   <maintainer email="luigi.iannelli@unisannio.it">Luigi Iannelli</maintainer>
 
   <author>Giuseppe Silano</author>
