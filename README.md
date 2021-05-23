@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/gsilano/CrazyS.svg?branch=master)](https://travis-ci.org/gsilano/CrazyS)
+[![CrazyS Build Automation Script](https://github.com/gsilano/CrazyS/actions/workflows/main.yml/badge.svg)](https://github.com/gsilano/CrazyS/actions/workflows/main.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 [![first-timers-only](https://img.shields.io/badge/first--timers--only-friendly-blue.svg?style=flat-square)](https://www.firsttimersonly.com/)
