@@ -51,6 +51,16 @@ jobs:
             sudo apt-get install -y ros-$ROS_DISTRO-octomap ros-$ROS_DISTRO-octomap-mapping
             sudo apt-get install -y ros-$ROS_DISTRO-pointcloud-to-laserscan ros-$ROS_DISTRO-octovis
             sudo apt-get install -y ros-$ROS_DISTRO-joy ros-$ROS_DISTRO-control-toolbox
+            sudo apt-get install -y libeigen3-dev ros-$ROS_DISTRO-image-view ros-$ROS_DISTRO-parrot-arsdk libprotobuf-dev 
+            suod apt-get install -y libprotoc-dev ros-$ROS_DISTRO-joy-teleop ros-$ROS_DISTRO-nav-msgs ros-$ROS_DISTRO-mav-msgs 
+            sudo apt-get install -y libyaml-cpp-dev ros-$ROS_DISTRO-nodelet ros-$ROS_DISTRO-mav-planning-msgs ros-$ROS_DISTRO-urdf 
+            sudo apt-get install -y ros-$ROS_DISTRO-image-transport ros-$ROS_DISTRO-roslint ros-$ROS_DISTRO-angles ros-$ROS_DISTRO-cv-bridge 
+            sudo apt-get install -y ros-$ROS_DISTRO-tf2-geometry-msgs ros-$ROS_DISTRO-xacro ffmpeg libavcodec-dev libavformat-dev 
+            sudo apt-get install -y libavutil-dev libswscale-dev ros-$ROS_DISTRO-camera-info-manager ros-$ROS_DISTRO-cmake-modules 
+            sudo apt-get install -y ros-$ROS_DISTRO-gazebo-msgs ros-$ROS_DISTRO-mavros-msgs ros-$ROS_DISTRO-control-toolbox 
+            sudo apt-get install -y ros-$ROS_DISTRO-mav-msgs ros-$ROS_DISTRO-libmavconn ros-$ROS_DISTRO-mavros ros-$ROS_DISTRO-octomap-msgs 
+            sudo apt-get install -y ros-$ROS_DISTRO-geographic-msgs ros-$ROS_DISTRO-mavlink ros-$ROS_DISTRO-mavros-extras 
+            sudo apt-get install -yros-$ROS_DISTRO-mav-planning-msgs ros-$ROS_DISTRO-joy
             source /opt/ros/$ROS_DISTRO/setup.bash
             sudo rosdep init
             rosdep update --include-eol-distros
