@@ -50,7 +50,7 @@ jobs:
             sudo apt-get install -y protobuf-compiler libgoogle-glog-dev python-rosinstall-generator
             sudo apt-get install -y ros-$ROS_DISTRO-octomap ros-$ROS_DISTRO-octomap-mapping
             sudo apt-get install -y ros-$ROS_DISTRO-pointcloud-to-laserscan ros-$ROS_DISTRO-octovis
-            sudo apt-get install -y ros-$ROS_DISTRO-joy ros-$ROS_DISTRO-control-toolbox ros-$ROS_DISTRO-rqt-rotors
+            sudo apt-get install -y ros-$ROS_DISTRO-joy ros-$ROS_DISTRO-control-toolbox
             sudo apt-get install -y python-rosinstall build-essential protobuf-compiler python-rosinstall-generator
             source /opt/ros/$ROS_DISTRO/setup.bash
             sudo rosdep init
