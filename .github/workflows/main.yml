@@ -44,14 +44,13 @@ jobs:
             sudo apt-get install dpkg
             sudo rm /var/lib/dpkg/lock
             sudo dpkg --configure -a
-            sudo apt-get install -y python-catkin-tools python-catkin-pkg python-rosdep python-wstool
+            sudo apt-get install -y python-catkin-tools python-catkin-pkg python-rosdep python-wstool protobuf-compiler 
             sudo apt-get install -y ros-$ROS_DISTRO-desktop-full ros-$ROS_DISTRO-joy ros-$ROS_DISTRO-octomap-ros
             sudo apt-get install -y ros-$ROS_DISTRO-mavlink python-wstool python-rosinstall build-essential
-            sudo apt-get install -y protobuf-compiler libgoogle-glog-dev python-rosinstall-generator
+            sudo apt-get install -y protobuf-compiler libgoogle-glog-dev python-rosinstall python-rosinstall-generator
             sudo apt-get install -y ros-$ROS_DISTRO-octomap ros-$ROS_DISTRO-octomap-mapping
             sudo apt-get install -y ros-$ROS_DISTRO-pointcloud-to-laserscan ros-$ROS_DISTRO-octovis
             sudo apt-get install -y ros-$ROS_DISTRO-joy ros-$ROS_DISTRO-control-toolbox
-            sudo apt-get install -y python-rosinstall build-essential protobuf-compiler python-rosinstall-generator
             source /opt/ros/$ROS_DISTRO/setup.bash
             sudo rosdep init
             rosdep update --include-eol-distros
@@ -127,10 +126,6 @@ jobs:
         rosdep update
         cd ~/catkin_ws
         rosdep install --from-paths src -i
-        sudo apt install -y ros-$ROS_DISTRO-rqt-rotors ros-$ROS_DISTRO-rotors-comm ros-$ROS_DISTRO-mav-msgs ros-$ROS_DISTRO-rotors-control
-        sudo apt install -y ros-$ROS_DISTRO-rotors-gazebo ros-$ROS_DISTRO-rotors-evaluation ros-$ROS_DISTRO-rotors-joy-interface
-        sudo apt install -y ros-$ROS_DISTRO-rotors-gazebo-plugins ros-$ROS_DISTRO-mav-planning-msgs ros-$ROS_DISTRO-rotors-description 
-        sudo apt install -y ros-$ROS_DISTRO-rotors-hil-interface
         rosdep update
         catkin build
         echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc
