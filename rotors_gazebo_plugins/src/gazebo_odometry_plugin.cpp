@@ -11,7 +11,6 @@
  * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
-
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,7 +22,6 @@
 #include "rotors_gazebo_plugins/gazebo_odometry_plugin.h"
 
 // SYSTEM
-#include <ros/ros.h>
 #include <chrono>
 #include <iostream>
 
@@ -44,7 +42,6 @@
 namespace gazebo {
 
 GazeboOdometryPlugin::~GazeboOdometryPlugin() {
-  
 }
 
 void GazeboOdometryPlugin::Load(physics::ModelPtr _model,
@@ -91,7 +88,7 @@ void GazeboOdometryPlugin::Load(physics::ModelPtr _model,
   if (_sdf->HasElement("covarianceImage")) {
     std::string image_name =
         _sdf->GetElement("covarianceImage")->Get<std::string>();
-    covariance_image_ = cv::imread(image_name, CV_LOAD_IMAGE_GRAYSCALE);
+    covariance_image_ = cv::imread(image_name, cv::IMREAD_GRAYSCALE);
     if (covariance_image_.data == NULL)
       gzerr << "loading covariance image " << image_name << " failed"
             << std::endl;
