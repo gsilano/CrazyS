@@ -35,6 +35,7 @@
   <build_depend>cmake_modules</build_depend>
   <build_depend>tf</build_depend>
   <build_depend>tf2</build_depend>
+  <build_depend>trajectory_msgs</build_depend>
 
   <!-- Dependencies needed after this package is compiled. -->
   <run_depend>gazebo_plugins</run_depend>
@@ -48,5 +49,6 @@
   <run_depend>sensor_msgs</run_depend>
   <run_depend>tf</run_depend>
   <run_depend>tf2</run_depend>
+  <run_depend>trajectory_msgs</run_depend>
 
 </package>

@@ -1,6 +1,6 @@
 <package>
   <name>rqt_rotors</name>
-  <version>6.0.9</version>
+  <version>6.1.0</version>
   <description>The rqt_rotors package</description>
 
   <maintainer email="giuseppe.silano@fel.cvut.cz">Giuseppe Silano</maintainer>
@@ -10,6 +10,11 @@
   <author>Emanuele Aucone</author>
   <author>Benjamin Rodriguez</author>
   <author>Luigi Iannelli</author>
+  <author>Ria Sonecha</author>
+  <author>Stefano Grossi</author>
+  <author>Lorenzo Sabattini</author>
+  <author>Federico Pratissoli</author>
+  <author>Beatrice Capelli</author>
 
   <license>ASL 2.0</license>
 
