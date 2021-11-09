@@ -52,10 +52,21 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   cmake_modules
+  rospy
+  trajectory_msgs
 )
 
 find_package(
   Eigen REQUIRED
+)
+
+## Generate added messages and services with any dependencies listed here
+generate_messages(
+   DEPENDENCIES
+   geometry_msgs
+   mav_msgs
+   nav_msgs
+   trajectory_msgs
 )
 
 catkin_package(
@@ -98,6 +109,50 @@ add_dependencies(hovering_example_spline_swarm ${catkin_EXPORTED_TARGETS})
 add_executable(quaternion_to_rpy src/nodes/quaternion_to_rpy.cpp)
 target_link_libraries(quaternion_to_rpy ${catkin_LIBRARIES})
 add_dependencies(quaternion_to_rpy ${catkin_EXPORTED_TARGETS})
+
+add_executable(square src/square.cpp)
+target_link_libraries(square ${catkin_LIBRARIES})
+add_dependencies(square ${catkin_EXPORTED_TARGETS})
+
+add_executable(semicirc src/semicirc.cpp)
+target_link_libraries(semicirc ${catkin_LIBRARIES})
+add_dependencies(semicirc ${catkin_EXPORTED_TARGETS})
+
+add_executable(semicirc2 src/semicirc2.cpp)
+target_link_libraries(semicirc2 ${catkin_LIBRARIES})
+add_dependencies(semicirc2 ${catkin_EXPORTED_TARGETS})
+
+add_executable(linear1_1 src/linear1_1.cpp)
+target_link_libraries(linear1_1 ${catkin_LIBRARIES})
+add_dependencies(linear1_1 ${catkin_EXPORTED_TARGETS})
+
+add_executable(lee_semicirc src/lee_semicirc.cpp)
+target_link_libraries(lee_semicirc ${catkin_LIBRARIES})
+add_dependencies(lee_semicirc ${catkin_EXPORTED_TARGETS})
+
+add_executable(lee_linear1_1_polynomial src/lee_linear1_1_polynomial.cpp)
+target_link_libraries(lee_linear1_1_polynomial ${catkin_LIBRARIES})
+add_dependencies(lee_linear1_1_polynomial ${catkin_EXPORTED_TARGETS})
+
+add_executable(lee_semicirc_polynomial src/lee_semicirc_polynomial.cpp)
+target_link_libraries(lee_semicirc_polynomial ${catkin_LIBRARIES})
+add_dependencies(lee_semicirc_polynomial ${catkin_EXPORTED_TARGETS})
+
+add_executable(swarm_lee_linear1_1 src/swarm_lee_linear1_1.cpp)
+target_link_libraries(swarm_lee_linear1_1 ${catkin_LIBRARIES})
+add_dependencies(swarm_lee_linear1_1 ${catkin_EXPORTED_TARGETS})
+
+add_executable(swarm_lee_semicirc src/swarm_lee_semicirc.cpp)
+target_link_libraries(swarm_lee_semicirc ${catkin_LIBRARIES})
+add_dependencies(swarm_lee_semicirc ${catkin_EXPORTED_TARGETS})
+
+add_executable(hovering_lee src/hovering_lee.cpp)
+target_link_libraries(hovering_lee ${catkin_LIBRARIES})
+add_dependencies(hovering_lee ${catkin_EXPORTED_TARGETS})
+
+add_executable(swarm_lee_linear1_0 src/swarm_lee_linear1_0.cpp)
+target_link_libraries(swarm_lee_linear1_0 ${catkin_LIBRARIES})
+add_dependencies(swarm_lee_linear1_0 ${catkin_EXPORTED_TARGETS})
 
 foreach(dir launch models resource worlds)
    install(DIRECTORY ${dir}/

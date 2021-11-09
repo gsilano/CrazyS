@@ -2,6 +2,14 @@
 Changelog for package rotors_gazebo
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.1.0 (2021-11-09)
+------------------
+* Add severl trajectory generator scripts to test the Lee's geometric controller. To be more
+specific, i.e., "hovering_lee.cpp", "leep_linear1_1_polynomial.cpp", "lee_semicirc.cpp", 
+"lee_semicric_polynomial.cpp", "linear1_1.cpp", "semicirc.cpp", "semicirc2.cpp", "square.cpp", 
+"swarm_lee_linear1_0.cpp", "swarm_lee_linear1_1.cpp", "swarm_lee_semicirc.cpp" files
+* Contributors: Stefano Grossi, Lorenzo Sabattini, Giuseppe Silano
+
 6.0.9 (2021-05-23)
 ------------------
 
