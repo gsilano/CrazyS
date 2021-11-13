@@ -83,7 +83,7 @@ namespace rotors_control {
     ros::Timer command_timer_;
 
     // Callbacks
-    void ReferenceTrajectoryCallback(const trajectory_msgs::MultiDOFJointTrajectoryConstPtr& msg);
+    void ReferenceTrajectoryCallback(const mav_msgs::DroneState& drone_state_msg);
     void OdometryCallback(const nav_msgs::OdometryConstPtr& odometry_msg);
 
   };

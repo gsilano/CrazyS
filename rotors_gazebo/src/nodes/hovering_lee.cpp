@@ -25,8 +25,17 @@
 #include <Eigen/Core>
 #include <mav_msgs/conversions.h>
 #include <mav_msgs/default_topics.h>
+#include <mav_msgs/DroneState.h>
 #include <ros/ros.h>
 #include <std_srvs/Empty.h>
+
+#include "rotors_gazebo/Quaternion.h"
+#include "rotors_gazebo/transform_datatypes.h"
+#include "rotors_gazebo/parameters_ros.h"
+#include <nav_msgs/Odometry.h>
+#include "rotors_gazebo/Matrix3x3.h"
+#include <ros/console.h>
+#include <time.h>
 #include <trajectory_msgs/MultiDOFJointTrajectory.h>
 
 double xd, yd, zd;
@@ -35,7 +44,7 @@ double Ts = 0.01;
 
 int main(int argc, char** argv) {
 
-  ros::init(argc, argv, "square_example");
+  ros::init(argc, argv, "hovering example lee");
 
   ros::NodeHandle nh;
 
@@ -43,10 +52,10 @@ int main(int argc, char** argv) {
   ros::NodeHandle nh_private("~");
 
   ros::Publisher trajectory_pub =
-      nh.advertise<trajectory_msgs::MultiDOFJointTrajectory>(
-          mav_msgs::default_topics::COMMAND_TRAJECTORY, 10);
+      nh.advertise<mav_msgs::DroneState>(
+          mav_msgs::default_topics::DRONE_STATE, 10);
 
-  ROS_INFO("Start square example.");
+  ROS_INFO("Start hovering example lee.");
 
   std_srvs::Empty srv;
   bool unpaused = ros::service::call("/gazebo/unpause_physics", srv);
@@ -67,15 +76,14 @@ int main(int argc, char** argv) {
     ROS_INFO("Unpaused the Gazebo simulation.");
   }
 
-  // Wait for 5 seconds to let the Gazebo GUI show up.
-  ros::Duration(5.0).sleep();
-
-  geometry_msgs::Pose trajectory_msg;
+  // Trajectory message
+  mav_msgs::DroneState trajectory_msg;
+  trajectory_msg.header.stamp = ros::Time::now();
+  mav_msgs::EigenDroneState eigen_reference;
   ros::Rate loop_rate(1/Ts);
   double j;
 
-  for (j = 1; j <= 200; j++)
-  {
+  for (j = 1; j <= 200; j++){
       xd = 0;
       yd = 0;
       zd = j/200 + 0.015;
@@ -84,16 +92,16 @@ int main(int argc, char** argv) {
       y_b1 = 0;
       z_b1 = 0;
 
-      ROS_DEBUG("Iteration j: %f", j);
-      ROS_DEBUG("Publishing z: %f", zd);
+      trajectory_msg.header.stamp = ros::Time::now();
 
-      trajectory_msg.position.x = xd;
-      trajectory_msg.position.y = yd;
-      trajectory_msg.position.z = zd;
+      eigen_reference.position_W = Eigen::Vector3f(xd, yd, zd);
+      eigen_reference.orientation_W_B = Eigen::Quaterniond(0, x_b1, y_b1, z_b1);
+      mav_msgs::eigenDroneFromStateToMsg(&eigen_reference, trajectory_msg);
 
-      trajectory_msg.orientation.x = x_b1;
-      trajectory_msg.orientation.y = y_b1;
-      trajectory_msg.orientation.z = z_b1;
+      ROS_DEBUG("Publishing position from msg: [%f, %f, %f].", eigen_reference.position_W[0], eigen_reference.position_W[1],
+        eigen_reference.position_W[2]);
+      ROS_DEBUG("Publishing orientation: [%f, %f, %f].", eigen_reference.orientation_W_B.x(), eigen_reference.orientation_W_B.y(),
+        eigen_reference.orientation_W_B.z());
 
       trajectory_pub.publish(trajectory_msg);
 

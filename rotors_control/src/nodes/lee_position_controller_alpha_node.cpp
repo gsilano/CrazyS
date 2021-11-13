@@ -33,7 +33,7 @@ LeePositionControllerAlphaNode::LeePositionControllerAlphaNode() {
   ros::NodeHandle nh;
 
   cmd_multi_dof_joint_trajectory_sub_ = nh.subscribe(
-      mav_msgs::default_topics::COMMAND_TRAJECTORY, 1,
+      mav_msgs::default_topics::DRONE_STATE, 1,
       &LeePositionControllerAlphaNode::ReferenceTrajectoryCallback, this);
 
   odometry_sub_ = nh.subscribe(mav_msgs::default_topics::ODOMETRY, 1,
@@ -128,36 +128,23 @@ void LeePositionControllerAlphaNode::OdometryCallback(const nav_msgs::OdometryCo
   motor_velocity_reference_pub_.publish(actuator_msg);
 }
 
-void LeePositionControllerAlphaNode::ReferenceTrajectoryCallback(const trajectory_msgs::MultiDOFJointTrajectoryConstPtr& msg){
+void LeePositionControllerAlphaNode::ReferenceTrajectoryCallback(const mav_msgs::DroneState& drone_state_msg){
   // Clear all pending commands.
   command_timer_.stop();
   commands_.clear();
   command_waiting_times_.clear();
 
-  const size_t n_commands = msg->points.size();
-
-  if(n_commands < 1){
+  if(drone_state_msg.position.z <= 0){
     ROS_WARN_STREAM("Got ReferenceTrajectoryCallback message, but message has no points.");
     return;
     }
 
-    mav_msgs::EigenTrajectoryPoint eigen_reference;
-    mav_msgs::eigenTrajectoryPointFromMsg(msg->points.front(), &eigen_reference);
-    commands_.push_front(eigen_reference);
-
-    for (size_t i = 1; i < n_commands; ++i) {
-    const trajectory_msgs::MultiDOFJointTrajectoryPoint& reference_before = msg->points[i-1];
-    const trajectory_msgs::MultiDOFJointTrajectoryPoint& current_reference = msg->points[i];
-
-    mav_msgs::eigenTrajectoryPointFromMsg(current_reference, &eigen_reference);
-
-    commands_.push_back(eigen_reference);
-    command_waiting_times_.push_back(current_reference.time_from_start - reference_before.time_from_start);
-  }
+  // We can trigger the first command immediately.
+  mav_msgs::EigenDroneState eigen_reference;
+  mav_msgs::eigenDroneStateFromMsg(drone_state_msg, &eigen_reference);
 
   // We can trigger the first command immediately.
-  lee_position_controller_alpha_.SetTrajectoryPoint(commands_.front());
-  commands_.pop_front();
+  lee_position_controller_alpha_.SetTrajectoryPoint(eigen_reference);
 
   ROS_DEBUG("Drone desired position [x_d: %f, y_d: %f, z_d: %f]", eigen_reference.position_W[0],
           eigen_reference.position_W[1], eigen_reference.position_W[2]);
@@ -165,10 +152,7 @@ void LeePositionControllerAlphaNode::ReferenceTrajectoryCallback(const trajector
   ROS_DEBUG("Drone desired attitude in unit quaternion [w: %f, x: %f, y: %f, z: %f]", eigen_reference.orientation_W_B.w(),
           eigen_reference.orientation_W_B.x(), eigen_reference.orientation_W_B.y(), eigen_reference.orientation_W_B.z());
 
-  if (n_commands > 1) {
-    command_timer_.setPeriod(command_waiting_times_.front());
-    command_waiting_times_.pop_front();
-    command_timer_.start();
+  if (drone_state_msg.position.z > 0) {
     waypointHasBeenPublished_ = true;
     ROS_INFO_ONCE("LeePositionControllerAlpha got first ReferenceTrajectoryCallback message.");
   }

@@ -89,7 +89,7 @@ namespace rotors_control {
 
           void InitializeParameters();
           void SetOdometry(const EigenOdometry& odometry);
-          void SetTrajectoryPoint(const mav_msgs::EigenTrajectoryPoint& command_trajectory);
+          void SetTrajectoryPoint(const mav_msgs::EigenDroneState& command_trajectory);
 
           // Controller variables
           double Ts_, gravity_, mass_, Jxx_, Jyy_, Jzz_;
@@ -111,7 +111,7 @@ namespace rotors_control {
           // Odometry
           EigenOdometry odometry_;
           state_t state_;
-          mav_msgs::EigenTrajectoryPoint command_trajectory_;
+          mav_msgs::EigenDroneState command_trajectory_;
 
           // Dirty Derivatives
           DxDt dx1dt_, dx2dt_, dx3dt_, dx4dt_; // derivative position

@@ -98,7 +98,7 @@ namespace rotors_control{
   }
 
   // Set the reference trajectory
-  void LeePositionControllerAlpha::SetTrajectoryPoint(const mav_msgs::EigenTrajectoryPoint& command_trajectory) {
+  void LeePositionControllerAlpha::SetTrajectoryPoint(const mav_msgs::EigenDroneState& command_trajectory) {
       command_trajectory_ = command_trajectory;
       controller_active_= true;
   }
