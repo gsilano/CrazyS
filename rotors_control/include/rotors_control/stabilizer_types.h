@@ -123,7 +123,7 @@ typedef struct state_s {
   velocity_t angularVelocity;      // rad/s
   acc_t angularAcc;                // m/s^2
   acc_t linearAcceleration;        // m/s^2
-  velocity_t linearVelocity;       //m/s
+  velocity_t linearVelocity;       // m/s
 } state_t;
 
 typedef struct control_s {
