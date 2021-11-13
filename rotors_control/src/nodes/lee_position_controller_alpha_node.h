@@ -78,8 +78,12 @@ namespace rotors_control {
     //publisher
     ros::Publisher motor_velocity_reference_pub_;
 
+    mav_msgs::EigenTrajectoryPointDeque commands_;
+    std::deque<ros::Duration> command_waiting_times_;
+    ros::Timer command_timer_;
+
     // Callbacks
-    void ReferenceTrajectoryCallback(const mav_msgs::DroneState& drone_state_msg);
+    void ReferenceTrajectoryCallback(const trajectory_msgs::MultiDOFJointTrajectoryConstPtr& msg);
     void OdometryCallback(const nav_msgs::OdometryConstPtr& odometry_msg);
 
   };

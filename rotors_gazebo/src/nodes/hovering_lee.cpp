@@ -43,10 +43,10 @@ int main(int argc, char** argv) {
   ros::NodeHandle nh_private("~");
 
   ros::Publisher trajectory_pub =
-      nh.advertise<geometry_msgs::Pose>(
+      nh.advertise<trajectory_msgs::MultiDOFJointTrajectory>(
           mav_msgs::default_topics::COMMAND_TRAJECTORY, 10);
 
-  ROS_INFO("Started square example.");
+  ROS_INFO("Start square example.");
 
   std_srvs::Empty srv;
   bool unpaused = ros::service::call("/gazebo/unpause_physics", srv);
@@ -84,8 +84,8 @@ int main(int argc, char** argv) {
       y_b1 = 0;
       z_b1 = 0;
 
-      /* ROS_INFO("Iteraz j: %f", j);
-      ROS_INFO("Pubblico z: %f", zd); */
+      ROS_DEBUG("Iteration j: %f", j);
+      ROS_DEBUG("Publishing z: %f", zd);
 
       trajectory_msg.position.x = xd;
       trajectory_msg.position.y = yd;
