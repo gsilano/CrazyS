@@ -13,9 +13,9 @@ Jzz: 2.9261652e-05
 d: 0.046 # arm length
 
 # Motor coefficients
-maxRotorsVelocity:  3052
-c_motor: 1.71465181e-08
-c_tauf: 0.004459273
+maxRotorsVelocity:  2618
+c_motor: 1.28192e-08
+c_tauf: 5.964552e-03
 
 tau: 0.05
 

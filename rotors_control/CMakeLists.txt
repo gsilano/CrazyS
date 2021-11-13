@@ -37,6 +37,10 @@ add_library(lee_position_controller
   src/library/lee_position_controller.cpp
 )
 
+add_library(lee_position_controller_alpha
+  src/library/lee_position_controller_alpha.cpp
+)
+
 add_library(position_controller
    src/library/position_controller.cpp
 )
@@ -67,10 +71,6 @@ add_library(mellinger_controller
 
 add_library(internal_model_controller
   src/library/internal_model_controller.cpp
-)
-
-add_library(lee_position_controller_alpha
-  src/library/lee_position_controller_alpha.cpp
 )
 
 target_link_libraries(lee_position_controller ${catkin_LIBRARIES})

@@ -19,6 +19,9 @@
 */
 
 #include <ros/ros.h>
+#include <ros/console.h>
+#include <time.h>
+#include <chrono>
 #include <mav_msgs/default_topics.h>
 
 #include "lee_position_controller_alpha_node.h"
@@ -28,6 +31,9 @@
 namespace rotors_control {
 
 LeePositionControllerAlphaNode::LeePositionControllerAlphaNode() {
+
+  ROS_INFO_ONCE("Started LeePositionControllerAlphaNode");
+
   InitializeParams(); // invoke the InitializeParams function in this file
 
   ros::NodeHandle nh;
@@ -36,15 +42,16 @@ LeePositionControllerAlphaNode::LeePositionControllerAlphaNode() {
       mav_msgs::default_topics::DRONE_STATE, 1,
       &LeePositionControllerAlphaNode::ReferenceTrajectoryCallback, this);
 
-  odometry_sub_ = nh.subscribe(mav_msgs::default_topics::ODOMETRY, 1,
-                               &LeePositionControllerAlphaNode::OdometryCallback, this);
+  odometry_sub_ = nh.subscribe(
+    mav_msgs::default_topics::ODOMETRY, 1,
+    &LeePositionControllerAlphaNode::OdometryCallback, this);
 
   motor_velocity_reference_pub_ = nh.advertise<mav_msgs::Actuators>(
       mav_msgs::default_topics::COMMAND_ACTUATORS, 1);
 
 }
 
-LeePositionControllerAlphaNode::~LeePositionControllerAlphaNode() { }
+LeePositionControllerAlphaNode::~LeePositionControllerAlphaNode() {}
 
 void LeePositionControllerAlphaNode::InitializeParams() {
   ros::NodeHandle pnh("~");
@@ -96,12 +103,13 @@ void LeePositionControllerAlphaNode::InitializeParams() {
                   lee_position_controller_alpha_.kOmega_,
                   &lee_position_controller_alpha_.kOmega_);
 
-  Ts_ = lee_position_controller_alpha_.Ts_;// for main ros rate
+  Ts_internal_ = lee_position_controller_alpha_.Ts_;// for main ros rate
   lee_position_controller_alpha_.InitializeParameters();
+
+  ROS_INFO("Parameters loaded");
 }
 
-void LeePositionControllerAlphaNode::Publish() {
-}
+void LeePositionControllerAlphaNode::Publish() {}
 
 void LeePositionControllerAlphaNode::OdometryCallback(const nav_msgs::OdometryConstPtr& odometry_msg) {
 
@@ -111,6 +119,7 @@ void LeePositionControllerAlphaNode::OdometryCallback(const nav_msgs::OdometryCo
   eigenOdometryFromMsg(odometry_msg, &odometry);
   lee_position_controller_alpha_.SetOdometry(odometry);
 
+  ros::Duration(1/Ts_internal_).sleep();
   Eigen::Vector4d ref_rotor_velocities;
   lee_position_controller_alpha_.CalculateRotorVelocities(&ref_rotor_velocities);
 
@@ -134,14 +143,14 @@ void LeePositionControllerAlphaNode::ReferenceTrajectoryCallback(const mav_msgs:
   commands_.clear();
   command_waiting_times_.clear();
 
-  if(drone_state_msg.position.z <= 0){
-    ROS_WARN_STREAM("Got ReferenceTrajectoryCallback message, but message has no points.");
-    return;
-    }
-
   // We can trigger the first command immediately.
   mav_msgs::EigenDroneState eigen_reference;
   mav_msgs::eigenDroneStateFromMsg(drone_state_msg, &eigen_reference);
+
+  if(eigen_reference.position_W[2] <= 0){
+    ROS_WARN_STREAM("Got ReferenceTrajectoryCallback message, but message has no points.");
+    return;
+    }
 
   // We can trigger the first command immediately.
   lee_position_controller_alpha_.SetTrajectoryPoint(eigen_reference);
@@ -152,7 +161,7 @@ void LeePositionControllerAlphaNode::ReferenceTrajectoryCallback(const mav_msgs:
   ROS_DEBUG("Drone desired attitude in unit quaternion [w: %f, x: %f, y: %f, z: %f]", eigen_reference.orientation_W_B.w(),
           eigen_reference.orientation_W_B.x(), eigen_reference.orientation_W_B.y(), eigen_reference.orientation_W_B.z());
 
-  if (drone_state_msg.position.z > 0) {
+  if (eigen_reference.position_W[2] > 0) {
     waypointHasBeenPublished_ = true;
     ROS_INFO_ONCE("LeePositionControllerAlpha got first ReferenceTrajectoryCallback message.");
   }
@@ -164,12 +173,11 @@ void LeePositionControllerAlphaNode::ReferenceTrajectoryCallback(const mav_msgs:
 int main(int argc, char** argv) {
   ros::init(argc, argv, "lee_position_controller_alpha_node");
 
+  ros::NodeHandle nh2;
+
   rotors_control::LeePositionControllerAlphaNode lee_position_controller_alpha_node;
 
-  ros::Rate loop_rate(1/lee_position_controller_alpha_node.Ts_);
-
-  loop_rate.sleep();
-  ros::spinOnce();
+  ros::spin();
 
   return 0;
 }

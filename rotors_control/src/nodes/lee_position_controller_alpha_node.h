@@ -18,33 +18,27 @@
  * limitations under the License.
 */
 
-#ifndef ROTORS_CONTROL_LEE_POSITION_CONTROLLER_ALPHA_NODE_H
-#define ROTORS_CONTROL_LEE_POSITION_CONTROLLER_ALPHA_NODE_H
+#ifndef LEE_POSITION_CONTROLLER_ALPHA_NODE_H
+#define LEE_POSITION_CONTROLLER_ALPHA_NODE_H
 
 #include <boost/bind.hpp>
 #include <Eigen/Eigen>
 #include <stdio.h>
-#include <iostream>
-#include <time.h>
-#include <chrono>
-#include <stdio.h>
-#include <math.h>
 
-#include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/Point.h>
-#include <geometry_msgs/Pose.h>
 #include <mav_msgs/Actuators.h>
 #include <mav_msgs/AttitudeThrust.h>
 #include <mav_msgs/DroneState.h>
 #include <mav_msgs/eigen_mav_msgs.h>
 #include <nav_msgs/Odometry.h>
-#include <ros/callback_queue.h>
-#include <ros/ros.h>
 #include <ros/console.h>
-#include <ros/callback_queue.h>
 #include <sensor_msgs/Imu.h>
 #include <std_msgs/Header.h>
 #include <trajectory_msgs/MultiDOFJointTrajectory.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <ros/callback_queue.h>
+#include <ros/ros.h>
+#include <trajectory_msgs/MultiDOFJointTrajectory.h>
+#include <ros/time.h>
 
 #include "rotors_control/common.h"
 #include "rotors_control/lee_position_controller_alpha.h"
@@ -59,17 +53,17 @@ namespace rotors_control {
     void InitializeParams();
     void Publish();
 
-    double Ts_;
-
    private:
-
-    std::string namespace_;
 
     bool waypointHasBeenPublished_ = false;
 
     LeePositionControllerAlpha lee_position_controller_alpha_; // instance of the of LeePositionControllerAlpha class in the "library" folder
 
     ros::NodeHandle n_;
+
+    std::string namespace_;
+
+    double Ts_internal_;
 
     //subscribers
     ros::Subscriber cmd_multi_dof_joint_trajectory_sub_;
