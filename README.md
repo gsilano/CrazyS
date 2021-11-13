@@ -85,7 +85,7 @@ $ echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc
 $ source ~/.bashrc
 ```
 
-5. Update the pre-installed Gazebo version. This fix the issue with the `error in REST request for accessing api.ignition.org`
+5. Update the pre-installed Gazebo version. This fixes the issue with the `error in REST request for accessing api.ignition.org`
 
 ```console
 $ sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list'
@@ -104,6 +104,12 @@ $ wget http://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
 $ sudo apt-get update
 $ sudo apt-get install gazebo9 gazebo9-* ros-melodic-gazebo-*
 $ sudo apt upgrade
+```
+
+> In the event the "cmd /opt/ros/melodic/lib/gazebo_ros/gzserver -u -e ode" appear, the solution proposed in [#40](https://github.com/gsilano/CrazyS/issues/40) temporany fixes the issue.
+
+```console
+cmd /opt/ros/melodic/lib/gazebo_ros/gzserver -u -e ode
 ```
 
 Installation Instructions - Ubuntu 16.04 with ROS Kinetic and Gazebo 7
