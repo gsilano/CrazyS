@@ -13,14 +13,14 @@ Jzz: 2.9261652e-05
 d: 0.046 # arm length
 
 # Motor coefficients
-maxRotorsVelocity:  2618
-c_motor: 1.28192e-08
-c_tauf: 5.964552e-03
+maxRotorsVelocity:  3052
+c_motor: 1.71465181e-08
+c_tauf: 0.004459273
 
 tau: 0.05
 
 # Controller gains
-kx: 0.108 # 4 * mass;
-kv: 0.0972 # 3.6 * mass;
+kx: 0.108 # 4 * 0.027 (mass);
+kv: 0.081 # 3.6 * 0.027 (mass);
 kR: 0.005873333 # 8.81 / 1500
 kOmega: 0.001693333 # 2.54 / 1500
