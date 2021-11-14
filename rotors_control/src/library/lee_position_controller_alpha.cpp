@@ -38,6 +38,11 @@
 #include <nav_msgs/Odometry.h>
 #include <ros/console.h>
 
+#define M_PI                      3.14159265358979323846  /* pi [rad]*/
+#define MAX_ROTOR_VELOCITY        3052 /* Max rotors velocity [rad/s] */
+#define MIN_ROTOR_VELOCITY        0 /* Min rotors velocity [rad/s] */
+#define POW_MAX_ROTOR_VELOCITY    MAX_ROTOR_VELOCITY*MAX_ROTOR_VELOCITY /* Squared max rotors velocity [rad/s] */
+
 namespace rotors_control{
 
   // Constructor
@@ -113,7 +118,7 @@ namespace rotors_control{
     }
 
     // Desired state
-    Eigen::Vector3d pos_ref, att_ref;
+    Eigen::Vector3d pos_ref, att_ref; // att_ref contains the x, y, z and components of unit quaternion
 
     pos_ref << command_trajectory_.position_W[0], command_trajectory_.position_W[1], command_trajectory_.position_W[2];
     att_ref << command_trajectory_.orientation_W_B.x(), command_trajectory_.orientation_W_B.y(), command_trajectory_.orientation_W_B.z();
@@ -226,6 +231,8 @@ namespace rotors_control{
     // Mapping angular velocity
     FMToAngVelocities(&f, M, Mix_, &maxRotorsVelocity_, *rotor_velocities);
 
+    ROS_DEBUG("Force %f, Momenta %f, %f, %f", f, M[0], M[1], M[2]);
+
   }
 
   void LeePositionControllerAlpha::FMToAngVelocities(double* force, Eigen::Vector3d &moments, Eigen::Matrix4d &mix, double* maxVel,
@@ -237,51 +244,67 @@ namespace rotors_control{
 
     rotor_velocities = mix * inputs;
 
-    if (rotor_velocities[0] < 0) {
-        rotor_velocities[0] = 0;
-    }
-    else {
-        rotor_velocities[0] = sqrt(rotor_velocities[0]);
-        if (rotor_velocities[0] >= *maxVel) {
-            rotor_velocities[0] = *maxVel;
-        }
-    }
+    // The propellers velocity is limited by taking into account the physical constrains
+    double motorMin=rotor_velocities[0], motorMax=rotor_velocities[0], motorFix=0;
 
-    if (rotor_velocities[1] < 0) {
-        rotor_velocities[1] = 0;
-    }
-    else {
-        rotor_velocities[1] = sqrt(rotor_velocities[1]);
-        if (rotor_velocities[1] >= *maxVel) {
-            rotor_velocities[1] = *maxVel;
-        }
-    }
+    if(rotor_velocities[1] < motorMin) motorMin = rotor_velocities[1];
+    if(rotor_velocities[1] > motorMax) motorMax = rotor_velocities[1];
 
-    if (rotor_velocities[2] < 0) {
-        rotor_velocities[2] = 0;
-    }
-    else {
-        rotor_velocities[2] = sqrt(rotor_velocities[2]);
-        if (rotor_velocities[2] >= *maxVel) {
-            rotor_velocities[2] = *maxVel;
-        }
-    }
+    if(rotor_velocities[2] < motorMin) motorMin = rotor_velocities[2];
+    if(rotor_velocities[2] > motorMax) motorMax = rotor_velocities[2];
 
-    if (rotor_velocities[3] < 0) {
-        rotor_velocities[3] = 0;
-    }
-    else {
-        rotor_velocities[3] = sqrt(rotor_velocities[3]);
-        if (rotor_velocities[3] >= *maxVel) {
-            rotor_velocities[3] = *maxVel;
-        }
-    }
+    if(rotor_velocities[3] < motorMin) motorMin = rotor_velocities[3];
+    if(rotor_velocities[3] > motorMax) motorMax = rotor_velocities[3];
+
+    if(motorMin < MIN_ROTOR_VELOCITY) motorFix = MIN_ROTOR_VELOCITY - motorMin;
+    else if(motorMax > POW_MAX_ROTOR_VELOCITY) motorFix = POW_MAX_ROTOR_VELOCITY - motorMax;
+
+    rotor_velocities[0] = rotor_velocities[0] + motorFix;
+    rotor_velocities[1] = rotor_velocities[1] + motorFix;
+    rotor_velocities[2] = rotor_velocities[2] + motorFix;
+    rotor_velocities[3] = rotor_velocities[3] + motorFix;
+
+    // The values have been saturated to avoid the root square of negative values
+    double saturated_1, saturated_2, saturated_3, saturated_4;
+    if(rotor_velocities[0] < 0)
+      saturated_1 = 0;
+    else if(rotor_velocities[0] > POW_MAX_ROTOR_VELOCITY)
+      saturated_1 = POW_MAX_ROTOR_VELOCITY;
+    else
+      saturated_1 = rotor_velocities[0];
+
+    if(rotor_velocities[1] < 0)
+      saturated_2 = 0;
+    else if(rotor_velocities[1] > POW_MAX_ROTOR_VELOCITY)
+      saturated_2 = POW_MAX_ROTOR_VELOCITY;
+    else
+      saturated_2 = rotor_velocities[1];
+
+    if(rotor_velocities[2] < 0)
+      saturated_3 = 0;
+    else if(rotor_velocities[2] > POW_MAX_ROTOR_VELOCITY)
+      saturated_3 = POW_MAX_ROTOR_VELOCITY;
+    else
+      saturated_3 = rotor_velocities[2];
+
+    if(rotor_velocities[3] < 0)
+      saturated_4 = 0;
+    else if(rotor_velocities[3] > POW_MAX_ROTOR_VELOCITY)
+      saturated_4 = POW_MAX_ROTOR_VELOCITY;
+    else
+      saturated_4 = rotor_velocities[3];
+
+    rotor_velocities[0] = sqrt(saturated_1);
+    rotor_velocities[1] = sqrt(saturated_2);
+    rotor_velocities[2] = sqrt(saturated_3);
+    rotor_velocities[3] = sqrt(saturated_4);
 
   }
 
   // Vee operation
   void LeePositionControllerAlpha::Vee(Eigen::Matrix3d &SkewSym, Eigen::Vector3d &result) {
 
+      // Some checks on Matrix dimension
       if (abs(SkewSym(0,0)) < 1e-2 || abs(SkewSym(1,1)) < 1e-2 || abs(SkewSym(2,2)) < 1e-2){
       }
 
@@ -360,19 +383,17 @@ namespace rotors_control{
       state_.position.z = odometry_.position[2];
 
       // rotating linear velocity from body to inertial frame
-      double theta, phi, psi;
-      Quaternion2Euler(&phi, &theta, &psi);
+      Eigen::Matrix3d R;
+      QuatToRot(R);
 
-      state_.linearVelocity.x = (cos(theta) * cos(psi) * odometry_.velocity[0]) +
-          ( ( (sin(phi) * sin(theta) * cos(psi) ) - ( cos(phi) * sin(psi) ) ) * odometry_.velocity[1]) +
-          ( ( (cos(phi) * sin(theta) * cos(psi) ) + ( sin(phi) * sin(psi) ) ) *  odometry_.velocity[2]);
+      state_.linearVelocity.x = R(1,1) * odometry_.velocity[0] + R(1,2) * odometry_.velocity[1] +
+           R(1,3) *  odometry_.velocity[2];
 
-      state_.linearVelocity.y = (cos(theta) * sin(psi) * odometry_.velocity[0]) +
-          ( ( (sin(phi) * sin(theta) * sin(psi) ) + ( cos(phi) * cos(psi) ) ) * odometry_.velocity[1]) +
-          ( ( (cos(phi) * sin(theta) * sin(psi) ) - ( sin(phi) * cos(psi) ) ) *  odometry_.velocity[2]);
+      state_.linearVelocity.y =   R(2,1) * odometry_.velocity[0] + R(2,2) * odometry_.velocity[1] +
+           R(2,3) *  odometry_.velocity[2];
 
-      state_.linearVelocity.z = (-sin(theta) * odometry_.velocity[0]) + ( sin(phi) * cos(theta) * odometry_.velocity[1]) +
-          (cos(phi) * cos(theta) * odometry_.velocity[2]);
+      state_.linearVelocity.z =  R(3,1) * odometry_.velocity[0] + R(3,2) * odometry_.velocity[1] +
+           R(3,3) * odometry_.velocity[2];
 
       state_.attitudeQuaternion.x = odometry_.orientation.x();
       state_.attitudeQuaternion.y = odometry_.orientation.y();
@@ -416,8 +437,8 @@ namespace rotors_control{
   void LeePositionControllerAlpha::UpdateDirtyDerivativesATerms(DxDt* derivative) {
     assert(derivative);
 
-    derivative->a1_ = (2*tau_ - Ts_)/(2*tau_ + Ts_);
-    derivative->a2_ = 2 / (2*tau_ + Ts_);
+    derivative->a1_ = (2*derivative->tau_ - derivative->ts_)/(2*derivative->tau_ + derivative->ts_);
+    derivative->a2_ = 2 / (2*derivative->tau_ + derivative->ts_);
 
   }
 

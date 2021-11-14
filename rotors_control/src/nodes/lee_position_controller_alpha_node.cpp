@@ -119,7 +119,7 @@ void LeePositionControllerAlphaNode::OdometryCallback(const nav_msgs::OdometryCo
   eigenOdometryFromMsg(odometry_msg, &odometry);
   lee_position_controller_alpha_.SetOdometry(odometry);
 
-  ros::Duration(1/Ts_internal_).sleep();
+  //ros::Duration(1/Ts_internal_).sleep();
   Eigen::Vector4d ref_rotor_velocities;
   lee_position_controller_alpha_.CalculateRotorVelocities(&ref_rotor_velocities);
 
