@@ -15,6 +15,7 @@
   <arg name="verbose" default="false"/>
   <!-- Enables the Internal Model Controller disabling the Mellinger and the Position ones -->
   <arg name="enable_internal_model_controller" default="true"/>
+  <arg name="forster_parameters" default="false"/>
 
   <!-- The following lines simulate the world in Gazebo. The physic engine properties
         are set up in the file "basic_crazyflie.world" file -->

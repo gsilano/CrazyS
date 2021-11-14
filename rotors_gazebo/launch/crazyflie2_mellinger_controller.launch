@@ -16,6 +16,7 @@
   <arg name="verbose" default="false"/>
   <!-- Enables the Position Controller disabling the Mellinger's one -->
   <arg name="enable_mellinger_controller" default="true"/>
+  <arg name="forster_parameters" default="false"/>
 
   <!-- The following lines simulate the world in Gazebo. The physic engine properties
         are set up in the file "basic_crazyflie.world" file -->
@@ -63,6 +64,6 @@
    <node name="quaternion_to_rpy" pkg="rotors_gazebo" type="quaternion_to_rpy" output="screen" >
        <remap from="odometry" to="odometry_sensor1/odometry" />
    </node>
-   
+
   </group>
 </launch>

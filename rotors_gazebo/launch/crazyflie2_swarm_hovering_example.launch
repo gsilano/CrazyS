@@ -8,6 +8,7 @@
   <arg name="mav_name" default="crazyflie2" />
   <arg name="enable_state_estimator" default="false"/>
   <arg name="enable_mellinger_controller" default="false"/>
+  <arg name="forster_parameters" default="false"/>
 
   <env name="GAZEBO_MODEL_PATH" value="${GAZEBO_MODEL_PATH}:$(find rotors_gazebo)/models"/>
   <env name="GAZEBO_RESOURCE_PATH" value="${GAZEBO_RESOURCE_PATH}:$(find rotors_gazebo)/models"/>

@@ -12,6 +12,7 @@
   <arg name="csvFilesStoring" default="false"/>
   <arg name="csvFilesStoringTime" default="15.0"/> <!-- seconds -->
   <arg name="user_account" default="giuseppe"/>
+  <arg name="forster_parameters" default="false"/>
   <!-- The following line causes gzmsg and gzerr messages to be printed to the console
       (even when Gazebo is started through roslaunch) -->
   <arg name="verbose" default="false"/>

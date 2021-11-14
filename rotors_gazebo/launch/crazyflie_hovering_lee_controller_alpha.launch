@@ -12,6 +12,7 @@
   <arg name="csvFilesStoring" default="false"/>
   <arg name="csvFilesStoringTime" default="15.0"/> <!-- seconds -->
   <arg name="user_account" default="giuseppe"/>
+  <arg name="forster_parameters" default="true"/>
   <!-- The following line causes gzmsg and gzerr messages to be printed to the console
       (even when Gazebo is started through roslaunch) -->
   <arg name="verbose" default="false"/>
@@ -30,13 +31,14 @@
 
   <group ns="$(arg mav_name)">
   <!-- The following lines simulate the Crazyflie dynamics -->
-    <include file="$(find rotors_gazebo)/launch/spawn_mav_crazyflie.launch"> <!-- spawn_mav_crazyflie_forster.xacro-->
+    <include file="$(find rotors_gazebo)/launch/spawn_mav_crazyflie.launch">
       <arg name="mav_name" value="$(arg mav_name)" />
       <arg name="model" value="$(find rotors_description)/urdf/mav_generic_odometry_sensor.gazebo" />
       <arg name="enable_logging" value="$(arg enable_logging)" />
       <arg name="enable_ground_truth" value="$(arg enable_ground_truth)" />
       <arg name="enable_state_estimator" value="$(arg enable_state_estimator)" />
       <arg name="log_file" value="$(arg log_file)"/>
+      <arg name="forster_parameters" value="$(arg forster_parameters)"/>
     </include>
    <!-- The Crazyflie position controller -->
    <node name="lee_position_controller_alpha_node" pkg="rotors_control" type="lee_position_controller_alpha_node" output="screen">
