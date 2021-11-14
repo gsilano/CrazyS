@@ -110,18 +110,6 @@ add_executable(quaternion_to_rpy src/nodes/quaternion_to_rpy.cpp)
 target_link_libraries(quaternion_to_rpy ${catkin_LIBRARIES})
 add_dependencies(quaternion_to_rpy ${catkin_EXPORTED_TARGETS})
 
-add_executable(square src/nodes/square.cpp)
-target_link_libraries(square ${catkin_LIBRARIES})
-add_dependencies(square ${catkin_EXPORTED_TARGETS})
-
-add_executable(semicirc src/nodes/semicirc.cpp)
-target_link_libraries(semicirc ${catkin_LIBRARIES})
-add_dependencies(semicirc ${catkin_EXPORTED_TARGETS})
-
-add_executable(semicirc2 src/nodes/semicirc2.cpp)
-target_link_libraries(semicirc2 ${catkin_LIBRARIES})
-add_dependencies(semicirc2 ${catkin_EXPORTED_TARGETS})
-
 add_executable(linear1_1 src/nodes/linear1_1.cpp)
 target_link_libraries(linear1_1 ${catkin_LIBRARIES})
 add_dependencies(linear1_1 ${catkin_EXPORTED_TARGETS})
@@ -162,7 +150,7 @@ endforeach(dir)
 install(TARGETS waypoint_publisher waypoint_publisher_file hovering_example
   quaternion_to_rpy hovering_example_spline hovering_example_spline_swarm
   hovering_lee lee_linear1_1_polynomial lee_semicirc_polynomial lee_semicirc linear1_1
-  semicirc semicirc2 square swarm_lee_linear1_0 swarm_lee_linear1_1 swarm_lee_semicirc
+  swarm_lee_linear1_0 swarm_lee_linear1_1 swarm_lee_semicirc
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

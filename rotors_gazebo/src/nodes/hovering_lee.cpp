@@ -83,16 +83,13 @@ int main(int argc, char** argv) {
   // Trajectory message
   mav_msgs::DroneState trajectory_msg;
   mav_msgs::EigenDroneState eigen_reference;
-  double j;
+  double j = 1;
 
-  while(true){
+  while(j <=200){
       xd = 0;
       yd = 0;
-
-      if(j <=200){
-        zd = j/200 + 0.015;
-        j++;
-      }
+      zd = j/200 + 0.015;
+      j++;
 
       x_b1 = 1;
       y_b1 = 0;
