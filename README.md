@@ -106,7 +106,7 @@ $ sudo apt-get install gazebo9 gazebo9-* ros-melodic-gazebo-*
 $ sudo apt upgrade
 ```
 
-> In the event the "cmd /opt/ros/melodic/lib/gazebo_ros/gzserver -u -e ode" appear, the solution proposed in [#40](https://github.com/gsilano/CrazyS/issues/40) temporany fixes the issue.
+> In the event the `cmd /opt/ros/melodic/lib/gazebo_ros/gzserver -u -e ode` appear, the solution proposed in [#40](https://github.com/gsilano/CrazyS/issues/40) temporany fixes the issue.
 
 ```console
 $ cp build/rotors_gazebo_plugins/libmav_msgs.so devel/lib/
