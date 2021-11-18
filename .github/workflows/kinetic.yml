@@ -17,7 +17,7 @@ jobs:
 ###########################################################################################
 ## GITHUB ACTIONS - UBUNTU 16.04 ROS KINETIC WITH GAZEBO 7
 ###########################################################################################
-  job:
+  job1:
     name: Build on Ubuntu 16.04 with ROS Kinetic and Gazebo 7
     runs-on: ubuntu-16.04
     steps:
