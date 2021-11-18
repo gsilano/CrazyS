@@ -1,4 +1,3 @@
-[![CrazyS Build Automation Script](https://github.com/gsilano/CrazyS/actions/workflows/main.yml/badge.svg)](https://github.com/gsilano/CrazyS/actions/workflows/main.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 [![first-timers-only](https://img.shields.io/badge/first--timers--only-friendly-blue.svg?style=flat-square)](https://www.firsttimersonly.com/)
@@ -6,6 +5,9 @@
 
 CrazyS
 ===============
+
+| CrazyS build status | [![Build Status](https://github.com/gsilano/CrazyS/actions/workflows/kinetic.yml/badge.svg)](https://github.com/gsilano/CrazyS/actions/workflows/kinetic.yml) | [![Build Status](https://github.com/gsilano/CrazyS/actions/workflows/melodic.yml/badge.svg)](https://github.com/gsilano/CrazyS/actions/workflows/melodic.yml) |
+|-----------------------|---------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|  
 
 CrazyS is an extension of the ROS package [RotorS](https://github.com/ethz-asl/rotors_simulator), aimed to modeling, developing and integrating the [Crazyflie 2.0](https://www.bitcraze.io/crazyflie-2/) nano-quadcopter in the physics based simulation environment Gazebo. The contribution can be also considered as a reference guide for expanding the RotorS functionalities in the Unmanned Aerial Vehicles (UAVs) field, by facilitating the integration of new aircraft.
 
