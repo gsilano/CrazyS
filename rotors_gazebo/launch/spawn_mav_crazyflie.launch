@@ -20,7 +20,7 @@
 
   <!-- send the robot XML to param server -->
   <param name="robot_description" command="
-    $(find xacro)/xacro --inorder '$(arg model)'
+    $(find xacro)/xacro '$(arg model)'
     enable_logging:=$(arg enable_logging)
     enable_mellinger_controller:=$(arg enable_mellinger_controller)
     enable_internal_model_controller:=$(arg enable_internal_model_controller)
