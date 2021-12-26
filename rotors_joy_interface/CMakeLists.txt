@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 2.8.3)
-project(rotors_joy_interface)
+cmake_minimum_required(VERSION 3.0)
+project(rotors_joy_interface VERSION 7.0.1)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp

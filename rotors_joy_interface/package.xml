@@ -1,6 +1,6 @@
 <package>
   <name>rotors_joy_interface</name>
-  <version>6.0.9</version>
+  <version>7.0.1</version>
   <description>The rotors_joy_interface package to control MAVs with a joystick</description>
 
   <maintainer email="giuseppe.silano@fel.cvut.cz">Giuseppe Silano</maintainer>
@@ -10,6 +10,7 @@
   <author>Luigi Iannelli</author>
   <author>Emanuele Aucone</author>
   <author>Benjamin Rodriguez</author>
+  <author>Daniele Morra</author>
 
   <license>ASL 2.0</license>
 

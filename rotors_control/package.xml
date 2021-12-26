@@ -1,6 +1,6 @@
 <package>
   <name>rotors_control</name>
-  <version>6.0.9</version>
+  <version>7.0.1</version>
   <description>RotorS control package</description>
 
   <maintainer email="giuseppe.silano@fel.cvut.cz">Giuseppe Silano</maintainer>
@@ -11,6 +11,7 @@
   <author>Benjamin Rodriguez</author>
   <author>Ria Sonecha</author>
   <author>Luigi Iannelli</author>
+  <author>Daniele Morra</author>
 
   <license>ASL 2.0</license>
 

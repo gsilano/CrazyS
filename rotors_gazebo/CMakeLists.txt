@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 2.8.3)
-project(rotors_gazebo)
+cmake_minimum_required(VERSION 3.0)
+project(rotors_gazebo VERSION 7.0.1)
 
 add_definitions(-std=c++11)
 
