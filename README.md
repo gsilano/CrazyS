@@ -86,6 +86,12 @@ $ echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc
 $ source ~/.bashrc
 ```
 
+> In the event the `cmd /opt/ros/melodic/lib/gazebo_ros/gzserver -u -e ode` appear, the solution proposed in [#40](https://github.com/gsilano/CrazyS/issues/40) temporany fixes the issue.
+
+```console
+$ cp build/rotors_gazebo_plugins/libmav_msgs.so devel/lib/
+```
+
 Installation Instructions - Ubuntu 18.04 with ROS Melodic and Gazebo 9
 -----------------------------------------------------------------------
 To use the code developed and stored in this repository some preliminary actions are needed. They are listed below.
