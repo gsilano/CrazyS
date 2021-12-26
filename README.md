@@ -53,7 +53,7 @@ $ sudo rosdep init
 $ rosdep update
 $ echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
 $ source ~/.bashrc
-$ sudo apt-get install python3-rosdep python3-wstool ros-noetic-ros
+$ sudo apt-get install python3-rosdep python3-wstool ros-noetic-ros libgoogle-glog-dev 
 ```
 
 2. If you don't have ROS workspace yet you can do so by
