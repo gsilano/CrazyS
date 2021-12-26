@@ -12,24 +12,24 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 find_package(
-  Eigen REQUIRED
+  Eigen3 REQUIRED
 )
 
 catkin_package(
-  INCLUDE_DIRS include ${Eigen_INCLUDE_DIRS}
+  INCLUDE_DIRS include ${Eigen3_INCLUDE_DIRS}
   LIBRARIES lee_position_controller position_controller crazyflie_onboard_controller
     roll_pitch_yawrate_thrust_controller sensfusion6 crazyflie_complementary_filter
     mellinger_controller internal_model_controller 
     roll_pitch_yawrate_thrust_controller_crazyflie
   CATKIN_DEPENDS geometry_msgs mav_msgs nav_msgs roscpp sensor_msgs
-  DEPENDS Eigen
+  DEPENDS Eigen3
 )
 
 
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${Eigen_INCLUDE_DIRS}
+  ${Eigen3_INCLUDE_DIRS}
 )
 
 add_library(lee_position_controller
