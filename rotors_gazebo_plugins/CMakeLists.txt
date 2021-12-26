@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.0.2)
 project(rotors_gazebo_plugins VERSION 7.0.1)
 
 # =============================================================================================== #
