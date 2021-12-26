@@ -75,6 +75,7 @@ $ cd ~/catkin_ws
 ```console
 $ rosdep install --from-paths src -i
 $ rosdep update
+$ catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release -DCATKIN_ENABLE_TESTING=False
 $ catkin build
 ```
 
