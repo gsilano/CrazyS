@@ -11,9 +11,11 @@ on:
   pull_request:
     branches:
        - 'dev/ros-noetic'
+
 ##########################################################################################
 ## GITHUB ACTIONS - ROS NOETIC WITH GAZEBO 11
 ###########################################################################################
+job:
   name: Build on Ubuntu 20.04 with ROS Noetic
   runs-on: ubuntu-20.04
   steps:
@@ -36,7 +38,7 @@ on:
     sudo apt-get install dpkg
     sudo rm /var/lib/dpkg/lock
     sudo dpkg --configure -a
-    sudo apt install -y python-catkin-tools python-catkin-pkg python-rosdep python-wstool ros-$ROS_DISTRO-desktop-full 
+    sudo apt install -y python-catkin-tools python-catkin-pkg python-rosdep python-wstool ros-$ROS_DISTRO-desktop-full
     sudo apt-get install -y ros-$ROS_DISTRO-joy  python-rosinstall python-rosinstall-generator python-wstool build-essential
     sudo apt install -y ros-$ROS_DISTRO-octomap-ros ros-$ROS_DISTRO-mavlink python-rosinstall build-essential protobuf-compiler
     sudo apt install -y libgoogle-glog-dev python-rosinstall-generator ros-$ROS_DISTRO-pointcloud-to-laserscan
@@ -48,7 +50,7 @@ on:
     rosdep install octomap_mapping
     rosmake octomap_mapping
 #####################################################################################
-    - name: Installation completed! Started the building process..
+  name: Installation completed! Started the building process..
   env:
     ROS_DISTRO: neotic
   run: |
