@@ -72,11 +72,11 @@ jobs:
         sudo dpkg --configure -a
         sudo apt install -y ros-$ROS_DISTRO-desktop-full ros-$ROS_DISTRO-joy ros-$ROS_DISTRO-octomap-ros ros-$ROS_DISTRO-mavlink
         sudo apt install -y ros-$ROS_DISTRO-octomap-mapping ros-$ROS_DISTRO-control-toolbox build-essential
-        sudo apt install -y python3-vcstool python-catkin-tools protobuf-compiler libgoogle-glog-dev
-        sudo apt install -y python-catkin-pkg python3-rosdep python3-wstool ros-$ROS_DISTRO-ros
-        sudo apt install -y python-rosinstall python-rosinstall-generator
+        sudo apt install -y python3-vcstool python3-catkin-tools protobuf-compiler libgoogle-glog-dev
+        sudo apt install -y python3-catkin-pkg python3-rosdep python3-wstool ros-$ROS_DISTRO-ros
+        sudo apt install -y python3-rosinstall python3-rosinstall-generator
         sudo apt install -y ros-$ROS_DISTRO-pointcloud-to-laserscan
-        sudo apt install -y python-rosdep ros-$ROS_DISTRO-octomap ros-$ROS_DISTRO-octomap-mapping
+        sudo apt install -y python3-rosdep ros-$ROS_DISTRO-octomap ros-$ROS_DISTRO-octomap-mapping
         source /opt/ros/$ROS_DISTRO/setup.bash
         sudo rosdep init
         rosdep update --include-eol-distros

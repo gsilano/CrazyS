@@ -74,7 +74,7 @@ $ curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo 
 $ sudo apt update
 $ sudo apt install ros-noetic-desktop-full ros-noetic-joy ros-noetic-octomap-ros ros-noetic-mavlink
 $ sudo apt install ros-noetic-octomap-mapping ros-noetic-control-toolbox
-$ sudo apt install python3-vcstool python-catkin-tools protobuf-compiler libgoogle-glog-dev
+$ sudo apt install python3-vcstool python3-catkin-tools protobuf-compiler libgoogle-glog-dev
 $ sudo rosdep init
 $ rosdep update
 $ echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
