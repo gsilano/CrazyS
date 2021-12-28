@@ -61,7 +61,7 @@ Keyboard layout: Italian
 Language: English
 ```
 
-Installation Instructions - Ubuntu 20.04 with ROS Neotic and Gazebo 11
+Installation Instructions - Ubuntu 20.04 with ROS Noetic and Gazebo 11
 -----------------------------------------------------------------------
 To use the code developed and stored in this repository some preliminary actions are needed. They are listed below.
 
