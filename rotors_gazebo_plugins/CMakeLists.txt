@@ -10,7 +10,7 @@
 # NO_ROS                            bool    Build without any ROS dependencies.
 
 cmake_minimum_required(VERSION 3.0.2)
-project(rotors_gazebo_plugins)
+project(rotors_gazebo_plugins VERSION 7.0.1)
 
 #
 #if ( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR} )
