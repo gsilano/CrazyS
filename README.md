@@ -1,27 +1,52 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 [![first-timers-only](https://img.shields.io/badge/first--timers--only-friendly-blue.svg?style=flat-square)](https://www.firsttimersonly.com/)
-[![All Contributors](https://img.shields.io/badge/all_contributors-5-orange.svg?style=flat-square)](#contributors)
+[![All Contributors](https://img.shields.io/badge/all_contributors-6-orange.svg?style=flat-square)](#contributors)
 
 CrazyS
 ===============
 
-| CrazyS build status | [![Build Status](https://github.com/gsilano/CrazyS/actions/workflows/kinetic.yml/badge.svg)](https://github.com/gsilano/CrazyS/actions/workflows/kinetic.yml) | [![Build Status](https://github.com/gsilano/CrazyS/actions/workflows/melodic.yml/badge.svg)](https://github.com/gsilano/CrazyS/actions/workflows/melodic.yml) |
-|-----------------------|---------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|  
+| CrazyS build status | [![Build Status](https://github.com/gsilano/CrazyS/actions/workflows/kinetic.yml/badge.svg)](https://github.com/gsilano/CrazyS/actions/workflows/kinetic.yml) | [![Build Status](https://github.com/gsilano/CrazyS/actions/workflows/melodic.yml/badge.svg)](https://github.com/gsilano/CrazyS/actions/workflows/melodic.yml) | [![Build Status](https://github.com/gsilano/CrazyS/actions/workflows/noetic.yml/badge.svg)](https://github.com/gsilano/CrazyS/actions/workflows/noetic.yml)
+|-----------------------|---------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|  
 
 CrazyS is an extension of the ROS package [RotorS](https://github.com/ethz-asl/rotors_simulator), aimed to modeling, developing and integrating the [Crazyflie 2.0](https://www.bitcraze.io/crazyflie-2/) nano-quadcopter in the physics based simulation environment Gazebo. The contribution can be also considered as a reference guide for expanding the RotorS functionalities in the Unmanned Aerial Vehicles (UAVs) field, by facilitating the integration of new aircraft.
 
 Such simulation platform allows to understand quickly the behavior of the flight control system by comparing and evaluating different indoor and outdoor scenarios, with a details level quite close to reality. The proposed extension expands RotorS capabilities by considering the Crazyflie 2.0 physical model and its flight control system, as well (the [2018.01.1](https://github.com/bitcraze/crazyflie-firmware/releases/tag/2018.01.1) firmware release).
 
-A simple case study is considered (`crazyflie2_hovering_example.launch`) in order to show how the package works and the validity of the employed dynamical model together the control architecture of the quadrotor.
+A simple case study is considered (`crazyflie2_hovering_example.launch`) in order to show how the package works and the validity of the employed dynamical model together the control architecture of the quadrotor. The code is released under Apache license, thus making it available for scientific and educational activities.
 
-The code is released under Apache license, thus making it available for scientific and educational activities.
-
-The platform was developed using Ubuntu 16.04 and the Kinetic Kame version of ROS, but it is also fully compatible with Ubuntu 18.04 and the Melodic Morenia distribution of ROS. Although backwards compatibility is guarantee, i.e., the platform is fully compatible with Indigo Igloo version of ROS and Ubuntu 14.04, such configuration is not recommended since the ROS support is expected to be closed in April 2019.
+The platform was developed using Ubuntu 16.04 and the Kinetic Kame version of ROS, but it is also fully compatible with Ubuntu 18.04 along with the Melodic Morenia distribution of ROS and Ubuntu 20.0.4 along with the Noetic Ninjemys release. Although backwards compatibility is guarantee, i.e., the platform is fully compatible with Indigo Igloo version of ROS and Ubuntu 14.04, such configuration is not recommended since the ROS support is expected to be closed in April 2019.
 
 Below we provide the instructions necessary for getting started. See [CrazyS' wiki](https://github.com/gsilano/CrazyS/wiki) for more instructions and examples.
 
-If you are using this simulator for research purposes especially for your publication, please take a look at the [Publications page](https://github.com/gsilano/CrazyS/wiki/Publications). The page contains the core papers and all related works (using the platform).
+If you are using this simulator for research purposes especially for your publication, please take a look at the [Publications page](https://github.com/gsilano/CrazyS/wiki/Publications). The page contains the core papers and all related works (using the platform). For the sake of simplicity, here the references to the core papers are reported.
+
+```console
+@INBOOKk{Silano2019ROSVolume4,
+  author = {Silano, G. and Iannelli, L.},
+  editor = {Koubaa, A.},
+  title = {Robot Operating System (ROS): The Complete Reference (Volume 4)},
+  chapter = {{CrazyS: a software-in-the-loop simulation platform for the Crazyflie 2.0 nano-quadcopter}},
+  publisher = {Springer International Publishing},
+  pages = {81--115},
+  isbn = {978-3-030-20190-6},
+  doi = {10.1007/978-3-030-20190-6_4},
+  link = {https://link.springer.com/chapter/10.1007/978-3-030-20190-6_4},
+  year = {2020}
+}
+
+@INPROCEEDINGS{Silano2018MED,
+  author = {Silano, G. and Aucone, E. and Iannelli, L.},
+  booktitle = {2018 26th Mediterranean Conference on Control and Automation (MED)},
+  title = {{CrazyS: A Software-In-The-Loop Platform for the Crazyflie 2.0 Nano-Quadcopter}},
+  year = {2018},
+  pages = {352--357},
+  doi = {10.1109/MED.2018.8442759},
+  issn = {2473-3504},
+  month = June,
+  link = {https://ieeexplore.ieee.org/document/8442759},  
+}
+```
 
 To facilitate the use of the repository, in addition to the installation instructions, the following are links to two virtual machines created using Oracle VirtualBox.
 
@@ -47,13 +72,14 @@ $ sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) ma
 $ sudo apt install curl # if you haven't already installed curl
 $ curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
 $ sudo apt update
-$ sudo apt install ros-noetic-desktop-full ros-noetic-joy ros-noetic-octomap-ros ros-noetic-mavlink ros-noetic-octomap-mapping
-$ sudo apt install python3-vcstool python-catkin-tools protobuf-compiler libgoogle-glog-dev ros-noetic-control-toolbox
+$ sudo apt install ros-noetic-desktop-full ros-noetic-joy ros-noetic-octomap-ros ros-noetic-mavlink
+$ sudo apt install ros-noetic-octomap-mapping ros-noetic-control-toolbox
+$ sudo apt install python3-vcstool python-catkin-tools protobuf-compiler libgoogle-glog-dev
 $ sudo rosdep init
 $ rosdep update
 $ echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
 $ source ~/.bashrc
-$ sudo apt-get install python3-rosdep python3-wstool ros-noetic-ros libgoogle-glog-dev 
+$ sudo apt-get install python3-rosdep python3-wstool ros-noetic-ros libgoogle-glog-dev
 ```
 
 2. If you don't have ROS workspace yet you can do so by
@@ -102,8 +128,9 @@ To use the code developed and stored in this repository some preliminary actions
 $ sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
 $ sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
 $ sudo apt update
-$ sudo apt install ros-melodic-desktop-full ros-melodic-joy ros-melodic-octomap-ros ros-melodic-mavlink ros-melodic-octomap-mapping
-$ sudo apt install python-wstool python-catkin-tools protobuf-compiler libgoogle-glog-dev ros-melodic-control-toolbox
+$ sudo apt install ros-melodic-desktop-full ros-melodic-joy ros-melodic-octomap-ros
+$ sudo apt install python-wstool python-catkin-tools protobuf-compiler libgoogle-glog-dev
+$ sudo apt install ros-melodic-control-toolbox ros-melodic-octomap-mapping ros-melodic-mavlink
 $ sudo rosdep init
 $ rosdep update
 $ echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc
@@ -129,9 +156,11 @@ $ cd ~/catkin_ws
 
 ```console
 $ rosdep install --from-paths src -i
-$ sudo apt install ros-melodic-rqt-rotors ros-melodic-rotors-comm ros-melodic-mav-msgs ros-melodic-rotors-control
-$ sudo apt install ros-melodic-rotors-gazebo ros-melodic-rotors-evaluation ros-melodic-rotors-joy-interface
-$ sudo apt install ros-melodic-rotors-gazebo-plugins ros-melodic-mav-planning-msgs ros-melodic-rotors-description ros-melodic-rotors-hil-interface
+$ sudo apt install ros-melodic-rqt-rotors ros-melodic-rotors-comm ros-melodic-rotors-description
+$ sudo apt install ros-melodic-mav-msgs ros-melodic-rotors-control
+$ sudo apt install ros-melodic-rotors-gazebo ros-melodic-rotors-evaluation
+$ sudo apt install ros-melodic-rotors-joy-interface ros-melodic-rotors-hil-interface
+$ sudo apt install ros-melodic-rotors-gazebo-plugins ros-melodic-mav-planning-msgs
 $ rosdep update
 $ catkin build
 ```
@@ -172,13 +201,15 @@ $ cp build/rotors_gazebo_plugins/libmav_msgs.so devel/lib/
 
 Installation Instructions - Ubuntu 16.04 with ROS Kinetic and Gazebo 7
 ---------------------------------------------------------
- 1. Install and initialize ROS kinetic desktop full, additional ROS packages, catkin-tools, and wstool:
+1. Install and initialize ROS kinetic desktop full, additional ROS packages, catkin-tools, and wstool:
 
- ```console
+```console
 $ sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
 $ sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
 $ sudo apt-get update
-$ sudo apt-get install ros-kinetic-desktop-full ros-kinetic-joy ros-kinetic-octomap-ros ros-kinetic-mavlink python-catkin-tools protobuf-compiler libgoogle-glog-dev ros-kinetic-control-toolbox ros-kinetic-octomap-mapping
+$ sudo apt-get install ros-kinetic-desktop-full ros-kinetic-joy ros-kinetic-octomap-ros
+$ sudo apt-get install ros-kinetic-mavlink python-catkin-tools protobuf-compiler
+$ sudo apt-get install libgoogle-glog-dev ros-kinetic-control-toolbox ros-kinetic-octomap-mapping
 $ sudo rosdep init
 $ rosdep update
 $ echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc
@@ -286,7 +317,9 @@ Installation Instructions - Ubuntu 14.04 with ROS Indigo
 $ sudo sh -c ’echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list’
 $ sudo apt-key adv --keyserver hkp://ha.pool.skskeyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
 $ sudo apt-get update
-$ sudo apt-get install ros-indigo-desktop-full ros-indigo-joy ros-indigo-octomap-ros python-wstool python-catkin-tools protobuf compiler libgoogle-glog-dev
+$ sudo apt-get install ros-indigo-desktop-full ros-indigo-joy
+$ sudo apt-get install ros-indigo-octomap-ros python-wstool python-catkin-tools
+$ sudo apt-get install protobuf compiler libgoogle-glog-dev
 $ sudo rosdep init
 $ rosdep update
 $ echo "source /opt/ros/indigo/setup.bash" >> ~/.bashrc
@@ -368,7 +401,7 @@ The whole process is the following: the desired trajectory coordinates (x_r, y_r
 
 There are some basic launch files where you can load the different multicopters with additional sensors. They can all be found in `~/catkin_ws/src/CrazyS/rotors_gazebo/launch`. Such scenarios are better explained in the [RotorS](https://github.com/ethz-asl/rotors_simulator) repository.
 
-The `world_name` argument looks for a .world file with a corresponding name in `~/catkin_ws/src/CrazyS/rotors_gazebo/worlds`. By default, all launch files, with the exception of those that have the world name explicitly included in the file name, use the empty world described in `basic.world`.
+The `world_name` argument looks for a `.world` file with a corresponding name in `~/catkin_ws/src/CrazyS/rotors_gazebo/worlds`. By default, all launch files, with the exception of those that have the world name explicitly included in the file name, use the empty world described in `basic.world`.
 
 Using the `csvFilesStoring` variable is possible to enable (true) or disable (false) the data storage. The log files are saved in the home directory (the path can be easily changed modifying the `position_controller.cpp` file). The recording time can be set via the `csvFilesStoringTime` while the user account can be set via the `user_account` variable. Of course, the log features can be used with and without the complementary filter.
 
@@ -382,7 +415,7 @@ An alternative controller is available on the repository. For running the simula
 $ roslaunch rotors_gazebo crazyflie2_internal_model_controller.launch
 ```
 
-or 
+or
 
 ```console
 $ roslaunch rotors_gazebo crazyflie2_internal_model_controller_vi_sensor.launch
