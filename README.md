@@ -6,8 +6,8 @@
 CrazyS
 ===============
 
-| CrazyS build status | [![Build Status](https://github.com/gsilano/CrazyS/actions/workflows/kinetic.yml/badge.svg)](https://github.com/gsilano/CrazyS/actions/workflows/kinetic.yml) | [![Build Status](https://github.com/gsilano/CrazyS/actions/workflows/melodic.yml/badge.svg)](https://github.com/gsilano/CrazyS/actions/workflows/melodic.yml) | [![Build Status](https://github.com/gsilano/CrazyS/actions/workflows/noetic.yml/badge.svg)](https://github.com/gsilano/CrazyS/actions/workflows/noetic.yml)
-|-----------------------|---------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|  
+| CrazyS build status | [![Build Status](https://github.com/gsilano/CrazyS/actions/workflows/melodic.yml/badge.svg)](https://github.com/gsilano/CrazyS/actions/workflows/melodic.yml) | [![Build Status](https://github.com/gsilano/CrazyS/actions/workflows/noetic.yml/badge.svg)](https://github.com/gsilano/CrazyS/actions/workflows/noetic.yml)
+|-----------------------|---------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|  
 
 CrazyS is an extension of the ROS package [RotorS](https://github.com/ethz-asl/rotors_simulator), aimed to modeling, developing and integrating the [Crazyflie 2.0](https://www.bitcraze.io/crazyflie-2/) nano-quadcopter in the physics based simulation environment Gazebo. The contribution can be also considered as a reference guide for expanding the RotorS functionalities in the Unmanned Aerial Vehicles (UAVs) field, by facilitating the integration of new aircraft.
 
