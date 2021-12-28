@@ -16,6 +16,19 @@ on:
   pull_request:
     branches:
        - 'dev/ros-melodic'
+###########################################################################################
+## MANUALLY TRIGGER BUILD
+###########################################################################################
+  workflow_dispatch:
+    inputs:
+      name:
+        description: 'Person to greet'
+        required: true
+        default: 'Mona the Octocat'
+      home:
+        description: 'location'
+        required: false
+        default: 'The Octoverse'
 
 jobs:
 ###########################################################################################
@@ -30,7 +43,7 @@ jobs:
         uses: styfle/cancel-workflow-action@0.8.0
         with:
           access_token: ${{ github.token }}
-          
+
 ##########################################################################################
 ## GITHUB ACTIONS - ROS MELODIC WITH GAZEBO 9
 ###########################################################################################

@@ -16,6 +16,19 @@ on:
   pull_request:
     branches:
        - 'master'
+###########################################################################################
+## MANUALLY TRIGGER BUILD
+###########################################################################################
+  workflow_dispatch:
+    inputs:
+      name:
+        description: 'Person to greet'
+        required: true
+        default: 'Mona the Octocat'
+      home:
+        description: 'location'
+        required: false
+        default: 'The Octoverse'
 
 jobs:
 ###########################################################################################
@@ -30,10 +43,10 @@ jobs:
         uses: styfle/cancel-workflow-action@0.8.0
         with:
           access_token: ${{ github.token }}
-          
+
 ###########################################################################################
 ## GITHUB ACTIONS - UBUNTU 16.04 ROS KINETIC WITH GAZEBO 7
-###########################################################################################     
+###########################################################################################
   build:
     name: Build on Ubuntu 16.04 with ROS Kinetic and Gazebo 7
     runs-on: ubuntu-16.04
