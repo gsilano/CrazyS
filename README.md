@@ -435,6 +435,8 @@ The package also provides a launch file for piloting the Crazyflie using a PC jo
 $ roslaunch rotors_gazebo crazyflie2_with_joy.launch
 ```
 
+> **Note** As explained in [#90](https://github.com/gsilano/CrazyS/issues/90), the recent updates in the xacro file format may break the simulation. To avoid these issue, simply downgrade the version of `xacro` to the 1.13.3 version. Remove `xacro` and `xacro-1.14.11.egg-info` directories from `/opt/ros/noetic/lib/python3/dist-packages` folder using `sudo rm -r ...` command and install the 1.13.3 version of xacro using `pip3 install xacro==1.13.3`. This avoid further modifications to the launch files.
+
 Gazebo Version
 --------------
 
