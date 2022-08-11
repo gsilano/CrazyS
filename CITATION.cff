@@ -1,4 +1,4 @@
-@INPROCEEDINGS{Silano2018MED,
+@inproceedings{Silano2018MED,
   author = {Silano, G. and Aucone, E. and Iannelli, L.},
   booktitle = {2018 26th Mediterranean Conference on Control and Automation (MED)},
   title = {{CrazyS: A Software-In-The-Loop Platform for the Crazyflie 2.0 Nano-Quadcopter}},
