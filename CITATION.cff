@@ -1,0 +1,37 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Silano"
+  given-names: "Giuseppe"
+  orcid: "https://orcid.org/0000-0002-6816-6002"
+- family-names: "Aucone"
+  given-names: "Emanuele"
+- family-names: "Iannelli"
+  given-names: "Luigi"
+  orcid: "https://orcid.org/0000-0003-2034-0005"
+title: "CrazyS: A Software-In-The-Loop Platform for the Crazyflie 2.0 Nano-Quadcopter"
+doi: 10.1109/MED.2018.8442759
+year: 2018
+start: 352 # First page number
+end: 357 # Last page number
+date-released: 2018-03-02
+url: "https://github.com/gsilano/CrazyS"
+
+preferred-citation:
+  type: inbook
+  authors:
+  - family-names: "Silano"
+    given-names: "Giuseppe"
+    orcid: "https://orcid.org/0000-0002-6816-6002"
+  - family-names: "Iannelli"
+    given-names: "Luigi"
+    orcid: "https://orcid.org/0000-0003-2034-0005"
+  title: "Robot Operating System (ROS): The Complete Reference (Volume 4)"
+  chapter: "CrazyS: a software-in-the-loop simulation platform for the Crazyflie 2.0 nano-quadcopter"
+  publisher: "Springer International Publishing"
+  doi: 10.1007/978-3-030-20190-6_4
+  start: 81 # First page number
+  end: 115 # Last page number
+  url: "https://link.springer.com/chapter/10.1007/978-3-030-20190-6_4"
+  isbn: "978-3-030-20190-6"
+  preprint: "https://giuseppesilano.net/publications/rosChapter19.pdf"
