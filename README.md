@@ -22,7 +22,7 @@ Below we provide the instructions necessary for getting started. See [CrazyS' wi
 If you are using this simulator for research purposes especially for your publication, please take a look at the [Publications page](https://github.com/gsilano/CrazyS/wiki/Publications). The page contains the core papers and all related works (using the platform). For the sake of simplicity, here the references to the core papers are reported.
 
 ```console
-@INBOOKk{Silano2019ROSVolume4,
+@INBOOK{Silano2019ROSVolume4,
   author = {Silano, G. and Iannelli, L.},
   editor = {Koubaa, A.},
   title = {Robot Operating System (ROS): The Complete Reference (Volume 4)},
