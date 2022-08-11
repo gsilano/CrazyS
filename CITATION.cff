@@ -1,17 +1,13 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
-
-@inproceedings{Silano2018MED,
-  author = {Silano, G. and Aucone, E. and Iannelli, L.},
-  booktitle = {2018 26th Mediterranean Conference on Control and Automation (MED)},
-  title = {{CrazyS: A Software-In-The-Loop Platform for the Crazyflie 2.0 Nano-Quadcopter}},
-  year = {2018},
-  pages = {352--357},
-  doi = {10.1109/MED.2018.8442759},
-  issn = {2473-3504},
-  month = jun,
-  preprint = {https://giuseppesilano.net/publications/med18.pdf},
-  link = {https://ieeexplore.ieee.org/document/8442759},
-  code = {http://github.com/gsilano/CrazyS},
-  note = {Zadar, Croatia}
+@article{Lisa_My_awesome_research_2021,
+  author = {Lisa, Mona and Bot, Hew},
+  doi = {10.0000/00000},
+  journal = {Journal Title},
+  month = {9},
+  number = {1},
+  pages = {1--10},
+  title = {{My awesome research software}},
+  volume = {1},
+  year = {2021}
 }
