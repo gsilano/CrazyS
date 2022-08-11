@@ -1,3 +1,6 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+
 @inproceedings{Silano2018MED,
   author = {Silano, G. and Aucone, E. and Iannelli, L.},
   booktitle = {2018 26th Mediterranean Conference on Control and Automation (MED)},
