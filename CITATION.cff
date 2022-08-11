@@ -1,14 +1,29 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 authors:
-- family-names: "Lisa"
-  given-names: "Mona"
-  orcid: "https://orcid.org/0000-0000-0000-0000"
-- family-names: "Bot"
-  given-names: "Hew"
-  orcid: "https://orcid.org/0000-0000-0000-0000"
-title: "My Research Software"
-version: 2.0.4
-doi: 10.5281/zenodo.1234
-date-released: 2017-12-18
-url: "https://github.com/github/linguist"
+- family-names: "Silano"
+  given-names: "Giuseppe"
+  orcid: "https://orcid.org/0000-0002-6816-6002"
+- family-names: "Aucone"
+  given-names: "Emanuele"
+- family-names: "Iannelli"
+  given-names: "Luigi"
+  orcid: "https://orcid.org/0000-0003-2034-0005"
+title: "CrazyS: A Software-In-The-Loop Platform for the Crazyflie 2.0 Nano-Quadcopter"
+doi: 10.1109/MED.2018.8442759
+date-released: 2018-03-02
+url: "https://github.com/gsilano/CrazyS"
+
+authors:
+- family-names: "Silano"
+  given-names: "Giuseppe"
+  orcid: "https://orcid.org/0000-0002-6816-6002"
+- family-names: "Aucone"
+  given-names: "Emanuele"
+- family-names: "Iannelli"
+  given-names: "Luigi"
+  orcid: "https://orcid.org/0000-0003-2034-0005"
+title: "CrazyS: A Software-In-The-Loop Platform for the Crazyflie 2.0 Nano-Quadcopter"
+doi: 10.1109/MED.2018.8442759
+date-released: 2018-03-02
+url: "https://github.com/gsilano/CrazyS"
