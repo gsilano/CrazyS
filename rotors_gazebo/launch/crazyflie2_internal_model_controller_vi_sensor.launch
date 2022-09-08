@@ -11,6 +11,7 @@
   <arg name="debug" default="false"/>
   <arg name="gui" default="true"/>
   <arg name="enable_vi_sensor" default="true"/>
+  <arg name="forster_parameters" default="false"/>
   <!-- The following line causes gzmsg and gzerr messages to be printed to the console
       (even when Gazebo is started through roslaunch) -->
   <arg name="verbose" default="false"/>

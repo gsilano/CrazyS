@@ -52,10 +52,21 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   cmake_modules
+  rospy
+  trajectory_msgs
 )
 
 find_package(
   Eigen REQUIRED
+)
+
+## Generate added messages and services with any dependencies listed here
+generate_messages(
+   DEPENDENCIES
+   geometry_msgs
+   mav_msgs
+   nav_msgs
+   trajectory_msgs
 )
 
 catkin_package(
@@ -99,6 +110,38 @@ add_executable(quaternion_to_rpy src/nodes/quaternion_to_rpy.cpp)
 target_link_libraries(quaternion_to_rpy ${catkin_LIBRARIES})
 add_dependencies(quaternion_to_rpy ${catkin_EXPORTED_TARGETS})
 
+add_executable(linear1_1 src/nodes/linear1_1.cpp)
+target_link_libraries(linear1_1 ${catkin_LIBRARIES})
+add_dependencies(linear1_1 ${catkin_EXPORTED_TARGETS})
+
+add_executable(lee_semicirc src/nodes/lee_semicirc.cpp)
+target_link_libraries(lee_semicirc ${catkin_LIBRARIES})
+add_dependencies(lee_semicirc ${catkin_EXPORTED_TARGETS})
+
+add_executable(lee_linear1_1_polynomial src/nodes/lee_linear1_1_polynomial.cpp)
+target_link_libraries(lee_linear1_1_polynomial ${catkin_LIBRARIES})
+add_dependencies(lee_linear1_1_polynomial ${catkin_EXPORTED_TARGETS})
+
+add_executable(lee_semicirc_polynomial src/nodes/lee_semicirc_polynomial.cpp)
+target_link_libraries(lee_semicirc_polynomial ${catkin_LIBRARIES})
+add_dependencies(lee_semicirc_polynomial ${catkin_EXPORTED_TARGETS})
+
+add_executable(swarm_lee_linear1_1 src/nodes/swarm_lee_linear1_1.cpp)
+target_link_libraries(swarm_lee_linear1_1 ${catkin_LIBRARIES})
+add_dependencies(swarm_lee_linear1_1 ${catkin_EXPORTED_TARGETS})
+
+add_executable(swarm_lee_semicirc src/nodes/swarm_lee_semicirc.cpp)
+target_link_libraries(swarm_lee_semicirc ${catkin_LIBRARIES})
+add_dependencies(swarm_lee_semicirc ${catkin_EXPORTED_TARGETS})
+
+add_executable(hovering_lee src/nodes/hovering_lee.cpp)
+target_link_libraries(hovering_lee ${catkin_LIBRARIES})
+add_dependencies(hovering_lee ${catkin_EXPORTED_TARGETS})
+
+add_executable(swarm_lee_linear1_0 src/nodes/swarm_lee_linear1_0.cpp)
+target_link_libraries(swarm_lee_linear1_0 ${catkin_LIBRARIES})
+add_dependencies(swarm_lee_linear1_0 ${catkin_EXPORTED_TARGETS})
+
 foreach(dir launch models resource worlds)
    install(DIRECTORY ${dir}/
       DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/${dir})
@@ -106,6 +149,8 @@ endforeach(dir)
 
 install(TARGETS waypoint_publisher waypoint_publisher_file hovering_example
   quaternion_to_rpy hovering_example_spline hovering_example_spline_swarm
+  hovering_lee lee_linear1_1_polynomial lee_semicirc_polynomial lee_semicirc linear1_1
+  swarm_lee_linear1_0 swarm_lee_linear1_1 swarm_lee_semicirc
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

@@ -22,7 +22,12 @@
 <robot name="crazyflie2" xmlns:xacro="http://ros.org/wiki/xacro">
   <xacro:include filename="$(find rotors_description)/urdf/component_snippets.xacro" />
   <!-- Instantiate crazyflie2 "mechanics" -->
-  <xacro:include filename="$(find rotors_description)/urdf/crazyflie2.xacro" />
+  <xacro:if value="$(arg forster_parameters)">
+    <xacro:include filename="$(find rotors_description)/urdf/crazyflie2_forster.xacro" />
+  </xacro:if>
+  <xacro:unless value="$(arg forster_parameters)">
+    <xacro:include filename="$(find rotors_description)/urdf/crazyflie2.xacro" />
+  </xacro:unless>
 
   <!-- Instantiate a controller.  -->
   <xacro:controller_plugin_macro namespace="${namespace}" imu_sub_topic="imu" />
