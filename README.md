@@ -1,5 +1,5 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Build](https://github.com/gsilano/CrazyS/actions/workflows/build.yml/badge.svg)](https://github.com/gsilano/CrazyS/actions/workflows/build.yml)
+[![Jazzy + Gazebo Harmonic](https://github.com/gsilano/CrazyS/actions/workflows/build-jazzy.yml/badge.svg?branch=dev/ros2-jazzy)](https://github.com/gsilano/CrazyS/actions/workflows/build-jazzy.yml)
 
 CrazyS for ROS 2
 ================

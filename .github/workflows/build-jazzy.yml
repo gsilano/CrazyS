@@ -1,0 +1,60 @@
+# Builds the dev/ros2-jazzy branch (Jazzy + Gazebo Harmonic) in a Docker container with the
+# matching Ubuntu and ROS version, on every push and pull request to this branch.
+# The weekly check on master calls this workflow too, to catch breakages in the
+# dependencies when nobody pushes.
+#
+# The unit tests of rotors_control are run as well.
+
+name: Jazzy + Gazebo Harmonic
+
+on:
+  push:
+    branches: [dev/ros2-jazzy]
+  pull_request:
+    branches: [dev/ros2-jazzy]
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      ref:
+        description: Git ref to build
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and test (dev/ros2-jazzy)
+    runs-on: ubuntu-latest
+    container: ros:jazzy-ros-base
+    env:
+      DEBIAN_FRONTEND: noninteractive
+    steps:
+      - name: Install the dependencies
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq --no-install-recommends git \
+            ros-jazzy-ros-gz ros-jazzy-actuator-msgs ros-jazzy-xacro ros-jazzy-joy \
+            ros-jazzy-robot-state-publisher
+
+      # The code is fetched with plain git, as in the ROS 1 workflows. When the
+      # workflow is called by the weekly check on master, inputs.ref names this branch.
+      - name: Get the code
+        shell: bash
+        run: |
+          mkdir -p ~/ros2_ws/src/CrazyS && cd ~/ros2_ws/src/CrazyS
+          git init -q
+          git remote add origin https://github.com/${{ github.repository }}.git
+          git fetch -q --depth 1 origin "${{ inputs.ref || github.ref }}"
+          git checkout -q FETCH_HEAD
+          git log -1 --format='Building %H (%s)'
+
+      - name: Build and test
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          cd ~/ros2_ws
+          colcon build --event-handlers console_cohesion+
+          colcon test --event-handlers console_cohesion+
+          colcon test-result --verbose
