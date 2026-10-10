@@ -58,15 +58,15 @@ Eigen::Matrix3d FromColumns(const Eigen::Vector3d& c1, const Eigen::Vector3d& c2
 DirtyDerivative::DirtyDerivative()
     : order_(1),
       iteration_(0),
-      a1_(0.0),
-      a2_(0.0),
+      tau_(kDefaultLeeTauFirstOrder),
+      sampling_time_(kDefaultLeeSamplingTime),
       derivative_(Eigen::Vector3d::Zero()),
       previous_input_(Eigen::Vector3d::Zero()) {}
 
 void DirtyDerivative::Configure(unsigned int order, double tau, double sampling_time) {
   order_ = order;
-  a1_ = (2.0 * tau - sampling_time) / (2.0 * tau + sampling_time);
-  a2_ = 2.0 / (2.0 * tau + sampling_time);
+  tau_ = tau;
+  sampling_time_ = sampling_time;
   Reset();
 }
 
@@ -76,10 +76,15 @@ void DirtyDerivative::Reset() {
   previous_input_.setZero();
 }
 
-const Eigen::Vector3d& DirtyDerivative::Update(const Eigen::Vector3d& input) {
+const Eigen::Vector3d& DirtyDerivative::Update(const Eigen::Vector3d& input, double dt) {
+  if (dt <= 0.0) {
+    dt = sampling_time_;
+  }
   ++iteration_;
   if (iteration_ > order_) {
-    derivative_ = a1_ * derivative_ + a2_ * (input - previous_input_);
+    const double a1 = (2.0 * tau_ - dt) / (2.0 * tau_ + dt);
+    const double a2 = 2.0 / (2.0 * tau_ + dt);
+    derivative_ = a1 * derivative_ + a2 * (input - previous_input_);
   }
   previous_input_ = input;
   return derivative_;
@@ -89,7 +94,12 @@ LeeGeometricController::LeeGeometricController()
     : controller_active_(false),
       initialized_params_(false),
       allocation_matrix_(Eigen::Matrix4d::Zero()),
-      allocation_matrix_inverse_(Eigen::Matrix4d::Zero()) {}
+      allocation_matrix_inverse_(Eigen::Matrix4d::Zero()),
+      odometry_time_(0.0),
+      reference_time_(0.0),
+      last_control_time_(-1.0),
+      last_reference_time_(-1.0),
+      new_reference_(false) {}
 
 LeeGeometricController::~LeeGeometricController() {}
 
@@ -127,13 +137,16 @@ void LeeGeometricController::InitializeParameters() {
   initialized_params_ = true;
 }
 
-void LeeGeometricController::SetOdometry(const EigenOdometry& odometry) {
+void LeeGeometricController::SetOdometry(const EigenOdometry& odometry, double time) {
   odometry_ = odometry;
+  odometry_time_ = time;
 }
 
 void LeeGeometricController::SetTrajectoryPoint(
-    const mav_msgs::EigenDroneState& command_trajectory) {
+    const mav_msgs::EigenDroneState& command_trajectory, double time) {
   command_trajectory_ = command_trajectory;
+  reference_time_ = time;
+  new_reference_ = true;
   controller_active_ = true;
 }
 
@@ -181,17 +194,37 @@ void LeeGeometricController::ComputeThrustAndMoments(double* thrust,
   const Eigen::Vector3d v = R * odometry_.velocity;
   const Eigen::Vector3d omega = odometry_.angular_velocity;
 
-  // Time derivatives (dirty derivatives).
-  const Eigen::Vector3d x_d_1dot = position_reference_1dot_.Update(x_d);
-  const Eigen::Vector3d x_d_2dot = position_reference_2dot_.Update(x_d_1dot);
-  const Eigen::Vector3d x_d_3dot = position_reference_3dot_.Update(x_d_2dot);
-  const Eigen::Vector3d x_d_4dot = position_reference_4dot_.Update(x_d_3dot);
+  // Time derivatives (dirty derivatives). The reference filters move only when a new
+  // reference sample has arrived, the velocity filters at every step; both use the
+  // time between the samples, taken from their time stamps.
+  if (new_reference_) {
+    const double dt = last_reference_time_ < 0.0 ? -1.0 : reference_time_ - last_reference_time_;
+    if (dt != 0.0) {
+      position_reference_1dot_.Update(x_d, dt);
+      position_reference_2dot_.Update(position_reference_1dot_.value(), dt);
+      position_reference_3dot_.Update(position_reference_2dot_.value(), dt);
+      position_reference_4dot_.Update(position_reference_3dot_.value(), dt);
+      heading_reference_1dot_.Update(b1_d, dt);
+      heading_reference_2dot_.Update(heading_reference_1dot_.value(), dt);
+      last_reference_time_ = reference_time_;
+    }
+    new_reference_ = false;
+  }
+  const double dt_v = last_control_time_ < 0.0 ? -1.0 : odometry_time_ - last_control_time_;
+  if (dt_v != 0.0) {
+    velocity_1dot_.Update(v, dt_v);
+    velocity_2dot_.Update(velocity_1dot_.value(), dt_v);
+    last_control_time_ = odometry_time_;
+  }
 
-  const Eigen::Vector3d b1_d_1dot = heading_reference_1dot_.Update(b1_d);
-  const Eigen::Vector3d b1_d_2dot = heading_reference_2dot_.Update(b1_d_1dot);
-
-  const Eigen::Vector3d v_1dot = velocity_1dot_.Update(v);
-  const Eigen::Vector3d v_2dot = velocity_2dot_.Update(v_1dot);
+  const Eigen::Vector3d x_d_1dot = position_reference_1dot_.value();
+  const Eigen::Vector3d x_d_2dot = position_reference_2dot_.value();
+  const Eigen::Vector3d x_d_3dot = position_reference_3dot_.value();
+  const Eigen::Vector3d x_d_4dot = position_reference_4dot_.value();
+  const Eigen::Vector3d b1_d_1dot = heading_reference_1dot_.value();
+  const Eigen::Vector3d b1_d_2dot = heading_reference_2dot_.value();
+  const Eigen::Vector3d v_1dot = velocity_1dot_.value();
+  const Eigen::Vector3d v_2dot = velocity_2dot_.value();
 
   // Position, velocity, acceleration and jerk errors.
   const Eigen::Vector3d e_x = x - x_d;
