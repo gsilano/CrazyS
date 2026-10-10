@@ -6,8 +6,9 @@
 CrazyS
 ===============
 
-| CrazyS build status | [![Build Status](https://github.com/gsilano/CrazyS/actions/workflows/melodic.yml/badge.svg)](https://github.com/gsilano/CrazyS/actions/workflows/melodic.yml) | [![Build Status](https://github.com/gsilano/CrazyS/actions/workflows/noetic.yml/badge.svg)](https://github.com/gsilano/CrazyS/actions/workflows/noetic.yml)
-|-----------------------|---------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|  
+[![Build](https://github.com/gsilano/CrazyS/actions/workflows/build.yml/badge.svg)](https://github.com/gsilano/CrazyS/actions/workflows/build.yml)
+
+The build workflow checks every release branch: `master` (Kinetic + Gazebo 7), `dev/gazebo9` (Kinetic + Gazebo 9), `dev/ros-melodic` (Melodic + Gazebo 9) and `dev/ros-noetic` (Noetic + Gazebo 11).
 
 CrazyS is an extension of the ROS package [RotorS](https://github.com/ethz-asl/rotors_simulator), aimed to modeling, developing and integrating the [Crazyflie 2.0](https://www.bitcraze.io/crazyflie-2/) nano-quadcopter in the physics based simulation environment Gazebo. The contribution can be also considered as a reference guide for expanding the RotorS functionalities in the Unmanned Aerial Vehicles (UAVs) field, by facilitating the integration of new aircraft.
 
