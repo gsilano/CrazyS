@@ -1,0 +1,9 @@
+# Swarm (thesis, 6.7), drone 2, spawned in (1, 0): take off, then half a circle of
+# radius 1 m around the origin.
+sampling_time: 0.01
+start_time: 3.0
+yaw: 0.0
+segments:
+  - {type: line, goal: [1.0, 0.0, 1.0], duration: 3.0, profile: cubic}
+  - {type: hold, duration: 3.0}
+  - {type: arc, center: [0.0, 0.0], angle: 3.14159265359, duration: 5.0, profile: cubic}
