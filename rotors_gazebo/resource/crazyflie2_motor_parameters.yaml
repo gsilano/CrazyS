@@ -1,0 +1,5 @@
+# Default CrazyS propeller coefficients.
+# Must match crazyflie2.xacro (forster_parameters:=false).
+motor_constant: 1.28192e-08      # thrust = motor_constant * omega^2 [kg m]
+moment_constant: 0.005964552     # yaw torque = moment_constant * thrust [m]
+max_rotor_velocity: 2618         # [rad/s]

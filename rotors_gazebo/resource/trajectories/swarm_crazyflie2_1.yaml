@@ -1,0 +1,8 @@
+# Swarm (thesis, 6.7), drone 1, spawned in (0, 0): take off, then go to (1, 1, 1).
+sampling_time: 0.01
+start_time: 3.0
+yaw: 0.0
+segments:
+  - {type: line, goal: [0.0, 0.0, 1.0], duration: 3.0, profile: cubic}
+  - {type: hold, duration: 3.0}
+  - {type: line, goal: [1.0, 1.0, 1.0], duration: 3.0, profile: cubic}

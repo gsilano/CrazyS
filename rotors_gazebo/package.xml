@@ -1,6 +1,6 @@
 <package>
   <name>rotors_gazebo</name>
-  <version>4.0.14</version>
+  <version>4.0.15</version>
   <description>The rotors_gazebo package</description>
 
   <maintainer email="giuseppe.silano@fel.cvut.cz">Giuseppe Silano</maintainer>
@@ -11,6 +11,10 @@
   <author>Benjamin Rodriguez</author>
   <author>Luigi Iannelli</author>
   <author>Ria Sonecha</author>
+  <author>Stefano Grossi</author>
+  <author>Lorenzo Sabattini</author>
+  <author>Federico Pratissoli</author>
+  <author>Beatrice Capelli</author>
 
   <license>ASL 2.0</license>
 
