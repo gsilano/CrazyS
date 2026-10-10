@@ -1,0 +1,10 @@
+# Gains of the attitude controller driven by the joystick,
+# rotors_control/roll_pitch_yawrate_thrust_crazyflie_node.
+
+/**:
+  ros__parameters:
+    attitude_gain_kp: {phi: 0.0611, theta: 0.0611}
+    attitude_gain_ki: {phi: 0.0349, theta: 0.0349}
+    rate_gain_kp: {p: 1000.0, q: 1000.0, r: 1000.0}
+    rate_gain_ki: {p: 0.0, q: 0.0, r: 95.6839}
+    thrust_percentage: {p: 1.0}

@@ -1,0 +1,8 @@
+# Default CrazyS propeller coefficients.
+# Must match the model spawned with forster_parameters:=false.
+
+/**:
+  ros__parameters:
+    motor_constant: 1.28192e-08      # thrust = motor_constant * omega^2 [kg m]
+    moment_constant: 0.005964552     # yaw torque = moment_constant * thrust [m]
+    max_rotor_velocity: 2618.0       # [rad/s]

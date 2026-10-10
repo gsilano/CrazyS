@@ -4,13 +4,14 @@
  * Copyright 2015 Mina Kamel, ASL, ETH Zurich, Switzerland
  * Copyright 2015 Janosch Nikolic, ASL, ETH Zurich, Switzerland
  * Copyright 2015 Markus Achtelik, ASL, ETH Zurich, Switzerland
+ * Copyright 2026 Giuseppe Silano, Czech Technical University in Prague, Czech Republic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
-
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,69 +19,47 @@
  * limitations under the License.
  */
 
-#include <fstream>
-#include <iostream>
+// Sends one waypoint on command/trajectory.
+//   ros2 run rotors_gazebo waypoint_publisher <x> <y> <z> <yaw_deg> [<delay>]
 
-#include <Eigen/Core>
-#include <mav_msgs/conversions.h>
-#include <mav_msgs/default_topics.h>
-#include <ros/ros.h>
-#include <trajectory_msgs/MultiDOFJointTrajectory.h>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "trajectory_utils.h"
 
 int main(int argc, char** argv) {
-  ros::init(argc, argv, "waypoint_publisher");
-  ros::NodeHandle nh;
-  ros::Publisher trajectory_pub =
-      nh.advertise<trajectory_msgs::MultiDOFJointTrajectory>(
-      mav_msgs::default_topics::COMMAND_TRAJECTORY, 10);
-
-  ROS_INFO("Started waypoint_publisher.");
-
-  ros::V_string args;
-  ros::removeROSArgs(argc, argv, args);
+  rclcpp::init(argc, argv);
+  const std::vector<std::string> args = rclcpp::remove_ros_arguments(argc, argv);
+  auto node = std::make_shared<rclcpp::Node>("waypoint_publisher");
 
   double delay;
-
   if (args.size() == 5) {
     delay = 1.0;
   } else if (args.size() == 6) {
-    delay = std::stof(args.at(5));
+    delay = std::stod(args.at(5));
   } else {
-    ROS_ERROR("Usage: waypoint_publisher <x> <y> <z> <yaw_deg> [<delay>]\n");
+    RCLCPP_ERROR(node->get_logger(), "Usage: waypoint_publisher <x> <y> <z> <yaw_deg> [<delay>]");
     return -1;
   }
+  const double x = std::stod(args.at(1));
+  const double y = std::stod(args.at(2));
+  const double z = std::stod(args.at(3));
+  const double yaw = std::stod(args.at(4)) * M_PI / 180.0;
 
-  const float DEG_2_RAD = M_PI / 180.0;
+  auto trajectory_pub = node->create_publisher<trajectory_msgs::msg::MultiDOFJointTrajectory>(
+      rotors_gazebo::kCommandTrajectoryTopic, 10);
 
-  trajectory_msgs::MultiDOFJointTrajectory trajectory_msg;
-  trajectory_msg.header.stamp = ros::Time::now();
-
-  Eigen::Vector3d desired_position(std::stof(args.at(1)), std::stof(args.at(2)),
-                                   std::stof(args.at(3)));
-
-  double desired_yaw = std::stof(args.at(4)) * DEG_2_RAD;
-
-  mav_msgs::msgMultiDofJointTrajectoryFromPositionYaw(desired_position,
-      desired_yaw, &trajectory_msg);
-
-  // Wait for some time to create the ros publisher.
-  ros::Duration(delay).sleep();
-
-  while (trajectory_pub.getNumSubscribers() == 0 && ros::ok()) {
-    ROS_INFO("There is no subscriber available, trying again in 1 second.");
-    ros::Duration(1.0).sleep();
+  rclcpp::sleep_for(std::chrono::duration_cast<std::chrono::nanoseconds>(
+      std::chrono::duration<double>(delay)));
+  if (!rotors_gazebo::WaitForSubscriber(node, trajectory_pub)) {
+    return 0;
   }
 
-  ROS_INFO("Publishing waypoint on namespace %s: [%f, %f, %f].",
-           nh.getNamespace().c_str(),
-           desired_position.x(),
-           desired_position.y(),
-           desired_position.z());
-
-  trajectory_pub.publish(trajectory_msg);
-
-  ros::spinOnce();
-  ros::shutdown();
-
+  RCLCPP_INFO(node->get_logger(), "Publishing waypoint on namespace %s: [%f, %f, %f].",
+              node->get_namespace(), x, y, z);
+  trajectory_pub->publish(rotors_gazebo::TrajectoryFromPositionYaw(x, y, z, yaw, node->now()));
+  rclcpp::sleep_for(std::chrono::milliseconds(500));
+  rclcpp::shutdown();
   return 0;
 }

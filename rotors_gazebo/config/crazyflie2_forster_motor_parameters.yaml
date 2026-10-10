@@ -1,0 +1,9 @@
+# Propeller coefficients from J. Forster, "System Identification of the Crazyflie 2.0
+# Nano Quadrocopter", Bachelor's thesis, ETH Zurich, 2015.
+# Must match the model spawned with forster_parameters:=true.
+
+/**:
+  ros__parameters:
+    motor_constant: 1.71465181e-08   # thrust = motor_constant * omega^2 [kg m]
+    moment_constant: 0.004459273     # yaw torque = moment_constant * thrust [m]
+    max_rotor_velocity: 3052.0       # [rad/s]

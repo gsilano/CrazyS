@@ -1,6 +1,7 @@
 /*
  * Copyright 2020 Ria Sonecha, Massachusetts Institute of Technology in Cambridge, MA, USA
  * Copyright 2020 Giuseppe Silano, University of Sannio in Benevento, Italy
+ * Copyright 2026 Giuseppe Silano, Czech Technical University in Prague, Czech Republic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,132 +16,104 @@
  * limitations under the License.
  */
 
-#include <thread>
-#include <chrono>
+// Publishes on drone_state, at 100 Hz, a quintic spline between an initial and a
+// final state (spline_trajectory.yaml). The spline starts at start_time [s] of
+// simulation time; once it is over, the final point keeps being published.
+// Used with the Internal Model Controller, also in the swarm example.
 
-#include "rotors_gazebo/Quaternion.h"
-#include "rotors_gazebo/transform_datatypes.h"
-#include "rotors_gazebo/parameters_ros.h"
-#include <nav_msgs/Odometry.h>
-#include "rotors_gazebo/Matrix3x3.h"
-#include <ros/console.h>
-#include <time.h>
+#include <algorithm>
+#include <memory>
 
-#include <Eigen/Core>
-#include <mav_msgs/conversions.h>
-#include <mav_msgs/default_topics.h>
-#include <ros/ros.h>
-#include <std_srvs/Empty.h>
-#include <trajectory_msgs/MultiDOFJointTrajectory.h>
-#include <math.h>
+#include <rclcpp/rclcpp.hpp>
+#include <rotors_comm/msg/drone_state.hpp>
+
 #include "rotors_gazebo/spline_trajectory_generator.h"
+#include "trajectory_utils.h"
 
-#define SAMPLING_TIME  10e-3       /* SAMPLING CONTROLLER TIME [s] - 100Hz */
-#define START_SIMULATION_TIME 3   /* TIME GAZEBO NEEDS TO INITIALIZE THE ENVIRONMENT */
+namespace {
 
-template<typename T> inline void GetRosParameterHovering(const ros::NodeHandle& nh,
-                                                         const std::string& key,
-                                                         const T& default_value,
-                                                         T* value) {
-
-  ROS_ASSERT(value != nullptr);
-  bool have_parameter = nh.getParam(key, *value);
-  if (!have_parameter) {
-    ROS_WARN_STREAM("[rosparam]: could not find parameter " << nh.getNamespace()
-                    << "/" << key << ", setting to default: " << default_value);
-    *value = default_value;
-  }
+Eigen::Vector3f DeclareVector(const rclcpp::Node::SharedPtr& node, const std::string& name,
+                              const std::string& x, const std::string& y, const std::string& z,
+                              const Eigen::Vector3f& default_value) {
+  return Eigen::Vector3f(
+      node->declare_parameter(name + "." + x, static_cast<double>(default_value.x())),
+      node->declare_parameter(name + "." + y, static_cast<double>(default_value.y())),
+      node->declare_parameter(name + "." + z, static_cast<double>(default_value.z())));
 }
 
+}  // namespace
+
 int main(int argc, char** argv) {
-  ros::init(argc, argv, "hovering_example_spline");
-  ros::NodeHandle nh;
-  // Create a private node handle for accessing node parameters.
-  ros::NodeHandle nh_private("~");
-  ros::Publisher trajectory_pub =
-      nh.advertise<mav_msgs::DroneState>(
-          mav_msgs::default_topics::DRONE_STATE, 10);
-  ROS_INFO("Started hovering example with spline.");
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared<rclcpp::Node>("hovering_example_spline");
 
-  std_srvs::Empty srv;
-  bool unpaused = ros::service::call("/gazebo/unpause_physics", srv);
-  unsigned int i = 0;
+  rotors_gazebo::SplineTrajectoryParameters p;
+  const double start_time = node->declare_parameter("start_time", 3.0);
+  const double sampling_time = node->declare_parameter("sampling_time", 0.01);
+  p.time_final = node->declare_parameter("time_final.time", p.time_final);
+  p.position_initial = DeclareVector(node, "position_initial", "x", "y", "z", p.position_initial);
+  p.position_final = DeclareVector(node, "position_final", "x", "y", "z", p.position_final);
+  p.velocity_initial = DeclareVector(node, "velocity_initial", "x", "y", "z", p.velocity_initial);
+  p.velocity_final = DeclareVector(node, "velocity_final", "x", "y", "z", p.velocity_final);
+  p.acceleration_initial =
+      DeclareVector(node, "acceleration_initial", "x", "y", "z", p.acceleration_initial);
+  p.acceleration_final =
+      DeclareVector(node, "acceleration_final", "x", "y", "z", p.acceleration_final);
+  p.orientation_initial =
+      DeclareVector(node, "orientation_initial", "roll", "pitch", "yaw", p.orientation_initial);
+  p.orientation_final =
+      DeclareVector(node, "orientation_final", "roll", "pitch", "yaw", p.orientation_final);
+  p.angular_velocity_initial = DeclareVector(node, "angularRate_initial", "roll", "pitch", "yaw",
+                                             p.angular_velocity_initial);
+  p.angular_velocity_final = DeclareVector(node, "angularRate_final", "roll", "pitch", "yaw",
+                                           p.angular_velocity_final);
+  p.angular_acceleration_initial = DeclareVector(node, "angularDoubleRate_initial", "roll",
+                                                 "pitch", "yaw", p.angular_acceleration_initial);
+  p.angular_acceleration_final = DeclareVector(node, "angularDoubleRate_final", "roll", "pitch",
+                                               "yaw", p.angular_acceleration_final);
 
-  // Trying to unpause Gazebo for 10 seconds.
-  while (i <= 10 && !unpaused) {
-    ROS_INFO("Wait for 1 second before trying to unpause Gazebo again.");
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    unpaused = ros::service::call("/gazebo/unpause_physics", srv);
-    ++i;
+  rotors_gazebo::SplineTrajectoryGenerator generator;
+  generator.SetParameters(p);
+
+  auto trajectory_pub =
+      node->create_publisher<rotors_comm::msg::DroneState>(rotors_gazebo::kDroneStateTopic, 10);
+  RCLCPP_INFO(node->get_logger(), "Started hovering example with spline.");
+
+  if (!rotors_gazebo::WaitForSimTime(node, start_time)) {
+    return 0;
   }
 
-  if (!unpaused) {
-    ROS_FATAL("Could not wake up Gazebo.");
-    return -1;
-  } else {
-    ROS_INFO("Unpaused the Gazebo simulation.");
+  rclcpp::Rate rate(1.0 / sampling_time, node->get_clock());
+  rotors_gazebo::SplineReference reference;
+  while (rclcpp::ok()) {
+    // After time_final the spline is no longer valid: hold the final point.
+    double initial_time = 0.0;
+    double elapsed = std::min(node->now().seconds() - start_time, p.time_final);
+    generator.TrajectoryCallback(&reference, &elapsed, &initial_time);
+
+    rotors_comm::msg::DroneState msg;
+    msg.header.stamp = node->now();
+    msg.position.x = reference.position_W.x();
+    msg.position.y = reference.position_W.y();
+    msg.position.z = reference.position_W.z();
+    msg.linear_velocity.x = reference.velocity.x();
+    msg.linear_velocity.y = reference.velocity.y();
+    msg.linear_velocity.z = reference.velocity.z();
+    msg.linear_acceleration.x = reference.acceleration.x();
+    msg.linear_acceleration.y = reference.acceleration.y();
+    msg.linear_acceleration.z = reference.acceleration.z();
+    msg.orientation.x = reference.orientation_W_B.x();
+    msg.orientation.y = reference.orientation_W_B.y();
+    msg.orientation.z = reference.orientation_W_B.z();
+    msg.orientation.w = reference.orientation_W_B.w();
+    msg.angular_velocity.x = reference.angular_velocity_B.x();
+    msg.angular_velocity.y = reference.angular_velocity_B.y();
+    msg.angular_velocity.z = reference.angular_velocity_B.z();
+    trajectory_pub->publish(msg);
+
+    rclcpp::spin_some(node);
+    rate.sleep();
   }
-
-  // Trajectory message
-  mav_msgs::DroneState trajectory_msg, trajectory_msg_pre;
-  trajectory_msg.header.stamp = ros::Time::now();
-  mav_msgs::EigenDroneState eigen_reference;
-  rotors_gazebo::SplineTrajectoryGenerator hovering_example_spline_generator;
-
-  Eigen::Vector3f check_position_final;
-  GetRosParameterHovering(nh_private, "position_final/x", check_position_final.x(),
-    &check_position_final.x());
-  GetRosParameterHovering(nh_private, "position_final/y", check_position_final.y(),
-    &check_position_final.y());
-  GetRosParameterHovering(nh_private, "position_final/z", check_position_final.z(),
-    &check_position_final.z());
-
-  ROS_DEBUG("[Node] Position final x: %f, y: %f, z :%f", check_position_final.x(),
-    check_position_final.y(), check_position_final.z());
-
-  // Wait for 5 seconds to let the Gazebo GUI show up.
-  if (ros::Time::now().toSec() < START_SIMULATION_TIME){
-    ros::Duration(START_SIMULATION_TIME).sleep();
-    hovering_example_spline_generator.InitializeParams();
-  }
-
-  // Reading the final time. This is stop condition for the spline generator
-  double end_generation_time;
-  GetRosParameterHovering(nh_private, "time_final/time", end_generation_time,
-    &end_generation_time);
-
-  double initial_time, final_time;
-  initial_time = START_SIMULATION_TIME;
-
-  // Publish the trajectory values until the final values is reached
-  while(true){
-    final_time = ros::Time::now().toSec();
-    hovering_example_spline_generator.TrajectoryCallback(&eigen_reference, &final_time, &initial_time);
-
-    mav_msgs::eigenDroneFromStateToMsg(&eigen_reference, trajectory_msg);
-
-    // new message
-    if(eigen_reference.position_W[0] <= check_position_final.x() &&
-      eigen_reference.position_W[1] <= check_position_final.y() &&
-      eigen_reference.position_W[2] <= check_position_final.z()){
-      trajectory_pub.publish(trajectory_msg);
-      trajectory_msg_pre = trajectory_msg;
-    }
-
-    ROS_DEBUG("Publishing waypoint from msg: [%f, %f, %f].", trajectory_msg.position.x, trajectory_msg.position.y, trajectory_msg.position.z);
-    ROS_DEBUG("Publishing waypoint: [%f, %f, %f].", eigen_reference.position_W[0], eigen_reference.position_W[1], eigen_reference.position_W[2]);
-
-    ros::Duration(SAMPLING_TIME).sleep();
-
-    // Hold the message until the simulation ends
-    if(eigen_reference.position_W[0] > check_position_final.x() &&
-      eigen_reference.position_W[1] > check_position_final.y() &&
-      eigen_reference.position_W[2] > check_position_final.z())
-      trajectory_pub.publish(trajectory_msg_pre);
-
-  }
-
-  ros::spin();
-
+  rclcpp::shutdown();
   return 0;
 }

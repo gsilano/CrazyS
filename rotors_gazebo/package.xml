@@ -1,10 +1,17 @@
-<package>
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
   <name>rotors_gazebo</name>
-  <version>7.1.0</version>
-  <description>The rotors_gazebo package</description>
+  <version>8.0.0</version>
+  <description>Gazebo Sim worlds, launch files and trajectory generators for the Crazyflie 2.x.</description>
 
   <maintainer email="giuseppe.silano@fel.cvut.cz">Giuseppe Silano</maintainer>
   <maintainer email="luigi.iannelli@unisannio.it">Luigi Iannelli</maintainer>
+
+  <license>Apache-2.0</license>
+
+  <url type="website">https://github.com/gsilano/CrazyS</url>
+  <url type="bugtracker">https://github.com/gsilano/CrazyS/issues</url>
 
   <author>Giuseppe Silano</author>
   <author>Emanuele Aucone</author>
@@ -17,37 +24,25 @@
   <author>Federico Pratissoli</author>
   <author>Beatrice Capelli</author>
 
-  <license>ASL 2.0</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <url type="website">https://github.com/gsilano/CrazyS</url>
-  <url type="bugtracker">https://github.com/gsilano/CrazyS/issues</url>
+  <depend>eigen</depend>
+  <depend>rclcpp</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>trajectory_msgs</depend>
+  <depend>rotors_comm</depend>
+  <depend>yaml_cpp_vendor</depend>
 
-  <buildtool_depend>catkin</buildtool_depend>
+  <exec_depend>rotors_description</exec_depend>
+  <exec_depend>ros_gz_sim</exec_depend>
+  <exec_depend>ros_gz_bridge</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>xacro</exec_depend>
+  <exec_depend>rotors_control</exec_depend>
+  <exec_depend>actuator_msgs</exec_depend>
 
-  <!-- Dependencies needed to compile this package. -->
-  <build_depend>gazebo_plugins</build_depend>
-  <build_depend>rotors_gazebo_plugins</build_depend>
-  <build_depend>mav_msgs</build_depend>
-  <build_depend>nav_msgs</build_depend>
-  <build_depend>gazebo_msgs</build_depend>
-  <build_depend>geometry_msgs</build_depend>
-  <build_depend>roscpp</build_depend>
-  <build_depend>sensor_msgs</build_depend>
-  <build_depend>cmake_modules</build_depend>
-  <build_depend>tf</build_depend>
-  <build_depend>tf2</build_depend>
-
-  <!-- Dependencies needed after this package is compiled. -->
-  <run_depend>gazebo_plugins</run_depend>
-  <run_depend>dynamic_reconfigure</run_depend>
-  <run_depend>rotors_gazebo_plugins</run_depend>
-  <run_depend>mav_msgs</run_depend>
-  <run_depend>nav_msgs</run_depend>
-  <run_depend>gazebo_msgs</run_depend>
-  <run_depend>geometry_msgs</run_depend>
-  <run_depend>roscpp</run_depend>
-  <run_depend>sensor_msgs</run_depend>
-  <run_depend>tf</run_depend>
-  <run_depend>tf2</run_depend>
-
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 </package>

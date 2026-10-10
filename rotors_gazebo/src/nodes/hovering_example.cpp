@@ -4,13 +4,14 @@
  * Copyright 2015 Mina Kamel, ASL, ETH Zurich, Switzerland
  * Copyright 2015 Janosch Nikolic, ASL, ETH Zurich, Switzerland
  * Copyright 2015 Markus Achtelik, ASL, ETH Zurich, Switzerland
+ * Copyright 2026 Giuseppe Silano, Czech Technical University in Prague, Czech Republic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
-
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,71 +19,38 @@
  * limitations under the License.
  */
 
-#include <thread>
-#include <chrono>
+// Publishes a single waypoint (by default 1 m above the origin) on command/trajectory
+// 5 s after the simulation starts. Parameters: x, y, z [m], yaw [rad], delay [s].
 
-#include <Eigen/Core>
-#include <mav_msgs/conversions.h>
-#include <mav_msgs/default_topics.h>
-#include <ros/ros.h>
-#include <std_srvs/Empty.h>
-#include <trajectory_msgs/MultiDOFJointTrajectory.h>
+#include <memory>
+
+#include "trajectory_utils.h"
 
 int main(int argc, char** argv) {
-  ros::init(argc, argv, "hovering_example");
-  ros::NodeHandle nh;
-  // Create a private node handle for accessing node parameters.
-  ros::NodeHandle nh_private("~");
-  ros::Publisher trajectory_pub =
-      nh.advertise<trajectory_msgs::MultiDOFJointTrajectory>(
-          mav_msgs::default_topics::COMMAND_TRAJECTORY, 10);
-  ROS_INFO("Started hovering example.");
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared<rclcpp::Node>("hovering_example");
+  const double x = node->declare_parameter("x", 0.0);
+  const double y = node->declare_parameter("y", 0.0);
+  const double z = node->declare_parameter("z", 1.0);
+  const double yaw = node->declare_parameter("yaw", 0.0);
+  const double delay = node->declare_parameter("delay", 5.0);
 
-  std_srvs::Empty srv;
-  bool unpaused = ros::service::call("/gazebo/unpause_physics", srv);
-  unsigned int i = 0;
+  auto trajectory_pub = node->create_publisher<trajectory_msgs::msg::MultiDOFJointTrajectory>(
+      rotors_gazebo::kCommandTrajectoryTopic, 10);
+  RCLCPP_INFO(node->get_logger(), "Started hovering example.");
 
-  // Trying to unpause Gazebo for 10 seconds.
-  while (i <= 10 && !unpaused) {
-    ROS_INFO("Wait for 1 second before trying to unpause Gazebo again.");
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    unpaused = ros::service::call("/gazebo/unpause_physics", srv);
-    ++i;
+  // Let the Gazebo GUI show up and the controller start.
+  if (!rotors_gazebo::WaitForSimTime(node, delay) ||
+      !rotors_gazebo::WaitForSubscriber(node, trajectory_pub)) {
+    return 0;
   }
 
-  if (!unpaused) {
-    ROS_FATAL("Could not wake up Gazebo.");
-    return -1;
-  } else {
-    ROS_INFO("Unpaused the Gazebo simulation.");
-  }
+  RCLCPP_INFO(node->get_logger(), "Publishing waypoint on namespace %s: [%f, %f, %f].",
+              node->get_namespace(), x, y, z);
+  trajectory_pub->publish(rotors_gazebo::TrajectoryFromPositionYaw(x, y, z, yaw, node->now()));
 
-  // Wait for 5 seconds to let the Gazebo GUI show up.
-  ros::Duration(5.0).sleep();
-
-  trajectory_msgs::MultiDOFJointTrajectory trajectory_msg;
-  trajectory_msg.header.stamp = ros::Time::now();
-
-  // Default desired position and yaw.
-  Eigen::Vector3d desired_position(0.0, 0.0, 1.0);
-  double desired_yaw = 0.0;
-
-  // Overwrite defaults if set as node parameters.
-  nh_private.param("x", desired_position.x(), desired_position.x());
-  nh_private.param("y", desired_position.y(), desired_position.y());
-  nh_private.param("z", desired_position.z(), desired_position.z());
-  nh_private.param("yaw", desired_yaw, desired_yaw);
-
-  mav_msgs::msgMultiDofJointTrajectoryFromPositionYaw(
-      desired_position, desired_yaw, &trajectory_msg);
-
-  ROS_INFO("Publishing waypoint on namespace %s: [%f, %f, %f].",
-           nh.getNamespace().c_str(), desired_position.x(),
-           desired_position.y(), desired_position.z());
-  trajectory_pub.publish(trajectory_msg);
-
-  ros::spinOnce();
-  ros::shutdown();
-
+  // Give the message some time to leave before shutting down.
+  rclcpp::sleep_for(std::chrono::milliseconds(500));
+  rclcpp::shutdown();
   return 0;
 }

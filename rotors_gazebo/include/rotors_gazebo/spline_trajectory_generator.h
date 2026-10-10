@@ -1,6 +1,7 @@
 /*
  * Copyright 2020 Ria Sonecha, MIT, USA
  * Copyright 2020 Giuseppe Silano, University of Sannio in Benevento, Italy
+ * Copyright 2026 Giuseppe Silano, Czech Technical University in Prague, Czech Republic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,70 +16,78 @@
  * limitations under the License.
  */
 
- #ifndef HOVERING_EXAMPLE_SPLINE_H
- #define HOVERING_EXAMPLE_SPLINE_H
+// Quintic spline between an initial and a final state (position, velocity,
+// acceleration, orientation and angular rates), used by hovering_example_spline.
+// The class does not depend on ROS.
 
- #include <boost/bind.hpp>
- #include <Eigen/Eigen>
- #include <Eigen/Core>
- #include <math.h>
- #include <stdio.h>
+#ifndef ROTORS_GAZEBO_SPLINE_TRAJECTORY_GENERATOR_H
+#define ROTORS_GAZEBO_SPLINE_TRAJECTORY_GENERATOR_H
 
- // package libraries
- #include "rotors_gazebo/Matrix3x3.h"
- #include "rotors_gazebo/Quaternion.h"
- #include "rotors_gazebo/transform_datatypes.h"
+#include <Eigen/Eigen>
 
- #include <nav_msgs/Odometry.h>
- #include <mav_msgs/conversions.h>
- #include <mav_msgs/default_topics.h>
- #include <sensor_msgs/Imu.h>
- #include <ros/callback_queue.h>
- #include <ros/ros.h>
- #include <ros/time.h>
- #include <mav_msgs/DroneState.h>
- #include <mav_msgs/eigen_mav_msgs.h>
+namespace rotors_gazebo {
 
+// Boundary conditions of the spline. Orientations are roll, pitch, yaw [rad].
+struct SplineTrajectoryParameters {
+  double time_final = 10.0;  // duration of the spline [s]
+  Eigen::Vector3f position_initial = Eigen::Vector3f::Zero();
+  Eigen::Vector3f position_final = Eigen::Vector3f(0.0f, 0.0f, 1.0f);
+  Eigen::Vector3f velocity_initial = Eigen::Vector3f::Zero();
+  Eigen::Vector3f velocity_final = Eigen::Vector3f::Zero();
+  Eigen::Vector3f acceleration_initial = Eigen::Vector3f::Zero();
+  Eigen::Vector3f acceleration_final = Eigen::Vector3f::Zero();
+  Eigen::Vector3f orientation_initial = Eigen::Vector3f::Zero();
+  Eigen::Vector3f orientation_final = Eigen::Vector3f::Zero();
+  Eigen::Vector3f angular_velocity_initial = Eigen::Vector3f::Zero();
+  Eigen::Vector3f angular_velocity_final = Eigen::Vector3f::Zero();
+  Eigen::Vector3f angular_acceleration_initial = Eigen::Vector3f::Zero();
+  Eigen::Vector3f angular_acceleration_final = Eigen::Vector3f::Zero();
+};
 
- namespace rotors_gazebo {
+// Point of the spline.
+struct SplineReference {
+  Eigen::Vector3f position_W = Eigen::Vector3f::Zero();
+  Eigen::Vector3f velocity = Eigen::Vector3f::Zero();
+  Eigen::Vector3f acceleration = Eigen::Vector3f::Zero();
+  Eigen::Quaterniond orientation_W_B = Eigen::Quaterniond::Identity();
+  Eigen::Vector3f angular_velocity_B = Eigen::Vector3f::Zero();
+};
 
-     class SplineTrajectoryGenerator{
-         public:
+class SplineTrajectoryGenerator {
+ public:
+  SplineTrajectoryGenerator();
+  ~SplineTrajectoryGenerator();
 
-           SplineTrajectoryGenerator();
-           ~SplineTrajectoryGenerator();
+  void SetParameters(const SplineTrajectoryParameters& parameters);
 
-           void TrajectoryCallback(mav_msgs::EigenDroneState* odometry, double* time_final, double* time_init);
-           void InitializeParams();
-           template<typename T> inline void GetRosParameterHovering(const ros::NodeHandle& nh,
-                                                            const std::string& key,
-                                                            const T& default_value,
-                                                            T* value);
+  // Spline evaluated at (*time_final - *time_init) seconds from its start.
+  void TrajectoryCallback(SplineReference* odometry, double* time_final, double* time_init);
 
-         private:
-             bool enable_parameter_computation_ = true;
-             //polynomial coefficients
-             Eigen::Vector3f a0_, a1_, a2_, a3_, a4_, a5_;
-             Eigen::Vector3f b0_, b1_, b2_, b3_, b4_;
-             Eigen::Vector3f c0_, c1_, c2_, c3_;
+ private:
+  bool enable_parameter_computation_ = true;
 
-             Eigen::Vector3f g0_, g1_, g2_, g3_, g4_, g5_;
-             Eigen::Vector3f h0_, h1_, h2_, h3_, h4_;
-             Eigen::Vector3f i0_, i1_, i2_, i3_;
+  // Polynomial coefficients
+  Eigen::Vector3f a0_, a1_, a2_, a3_, a4_, a5_;
+  Eigen::Vector3f b0_, b1_, b2_, b3_, b4_;
+  Eigen::Vector3f c0_, c1_, c2_, c3_;
+  Eigen::Vector3f g0_, g1_, g2_, g3_, g4_, g5_;
+  Eigen::Vector3f h0_, h1_, h2_, h3_, h4_;
+  Eigen::Vector3f i0_, i1_, i2_, i3_;
 
-             // Desidred drone orientation expressed in radians
-             double rollDesRad_, pitchDesRad_, yawDesRad_;
+  // Desired orientation [rad]
+  double rollDesRad_, pitchDesRad_, yawDesRad_;
 
-             // Parameters used for the trajectory generation
-             double time_final_;
-             Eigen::Vector3f position_initial_, position_final_, velocity_initial_, velocity_final_, acceleration_initial_, acceleration_final_;
-             Eigen::Vector3f orientation_initial_, orientation_final_, angular_velocity_initial_, angular_velocity_final_, angular_acceleration_initial_, angular_acceleration_final_;
+  // Boundary conditions
+  double time_final_;
+  Eigen::Vector3f position_initial_, position_final_, velocity_initial_, velocity_final_,
+      acceleration_initial_, acceleration_final_;
+  Eigen::Vector3f orientation_initial_, orientation_final_, angular_velocity_initial_,
+      angular_velocity_final_, angular_acceleration_initial_, angular_acceleration_final_;
 
-             void ComputeSplineParameters(double* time_spline);
+  void ComputeSplineParameters(double* time_spline);
+  void Euler2QuaternionCommandTrajectory(double* x, double* y, double* z, double* w) const;
+};
 
-             void Euler2QuaternionCommandTrajectory(double* x, double* y, double* z, double* w) const;
+}  // namespace rotors_gazebo
 
-     };
-
- }
- #endif // HOVERING_EXAMPLE_SPLINE_H
+#endif  // ROTORS_GAZEBO_SPLINE_TRAJECTORY_GENERATOR_H

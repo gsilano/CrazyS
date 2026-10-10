@@ -1,0 +1,22 @@
+# Internal Model Controller, rotors_control/position_controller_node with
+# enable_internal_model_controller:=true.
+
+/**:
+  ros__parameters:
+    beta_xy: {beta_x: -16.4259, beta_y: -16.3627}
+    beta_z: {beta_z: -17.2277}
+    beta_phi: {beta_phi: -18.3431}
+    beta_theta: {beta_theta: -18.3431}
+    beta_psi: {beta_psi: -14.3431}
+    mu_xy: {mu_x: 1.0, mu_y: 1.0}
+    mu_z: {mu_z: 1.0}
+    mu_phi: {mu_phi: 0.44}
+    mu_theta: {mu_theta: 0.44}
+    mu_psi: {mu_psi: 0.44}
+    U_xyz: {U_x: 0.8299, U_y: 0.8299, U_z: 8.6697}
+    # Vehicle parameters (rotors_description/urdf/crazyflie2_parameters.xacro)
+    mass: 0.027
+    inertia: {xx: 1.657171e-05, yy: 1.657171e-05, zz: 2.9261652e-05}
+    bf: 1.28192e-08   # thrust coefficient [kg m]
+    bm: 5.964552e-03  # yaw torque to thrust ratio [m]
+    l: 0.046          # arm length [m]

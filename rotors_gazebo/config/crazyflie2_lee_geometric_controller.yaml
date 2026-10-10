@@ -1,0 +1,28 @@
+# Lee geometric controller (rotors_control/lee_geometric_controller_node).
+# Gains and filter time constants from S. Grossi's MSc thesis, Sections 6.3 and 6.6.
+# The motor coefficients are not here: the launch file loads them from
+# crazyflie2_forster_motor_parameters.yaml or crazyflie2_motor_parameters.yaml,
+# depending on the forster_parameters argument.
+
+/**:
+  ros__parameters:
+    sampling_time: 0.01           # [s], 100 Hz
+    gravity: 9.81                 # [m/s^2]
+
+    # Same values as rotors_description/urdf/crazyflie2_parameters.xacro
+    mass: 0.027                   # [kg]
+    inertia: {xx: 1.657171e-05, yy: 1.657171e-05, zz: 2.9261652e-05}  # [kg m^2]
+    arm_length: 0.046             # [m]
+
+    # Time constants of the dirty derivatives s / (tau * s + 1)
+    dirty_derivative:
+      tau_first_order: 0.05       # [s]
+      tau_higher_order: 0.10      # [s]
+
+    # Gains of the paper (Lee et al., CDC 2010) scaled by the Crazyflie mass (kx, kv) and
+    # by the inertia ratio between the X-4 Flyer and the Crazyflie (kR, kOmega).
+    gains:
+      position: 0.108             # kx     = 4.0 * mass
+      velocity: 0.0972            # kv     = 3.6 * mass
+      attitude: 0.005873333       # kR     = 8.81 / 1500
+      angular_rate: 0.001693333   # kOmega = 2.54 / 1500

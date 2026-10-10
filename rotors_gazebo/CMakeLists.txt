@@ -1,125 +1,40 @@
-cmake_minimum_required(VERSION 3.0.2)
-project(rotors_gazebo VERSION 7.1.0)
+cmake_minimum_required(VERSION 3.16)
+project(rotors_gazebo)
 
-add_definitions(-std=c++11)
-
-#--------------------------#
-# Generation of SDF models #
-#--------------------------#
-
-# We need Gazebo version >= 3.0.0 to generate iris.sdf file
-# (gz sdf ... command needs to be available)
-find_package(gazebo REQUIRED)
-find_package(PythonInterp REQUIRED)
-
-
-if(${gazebo_VERSION_MAJOR} GREATER 2)
-    message(STATUS "Building iris.sdf.")
-
-    set(enable_mavlink_interface "true")
-    set(enable_ground_truth "false")
-    set(enable_logging "false")
-    set(enable_camera "false")
-    set(enable_wind "false")
-    set(rotors_description_dir "${CMAKE_CURRENT_SOURCE_DIR}/models/rotors_description")
-    set(scripts_dir "${CMAKE_CURRENT_SOURCE_DIR}/scripts")
-
-    # Creates shell commands to generate .sdf file
-    add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/models/iris/iris.sdf
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      COMMAND rm -f ${CMAKE_CURRENT_SOURCE_DIR}/models/iris/iris.sdf
-      COMMAND ${PYTHON_EXECUTABLE} ${scripts_dir}/xacro.py -o  ${rotors_description_dir}/urdf/iris_base.urdf  ${rotors_description_dir}/urdf/iris_base.xacro enable_mavlink_interface:=${enable_mavlink_interface} enable_ground_truth:=${enable_ground_truth} enable_wind:=${enable_wind} enable_logging:=${enable_logging} rotors_description_dir:=${rotors_description_dir}
-      COMMAND gz sdf -p  ${rotors_description_dir}/urdf/iris_base.urdf >> ${CMAKE_CURRENT_SOURCE_DIR}/models/iris/iris.sdf
-      COMMAND rm -f ${rotors_description_dir}/urdf/iris_base.urdf
-      DEPENDS ${rotors_description_dir}/urdf/iris.xacro
-      DEPENDS ${rotors_description_dir}/urdf/iris_base.xacro
-      DEPENDS ${rotors_description_dir}/urdf/component_snippets.xacro
-      )
-    add_custom_target(sdf ALL DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/models/iris/iris.sdf)
-else()
-  message(STATUS "Gazebo version is less than 3, cannot generate iris.sdf (gz tool not available).")
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
 endif()
 
-if(NO_ROS)
-  message(STATUS "NO_ROS = true, not building waypoint publisher or hovering example, returning now.")
-  return()
-endif()
+find_package(ament_cmake REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(trajectory_msgs REQUIRED)
+find_package(rotors_comm REQUIRED)
+find_package(yaml_cpp_vendor REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
+add_library(spline_trajectory_generator SHARED src/library/spline_trajectory_generator.cpp)
+target_include_directories(spline_trajectory_generator PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
+target_link_libraries(spline_trajectory_generator PUBLIC Eigen3::Eigen)
 
-find_package(catkin REQUIRED COMPONENTS
-  gazebo_msgs
-  geometry_msgs
-  mav_msgs
-  nav_msgs
-  roscpp
-  sensor_msgs
-  cmake_modules
-)
+set(node_dependencies rclcpp geometry_msgs nav_msgs trajectory_msgs rotors_comm)
+foreach(node hovering_example hovering_example_spline waypoint_publisher
+             waypoint_publisher_file quaternion_to_rpy piecewise_trajectory_generator)
+  add_executable(${node} src/nodes/${node}.cpp)
+  ament_target_dependencies(${node} ${node_dependencies})
+  install(TARGETS ${node} DESTINATION lib/${PROJECT_NAME})
+endforeach()
+target_link_libraries(hovering_example_spline spline_trajectory_generator)
+target_link_libraries(piecewise_trajectory_generator Eigen3::Eigen yaml-cpp)
 
-find_package(
-  Eigen3 REQUIRED
-)
+install(TARGETS spline_trajectory_generator EXPORT export_${PROJECT_NAME}
+  LIBRARY DESTINATION lib ARCHIVE DESTINATION lib RUNTIME DESTINATION bin)
+install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
+install(DIRECTORY launch worlds config DESTINATION share/${PROJECT_NAME})
 
-catkin_package(
-  INCLUDE_DIRS include ${Eigen3_INCLUDE_DIRS}
-  LIBRARIES spline_trajectory_generator
-  CATKIN_DEPENDS geometry_msgs mav_msgs nav_msgs roscpp sensor_msgs gazebo_msgs
-  DEPENDS Eigen3
-)
-
-include_directories(
-  include
-  ${catkin_INCLUDE_DIRS}
-  ${Eigen3_INCLUDE_DIRS}
-)
-
-add_library(spline_trajectory_generator
-  src/library/spline_trajectory_generator.cpp
-)
-
-add_executable(waypoint_publisher src/nodes/waypoint_publisher.cpp)
-target_link_libraries(waypoint_publisher ${catkin_LIBRARIES})
-add_dependencies(waypoint_publisher ${catkin_EXPORTED_TARGETS})
-
-add_executable(waypoint_publisher_file src/nodes/waypoint_publisher_file.cpp)
-target_link_libraries(waypoint_publisher_file ${catkin_LIBRARIES})
-add_dependencies(waypoint_publisher_file ${catkin_EXPORTED_TARGETS})
-
-add_executable(hovering_example src/nodes/hovering_example.cpp)
-target_link_libraries(hovering_example ${catkin_LIBRARIES})
-add_dependencies(hovering_example ${catkin_EXPORTED_TARGETS})
-
-add_executable(hovering_example_spline src/nodes/hovering_example_spline.cpp)
-target_link_libraries(hovering_example_spline spline_trajectory_generator ${catkin_LIBRARIES})
-add_dependencies(hovering_example_spline ${catkin_EXPORTED_TARGETS})
-
-add_executable(hovering_example_spline_swarm src/nodes/hovering_example_spline_swarm.cpp)
-target_link_libraries(hovering_example_spline_swarm spline_trajectory_generator ${catkin_LIBRARIES})
-add_dependencies(hovering_example_spline_swarm ${catkin_EXPORTED_TARGETS})
-
-add_executable(piecewise_trajectory_generator src/nodes/piecewise_trajectory_generator.cpp)
-target_link_libraries(piecewise_trajectory_generator ${catkin_LIBRARIES})
-add_dependencies(piecewise_trajectory_generator ${catkin_EXPORTED_TARGETS})
-
-add_executable(quaternion_to_rpy src/nodes/quaternion_to_rpy.cpp)
-target_link_libraries(quaternion_to_rpy ${catkin_LIBRARIES})
-add_dependencies(quaternion_to_rpy ${catkin_EXPORTED_TARGETS})
-
-foreach(dir launch models resource worlds)
-   install(DIRECTORY ${dir}/
-      DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/${dir})
-endforeach(dir)
-
-install(TARGETS waypoint_publisher waypoint_publisher_file hovering_example
-  quaternion_to_rpy hovering_example_spline hovering_example_spline_swarm
-  piecewise_trajectory_generator
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-install(
-  DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  FILES_MATCHING PATTERN "*.h"
-)
+ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+ament_package()

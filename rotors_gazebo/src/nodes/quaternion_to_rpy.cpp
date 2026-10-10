@@ -3,6 +3,7 @@
  * Copyright 2018 Emanuele Aucone, University of Sannio in Benevento, Italy
  * Copyright 2018 Benjamin Rodriguez, MIT, USA
  * Copyright 2018 Luigi Iannelli, University of Sannio in Benevento, Italy
+ * Copyright 2026 Giuseppe Silano, Czech Technical University in Prague, Czech Republic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,76 +18,50 @@
  * limitations under the License.
  */
 
-#include "rotors_gazebo/transform_datatypes.h"
-#include "rotors_gazebo/Matrix3x3.h"
-#include "rotors_gazebo/Quaternion.h"
+// Publishes on orientation_rpy (geometry_msgs/Vector3) the roll, pitch and yaw angles of
+// the drone in degrees, in [0, 360), read from the odometry.
 
-#include <math.h> 
-#include <ros/ros.h>
-#include <ros/console.h> 
-#include <Eigen/Eigen>
-#include <stdio.h>
-#include <boost/bind.hpp>
+#include <algorithm>
+#include <cmath>
+#include <memory>
 
-#include <geometry_msgs/Vector3.h>
-#include <geometry_msgs/PoseStamped.h>
-#include <mav_msgs/conversions.h>
-#include <mav_msgs/default_topics.h>
-#include <mav_msgs/eigen_mav_msgs.h>
-#include <nav_msgs/Odometry.h>
+#include <geometry_msgs/msg/vector3.hpp>
+#include <nav_msgs/msg/odometry.hpp>
+#include <rclcpp/rclcpp.hpp>
 
-#define M_PI    3.14159265358979323846  /* pi */
+class QuaternionToRpy : public rclcpp::Node {
+ public:
+  QuaternionToRpy() : Node("quaternion_to_rpy") {
+    rpy_pub_ = create_publisher<geometry_msgs::msg::Vector3>("orientation_rpy", 1);
+    odometry_sub_ = create_subscription<nav_msgs::msg::Odometry>(
+        "odometry", 1, [this](const nav_msgs::msg::Odometry& msg) { Callback(msg); });
+  }
 
-ros::Publisher rpy_publisher;
-ros::Subscriber quat_subscriber;
+ private:
+  rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr rpy_pub_;
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odometry_sub_;
 
-void MsgCallback(const nav_msgs::Odometry odometry_msg)
-{
-    // the incoming geometry_msgs::PoseStamped is transformed to a tf::Quaterion
-    mav_msgs::EigenOdometry odometry;
-    eigenOdometryFromMsg(odometry_msg, &odometry);
-    tf::Quaternion q(odometry.orientation_W_B.x(), odometry.orientation_W_B.y(), odometry.orientation_W_B.z(), 
-                     odometry.orientation_W_B.w());
-    tf::Matrix3x3 m(q);
+  static double ToPositiveDegrees(double angle) {
+    double degrees = angle * 180.0 / M_PI;
+    return degrees < 0.0 ? degrees + 360.0 : degrees;
+  }
 
-    // the tf::Quaternion has a method to acess roll pitch and yaw
-    double roll, pitch, yaw;
-    m.getRPY(roll, pitch, yaw);
+  void Callback(const nav_msgs::msg::Odometry& msg) {
+    const auto& q = msg.pose.pose.orientation;
+    const double roll = std::atan2(2.0 * (q.w * q.x + q.y * q.z), 1.0 - 2.0 * (q.x * q.x + q.y * q.y));
+    const double pitch = std::asin(std::max(-1.0, std::min(1.0, 2.0 * (q.w * q.y - q.z * q.x))));
+    const double yaw = std::atan2(2.0 * (q.w * q.z + q.x * q.y), 1.0 - 2.0 * (q.y * q.y + q.z * q.z));
+    geometry_msgs::msg::Vector3 rpy;
+    rpy.x = ToPositiveDegrees(roll);
+    rpy.y = ToPositiveDegrees(pitch);
+    rpy.z = ToPositiveDegrees(yaw);
+    rpy_pub_->publish(rpy);
+  }
+};
 
-    double yaw_degrees = yaw * 180.0 / M_PI; // conversion to degrees
-    if( yaw_degrees < 0 ) yaw_degrees += 360.0; // convert negative to positive angles
-
-    double roll_degrees = roll * 180.0 / M_PI; // conversion to degrees
-    if( roll_degrees < 0 ) roll_degrees += 360.0; // convert negative to positive angles
-
-    double pitch_degrees = pitch * 180.0 / M_PI; // conversion to degrees
-    if( pitch_degrees < 0 ) pitch_degrees += 360.0; // convert negative to positive angles
-
-    // the found angles are written in a geometry_msgs::Vector3
-    geometry_msgs::Vector3 rpy;
-    rpy.x = roll_degrees;
-    rpy.y = pitch_degrees;
-    rpy.z = yaw_degrees;
-
-    // this Vector is then published:
-    rpy_publisher.publish(rpy);
-    ROS_DEBUG("published rpy angles: roll=%f pitch=%f yaw=%f", rpy.x, rpy.y, rpy.z);
-}
-
-int main(int argc, char **argv)
-{
-    ros::init(argc, argv, "quaternion_to_rpy");
-
-    ros::NodeHandle n;
-
-    rpy_publisher = n.advertise<geometry_msgs::Vector3>("orientation_rpy", 1);
-
-    quat_subscriber = n.subscribe(mav_msgs::default_topics::ODOMETRY, 1, MsgCallback);
-
-    // check for incoming quaternions untill ctrl+c is pressed
-    ROS_DEBUG("waiting for quaternion");
-
-    ros::spin();
-
-    return 0;
+int main(int argc, char** argv) {
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<QuaternionToRpy>());
+  rclcpp::shutdown();
+  return 0;
 }

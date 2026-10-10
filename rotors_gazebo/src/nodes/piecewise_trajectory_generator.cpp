@@ -2,6 +2,7 @@
  * Copyright 2021 Stefano Grossi, University of Modena and Reggio Emilia, Italy
  * Copyright 2021 Lorenzo Sabattini, University of Modena and Reggio Emilia, Italy
  * Copyright 2021 Giuseppe Silano, Czech Technical University in Prague, Czech Republic
+ * Copyright 2026 Giuseppe Silano, Czech Technical University in Prague, Czech Republic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +19,8 @@
 
 /*
  * Publishes a DroneState reference (position, velocity, acceleration, yaw) on the
- * "drone_state" topic. The trajectory is a list of segments loaded from the
- * parameter server, e.g.:
+ * "drone_state" topic. The trajectory is a list of segments read from the YAML file
+ * given by the "trajectory_file" parameter, e.g.:
  *
  *   sampling_time: 0.01     # publishing period [s]
  *   start_time: 3.0         # sim time at which the trajectory starts [s]
@@ -39,7 +40,7 @@
  * uses a third order polynomial with zero velocity at both ends.
  *
  * The first segment starts where the drone is (first "odometry" message, or the
- * "initial_position" parameter as fallback). When the last segment is over, the
+ * "initial_position" entry of the file as fallback). When the last segment is over, the
  * final point keeps being published.
  *
  * The files in resource/trajectories reproduce the tests of S. Grossi's thesis.
@@ -48,16 +49,18 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <memory>
 #include <string>
-#include <thread>
 #include <vector>
 
 #include <Eigen/Geometry>
-#include <mav_msgs/DroneState.h>
-#include <mav_msgs/default_topics.h>
-#include <nav_msgs/Odometry.h>
-#include <ros/ros.h>
-#include <std_srvs/Empty.h>
+#include <nav_msgs/msg/odometry.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp/wait_for_message.hpp>
+#include <rotors_comm/msg/drone_state.hpp>
+#include <yaml-cpp/yaml.h>
+
+#include "trajectory_utils.h"
 
 namespace {
 
@@ -84,89 +87,76 @@ struct ReferencePoint {
   Eigen::Vector3d acceleration;
 };
 
-double ToDouble(XmlRpc::XmlRpcValue& value) {
-  if (value.getType() == XmlRpc::XmlRpcValue::TypeInt) {
-    return static_cast<int>(value);
-  }
-  return static_cast<double>(value);
-}
-
-bool ReadVector(XmlRpc::XmlRpcValue& segment, const std::string& key, int size,
-                Eigen::VectorXd* vector) {
-  if (!segment.hasMember(key) || segment[key].getType() != XmlRpc::XmlRpcValue::TypeArray ||
-      segment[key].size() != size) {
-    ROS_ERROR_STREAM("[Trajectory generator] The '" << key << "' field must be a list of "
-                     << size << " numbers.");
+// Reads the segments of the trajectory. Errors are reported through *error.
+bool ReadSegments(const YAML::Node& list, std::vector<Segment>* segments, std::string* error) {
+  if (!list || !list.IsSequence()) {
+    *error = "the 'segments' entry is missing or is not a list";
     return false;
   }
-  vector->resize(size);
-  for (int i = 0; i < size; ++i) {
-    (*vector)(i) = ToDouble(segment[key][i]);
-  }
-  return true;
-}
-
-bool ReadSegments(const ros::NodeHandle& nh, std::vector<Segment>* segments) {
-  XmlRpc::XmlRpcValue list;
-  if (!nh.getParam("segments", list) || list.getType() != XmlRpc::XmlRpcValue::TypeArray) {
-    ROS_ERROR("[Trajectory generator] The 'segments' parameter is missing or is not a list.");
-    return false;
-  }
-
-  for (int i = 0; i < list.size(); ++i) {
-    XmlRpc::XmlRpcValue& item = list[i];
+  for (std::size_t i = 0; i < list.size(); ++i) {
+    const YAML::Node item = list[i];
+    const std::string prefix = "segment " + std::to_string(i) + ": ";
     Segment segment;
     segment.goal.setZero();
     segment.center.setZero();
     segment.angle = 0.0;
 
-    if (!item.hasMember("type") || !item.hasMember("duration")) {
-      ROS_ERROR("[Trajectory generator] Segment %d needs both 'type' and 'duration'.", i);
+    if (!item["type"] || !item["duration"]) {
+      *error = prefix + "'type' and 'duration' are required";
       return false;
     }
-    const std::string type = item["type"];
-    segment.duration = ToDouble(item["duration"]);
+    const std::string type = item["type"].as<std::string>();
+    segment.duration = item["duration"].as<double>();
     if (segment.duration <= 0.0) {
-      ROS_ERROR("[Trajectory generator] Segment %d has a non positive duration.", i);
+      *error = prefix + "the duration must be positive";
       return false;
     }
 
     segment.profile = TimingLaw::kLinear;
-    if (item.hasMember("profile")) {
-      const std::string profile = item["profile"];
+    if (item["profile"]) {
+      const std::string profile = item["profile"].as<std::string>();
       if (profile == "cubic") {
         segment.profile = TimingLaw::kCubic;
       } else if (profile != "linear") {
-        ROS_ERROR("[Trajectory generator] Unknown profile '%s' (segment %d).",
-                  profile.c_str(), i);
+        *error = prefix + "unknown profile '" + profile + "'";
         return false;
       }
     }
 
-    Eigen::VectorXd vector;
     if (type == "line") {
       segment.type = SegmentType::kLine;
-      if (!ReadVector(item, "goal", 3, &vector)) return false;
-      segment.goal = vector;
-    } else if (type == "arc") {
-      segment.type = SegmentType::kArc;
-      if (!ReadVector(item, "center", 2, &vector)) return false;
-      segment.center = vector;
-      if (!item.hasMember("angle")) {
-        ROS_ERROR("[Trajectory generator] The arc segment %d needs the 'angle' field.", i);
+      if (!item["goal"] || !item["goal"].IsSequence() || item["goal"].size() != 3) {
+        *error = prefix + "'goal' must be a list of 3 numbers";
         return false;
       }
-      segment.angle = ToDouble(item["angle"]);
+      segment.goal = Eigen::Vector3d(item["goal"][0].as<double>(), item["goal"][1].as<double>(),
+                                     item["goal"][2].as<double>());
+    } else if (type == "arc") {
+      segment.type = SegmentType::kArc;
+      if (!item["center"] || !item["center"].IsSequence() || item["center"].size() != 2) {
+        *error = prefix + "'center' must be a list of 2 numbers";
+        return false;
+      }
+      if (!item["angle"]) {
+        *error = prefix + "'angle' is required for an arc";
+        return false;
+      }
+      segment.center = Eigen::Vector2d(item["center"][0].as<double>(),
+                                       item["center"][1].as<double>());
+      segment.angle = item["angle"].as<double>();
     } else if (type == "hold") {
       segment.type = SegmentType::kHold;
     } else {
-      ROS_ERROR("[Trajectory generator] Unknown segment type '%s' (segment %d).",
-                type.c_str(), i);
+      *error = prefix + "unknown segment type '" + type + "'";
       return false;
     }
     segments->push_back(segment);
   }
-  return !segments->empty();
+  if (segments->empty()) {
+    *error = "the trajectory has no segments";
+    return false;
+  }
+  return true;
 }
 
 // Normalized path coordinate s in [0, 1] and its first two time derivatives.
@@ -265,87 +255,79 @@ ReferencePoint EvaluateTrajectory(const std::vector<Segment>& segments, double t
   return EvaluateSegment(segments.back(), segments.back().duration);
 }
 
-bool UnpauseGazebo() {
-  std_srvs::Empty srv;
-  for (int i = 0; i <= 10; ++i) {
-    if (ros::service::call("/gazebo/unpause_physics", srv)) {
-      ROS_INFO("[Trajectory generator] Unpaused the Gazebo simulation.");
-      return true;
-    }
-    ROS_INFO("[Trajectory generator] Wait for 1 second before trying to unpause Gazebo again.");
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-  }
-  return false;
-}
-
 }  // namespace
 
 int main(int argc, char** argv) {
-  ros::init(argc, argv, "piecewise_trajectory_generator");
-  ros::NodeHandle nh;
-  ros::NodeHandle private_nh("~");
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared<rclcpp::Node>("piecewise_trajectory_generator");
+  const std::string trajectory_file = node->declare_parameter("trajectory_file", std::string(""));
 
-  ros::Publisher trajectory_pub =
-      nh.advertise<mav_msgs::DroneState>(mav_msgs::default_topics::DRONE_STATE, 10);
-
-  double sampling_time, start_time, yaw;
-  private_nh.param("sampling_time", sampling_time, 0.01);
-  private_nh.param("start_time", start_time, 3.0);
-  private_nh.param("yaw", yaw, 0.0);
+  YAML::Node config;
+  try {
+    config = YAML::LoadFile(trajectory_file);
+  } catch (const std::exception& e) {
+    RCLCPP_FATAL(node->get_logger(), "Cannot read the trajectory file '%s': %s",
+                 trajectory_file.c_str(), e.what());
+    return -1;
+  }
+  const double sampling_time = config["sampling_time"] ? config["sampling_time"].as<double>() : 0.01;
+  const double start_time = config["start_time"] ? config["start_time"].as<double>() : 3.0;
+  const double yaw = config["yaw"] ? config["yaw"].as<double>() : 0.0;
 
   std::vector<Segment> segments;
-  if (!ReadSegments(private_nh, &segments)) {
-    ROS_FATAL("[Trajectory generator] Invalid trajectory description.");
+  std::string error;
+  if (!ReadSegments(config["segments"], &segments, &error)) {
+    RCLCPP_FATAL(node->get_logger(), "Invalid trajectory file '%s': %s", trajectory_file.c_str(),
+                 error.c_str());
     return -1;
   }
 
-  if (!UnpauseGazebo()) {
-    ROS_FATAL("[Trajectory generator] Could not wake up Gazebo.");
-    return -1;
+  auto trajectory_pub =
+      node->create_publisher<rotors_comm::msg::DroneState>(rotors_gazebo::kDroneStateTopic, 10);
+
+  // Give Gazebo and the controller some time to start.
+  if (!rotors_gazebo::WaitForSimTime(node, start_time)) {
+    return 0;
   }
 
-  // Start from where the drone is.
+  // Start from where the drone is (read now, when it is resting on the ground).
   Eigen::Vector3d initial_position(0.0, 0.0, 0.0);
-  std::vector<double> initial_position_param;
-  nav_msgs::OdometryConstPtr odometry = ros::topic::waitForMessage<nav_msgs::Odometry>(
-      mav_msgs::default_topics::ODOMETRY, nh, ros::Duration(5.0));
-  if (odometry) {
-    initial_position << odometry->pose.pose.position.x, odometry->pose.pose.position.y,
-                        odometry->pose.pose.position.z;
-  } else if (private_nh.getParam("initial_position", initial_position_param) &&
-             initial_position_param.size() == 3) {
-    initial_position << initial_position_param[0], initial_position_param[1],
-                        initial_position_param[2];
+  nav_msgs::msg::Odometry odometry;
+  if (rclcpp::wait_for_message(odometry, node, rotors_gazebo::kOdometryTopic,
+                               std::chrono::seconds(10))) {
+    initial_position << odometry.pose.pose.position.x, odometry.pose.pose.position.y,
+                        odometry.pose.pose.position.z;
+  } else if (config["initial_position"] && config["initial_position"].size() == 3) {
+    initial_position << config["initial_position"][0].as<double>(),
+                        config["initial_position"][1].as<double>(),
+                        config["initial_position"][2].as<double>();
   } else {
-    ROS_WARN("[Trajectory generator] No odometry received, starting from the origin.");
+    RCLCPP_WARN(node->get_logger(), "No odometry received, starting from the origin.");
   }
   ComputeSegmentStartPoints(initial_position, &segments);
 
   const double total_duration = segments.back().start_time + segments.back().duration;
-  ROS_INFO("[Trajectory generator] Trajectory with %zu segments (%.2f s) starting from "
-           "[%.3f, %.3f, %.3f] at t = %.2f s.", segments.size(), total_duration,
-           initial_position.x(), initial_position.y(), initial_position.z(), start_time);
+  RCLCPP_INFO(node->get_logger(),
+              "Trajectory with %zu segments (%.2f s) starting from [%.3f, %.3f, %.3f] at t = %.2f s.",
+              segments.size(), total_duration, initial_position.x(), initial_position.y(),
+              initial_position.z(), start_time);
 
-  // Give Gazebo and the controller some time to start.
-  while (ros::ok() && ros::Time::now().toSec() < start_time) {
-    ros::Duration(sampling_time).sleep();
-  }
-  const ros::Time trajectory_start = ros::Time::now();
+  const rclcpp::Time trajectory_start = node->now();
 
   const Eigen::Quaterniond orientation(Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ()));
-  mav_msgs::DroneState msg;
+  rotors_comm::msg::DroneState msg;
   msg.orientation.w = orientation.w();
   msg.orientation.x = orientation.x();
   msg.orientation.y = orientation.y();
   msg.orientation.z = orientation.z();
 
   bool completed = false;
-  ros::Rate rate(1.0 / sampling_time);
-  while (ros::ok()) {
-    const double t = (ros::Time::now() - trajectory_start).toSec();
+  rclcpp::Rate rate(1.0 / sampling_time, node->get_clock());
+  while (rclcpp::ok()) {
+    const double t = (node->now() - trajectory_start).seconds();
     const ReferencePoint point = EvaluateTrajectory(segments, t);
 
-    msg.header.stamp = ros::Time::now();
+    msg.header.stamp = node->now();
     msg.position.x = point.position.x();
     msg.position.y = point.position.y();
     msg.position.z = point.position.z();
@@ -355,16 +337,15 @@ int main(int argc, char** argv) {
     msg.linear_acceleration.x = point.acceleration.x();
     msg.linear_acceleration.y = point.acceleration.y();
     msg.linear_acceleration.z = point.acceleration.z();
-    trajectory_pub.publish(msg);
+    trajectory_pub->publish(msg);
 
     if (!completed && t >= total_duration) {
       completed = true;
-      ROS_INFO("[Trajectory generator] Trajectory completed, holding [%.3f, %.3f, %.3f].",
-               point.position.x(), point.position.y(), point.position.z());
+      RCLCPP_INFO(node->get_logger(), "Trajectory completed, holding [%.3f, %.3f, %.3f].",
+                  point.position.x(), point.position.y(), point.position.z());
     }
-
     rate.sleep();
   }
-
+  rclcpp::shutdown();
   return 0;
 }
