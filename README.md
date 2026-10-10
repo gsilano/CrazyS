@@ -13,9 +13,9 @@ CrazyS is an extension of the ROS package [RotorS](https://github.com/ethz-asl/r
 
 Such simulation platform allows to understand quickly the behavior of the flight control system by comparing and evaluating different indoor and outdoor scenarios, with a details level quite close to reality. The proposed extension expands RotorS capabilities by considering the Crazyflie 2.0 physical model and its flight control system, as well (the [2018.01.1](https://github.com/bitcraze/crazyflie-firmware/releases/tag/2018.01.1) firmware release).
 
-A simple case study is considered (`crazyflie2_hovering_example.launch`) in order to show how the package works and the validity of the employed dynamical model together the control architecture of the quadrotor. The code is released under Apache license, thus making it available for scientific and educational activities.
+A simple case study is considered (`crazyflie2_hovering_example.launch`) in order to show how the package works and the validity of the employed dynamical model together with the control architecture of the quadrotor. The code is released under Apache license, thus making it available for scientific and educational activities.
 
-The platform was developed using Ubuntu 16.04 and the Kinetic Kame version of ROS, but it is also fully compatible with Ubuntu 18.04 along with the Melodic Morenia distribution of ROS and Ubuntu 20.0.4 along with the Noetic Ninjemys release. Although backwards compatibility is guarantee, i.e., the platform is fully compatible with Indigo Igloo version of ROS and Ubuntu 14.04, such configuration is not recommended since the ROS support is expected to be closed in April 2019.
+The platform was developed using Ubuntu 16.04 and the Kinetic Kame version of ROS, but it is also fully compatible with Ubuntu 18.04 along with the Melodic Morenia distribution of ROS and Ubuntu 20.04 along with the Noetic Ninjemys release. Although backwards compatibility is guaranteed, i.e., the platform is fully compatible with Indigo Igloo version of ROS and Ubuntu 14.04, such configuration is not recommended since the ROS support is expected to be closed in April 2019.
 
 Below we provide the instructions necessary for getting started. See [CrazyS' wiki](https://github.com/gsilano/CrazyS/wiki) for more instructions and examples.
 
@@ -65,7 +65,7 @@ Installation Instructions - Ubuntu 20.04 with ROS Noetic and Gazebo 11
 -----------------------------------------------------------------------
 To use the code developed and stored in this repository some preliminary actions are needed. They are listed below.
 
-1. Install and initialize ROS Melodic desktop full, additional ROS packages, catkin-tools, and wstool:
+1. Install and initialize ROS Noetic desktop full, additional ROS packages, catkin-tools, and wstool:
 
 ```console
 $ sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
@@ -427,6 +427,32 @@ while a simple swarm example is available at
 $ roslaunch rotors_gazebo crazyflie2_swarm_hovering_example.launch
 ```
 
+### Lee's geometric controller
+
+The package also includes the geometric controller on SE(3) by [Lee, Leok and McClamroch](https://doi.org/10.1109/CDC.2010.5717652), developed and tuned for the Crazyflie by Stefano Grossi in his MSc thesis (University of Modena and Reggio Emilia, 2021), see [#86](https://github.com/gsilano/CrazyS/pull/86). To try it
+
+```console
+$ roslaunch rotors_gazebo crazyflie2_lee_geometric_controller.launch
+```
+
+Use the `trajectory` argument to pick one of the scenarios in `rotors_gazebo/resource/trajectories`: `hovering` (default), `linear`, `linear_polynomial`, `semicircle` and `semicircle_polynomial`. The `_polynomial` versions use a cubic timing law, so the velocity is zero at the start and at the end of every segment.
+
+```console
+$ roslaunch rotors_gazebo crazyflie2_lee_geometric_controller.launch trajectory:=semicircle_polynomial
+```
+
+The `lee_geometric_controller_node` (`rotors_control`) reads the reference from the `drone_state` topic (`mav_msgs/DroneState`) and the drone state from `odometry`, and publishes the motor speeds on `command/motor_speed` at 100 Hz. The heading comes from the yaw of the reference orientation. Gains, vehicle parameters and filter time constants are in `crazyflie2_lee_geometric_controller.yaml`.
+
+The reference is published by the `piecewise_trajectory_generator` node (`rotors_gazebo`). A trajectory is just a list of `line`, `arc` and `hold` segments in a YAML file, so new scenarios don't need any code. The syntax is described at the top of `piecewise_trajectory_generator.cpp`.
+
+The controller was tuned with the propeller coefficients identified by J. Forster (Bachelor's thesis, ETH Zurich, 2015), so the launch file sets `forster_parameters:=true`, which loads `crazyflie2_forster.xacro`. With the default CrazyS model (`forster_parameters:=false`) the rotor drag is much higher and, since the controller has no integral action, the drone lags behind the reference.
+
+There is also a swarm example with three drones, each one with its own controller and trajectory
+
+```console
+$ roslaunch rotors_gazebo crazyflie2_swarm_lee_geometric_controller.launch
+```
+
 > **Note** There is also a draft of the Mellinger's controller implementation in the package. This is a NOT WORKING example. As soon as the problems are resolved, a working version will be made available.
 
 The package also provides a launch file for piloting the Crazyflie using a PC joystick. To run the simulation simple copy and paste the command in the following in a terminal window
@@ -457,4 +483,4 @@ YouTube videos
 
 In this section a video providing the effectiveness of the platform and how it works is reported. Further videos can be found in the related YouTube channel. Have fun! :)
 
-[![CrazyS, an extension of the ROS package RotorS aimed to modeling, developing and integrating the Crazyflie 2.0 nano-quadcopter](https://github.com/gsilano/CrazyS/wiki/img/img_YouTube_MED18.png)](https://youtu.be/qsrYCUSQ-S4 "CrazyS, an exntension of the ROS pakcage RotrS aimed to modeling, developing and integrating the Crazyflie 2.0 nano-quadcopter")
+[![CrazyS, an extension of the ROS package RotorS aimed to modeling, developing and integrating the Crazyflie 2.0 nano-quadcopter](https://github.com/gsilano/CrazyS/wiki/img/img_YouTube_MED18.png)](https://youtu.be/qsrYCUSQ-S4 "CrazyS, an extension of the ROS package RotorS aimed to modeling, developing and integrating the Crazyflie 2.0 nano-quadcopter")
