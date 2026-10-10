@@ -1,6 +1,6 @@
 <package>
   <name>rotors_comm</name>
-  <version>4.0.15</version>
+  <version>4.1.0</version>
   <description>RotorS specific messages and services.</description>
 
   <maintainer email="giuseppe.silano@fel.cvut.cz">Giuseppe Silano</maintainer>

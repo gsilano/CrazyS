@@ -1,6 +1,6 @@
 <package>
   <name>rotors_gazebo</name>
-  <version>4.0.15</version>
+  <version>4.1.0</version>
   <description>The rotors_gazebo package</description>
 
   <maintainer email="giuseppe.silano@fel.cvut.cz">Giuseppe Silano</maintainer>
