@@ -8,13 +8,13 @@ CrazyS
 
 [![Build](https://github.com/gsilano/CrazyS/actions/workflows/build.yml/badge.svg)](https://github.com/gsilano/CrazyS/actions/workflows/build.yml)
 
-The build workflow checks every release branch: `master` (Kinetic + Gazebo 7), `dev/gazebo9` (Kinetic + Gazebo 9), `dev/ros-melodic` (Melodic + Gazebo 9) and `dev/ros-noetic` (Noetic + Gazebo 11).
+The build workflow checks every release branch: `master` (Kinetic + Gazebo 7), `dev/gazebo9` (Kinetic + Gazebo 9), `dev/ros-melodic` (Melodic + Gazebo 9), `dev/ros-noetic` (Noetic + Gazebo 11) and `dev/ros2-jazzy` (ROS 2 Jazzy + Gazebo Harmonic).
 
 CrazyS extends the ROS package [RotorS](https://github.com/ethz-asl/rotors_simulator) with a model of the [Crazyflie 2.0](https://www.bitcraze.io/crazyflie-2/) nano-quadcopter for the Gazebo simulator. It can also be used as a guide for adding new aircraft to RotorS.
 
 Besides the physical model of the drone, CrazyS includes its flight control system, taken from the [2018.01.1](https://github.com/bitcraze/crazyflie-firmware/releases/tag/2018.01.1) firmware release, so control algorithms can be tested in indoor and outdoor scenarios before flying the real drone. The `crazyflie2_hovering_example.launch` file is a simple starting point. The code is released under the Apache license.
 
-CrazyS was developed on Ubuntu 16.04 with ROS Kinetic, and it also works with ROS Melodic (Ubuntu 18.04) and ROS Noetic (Ubuntu 20.04). Instructions for ROS Indigo (Ubuntu 14.04) are kept below, but that setup is no longer recommended.
+CrazyS was developed on Ubuntu 16.04 with ROS Kinetic, and it also works with ROS Melodic (Ubuntu 18.04), ROS Noetic (Ubuntu 20.04) and, on the `dev/ros2-jazzy` branch, ROS 2 Jazzy (Ubuntu 24.04). Instructions for ROS Indigo (Ubuntu 14.04) are kept below, but that setup is no longer recommended.
 
 The instructions to get started are below. More examples are in the [wiki](https://github.com/gsilano/CrazyS/wiki).
 
@@ -58,6 +58,19 @@ USER: user
 PASS: password
 Keyboard layout: Italian
 Language: English
+```
+
+Installation Instructions - Ubuntu 24.04 with ROS 2 Jazzy and Gazebo Harmonic
+------------------------------------------------------------------------------
+
+The ROS 2 version lives on the `dev/ros2-jazzy` branch. It uses the systems of Gazebo Sim (Harmonic) instead of the RotorS plugins and does not need `mav_comm`. Only the Crazyflie and its controllers are ported; the other RotorS vehicles are not. The [README of that branch](https://github.com/gsilano/CrazyS/tree/dev/ros2-jazzy) lists the examples and the differences from the ROS 1 version.
+
+```console
+$ sudo apt install ros-jazzy-desktop ros-jazzy-ros-gz ros-jazzy-actuator-msgs ros-jazzy-xacro ros-jazzy-joy python3-colcon-common-extensions
+$ mkdir -p ~/crazys_ws/src && cd ~/crazys_ws/src
+$ git clone -b dev/ros2-jazzy https://github.com/gsilano/CrazyS.git
+$ cd ~/crazys_ws && colcon build && source install/setup.bash
+$ ros2 launch rotors_gazebo crazyflie2_hovering_example.launch.py
 ```
 
 Installation Instructions - Ubuntu 20.04 with ROS Noetic and Gazebo 11

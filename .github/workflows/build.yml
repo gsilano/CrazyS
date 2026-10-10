@@ -4,6 +4,9 @@
 #
 # Kinetic and Melodic are end-of-life: their packages are no longer on packages.ros.org
 # and are installed from the final snapshot on snapshots.ros.org.
+#
+# The ROS 2 branch (dev/ros2-jazzy) is built in the official ros:jazzy image, and its
+# unit tests are run as well.
 
 name: Build
 
@@ -97,3 +100,31 @@ jobs:
           catkin init
           catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release -DCATKIN_ENABLE_TESTING=False
           catkin build --no-status --summarize
+
+  build-ros2:
+    name: Jazzy + Gazebo Harmonic (dev/ros2-jazzy)
+    runs-on: ubuntu-latest
+    container: ros:jazzy-ros-base
+    env:
+      DEBIAN_FRONTEND: noninteractive
+    steps:
+      - name: Install the dependencies
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq --no-install-recommends git \
+            ros-jazzy-ros-gz ros-jazzy-actuator-msgs ros-jazzy-xacro ros-jazzy-joy \
+            ros-jazzy-robot-state-publisher
+
+      - name: Clone CrazyS
+        run: |
+          mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
+          git clone --depth 1 -b dev/ros2-jazzy https://github.com/${{ github.repository }}.git CrazyS
+
+      - name: Build and test
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          cd ~/ros2_ws
+          colcon build --event-handlers console_cohesion+
+          colcon test --event-handlers console_cohesion+
+          colcon test-result --verbose
