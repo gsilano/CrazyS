@@ -1,22 +1,16 @@
-cmake_minimum_required(VERSION 3.0.2)
-project(rotors_comm VERSION 7.1.0)
-find_package(catkin REQUIRED
-  COMPONENTS cmake_modules geometry_msgs message_generation octomap_msgs std_msgs)
+cmake_minimum_required(VERSION 3.16)
+project(rotors_comm)
 
-# Declare the service files to be built
-add_service_files(
-  FILES
-  Octomap.srv
-  RecordRosbag.srv
+find_package(ament_cmake REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
+
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/DroneState.msg"
+  "msg/RollPitchYawrateThrustCrazyflie.msg"
+  DEPENDENCIES geometry_msgs std_msgs
 )
 
-add_message_files(
-  FILES
-  WindSpeed.msg
-)
-
-generate_messages(DEPENDENCIES geometry_msgs octomap_msgs std_msgs)
-
-catkin_package(
-  CATKIN_DEPENDS message_runtime
-)
+ament_export_dependencies(rosidl_default_runtime)
+ament_package()

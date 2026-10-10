@@ -1,31 +1,31 @@
-<package>
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
   <name>rotors_comm</name>
-  <version>7.1.0</version>
-  <description>RotorS specific messages and services.</description>
+  <version>8.0.0</version>
+  <description>Messages used by CrazyS.</description>
 
   <maintainer email="giuseppe.silano@fel.cvut.cz">Giuseppe Silano</maintainer>
   <maintainer email="luigi.iannelli@unisannio.it">Luigi Iannelli</maintainer>
 
-  <author>Giuseppe Silano</author>
-  <author>Emanuele Aucone</author>
-  <author>Benjamin Rodriguez</author>
-  <author>Luigi Iannelli</author>
-  <author>Daniele Morra</author>
-
-  <license>ASL 2.0</license>
+  <license>Apache-2.0</license>
 
   <url type="website">https://github.com/gsilano/CrazyS</url>
   <url type="bugtracker">https://github.com/gsilano/CrazyS/issues</url>
 
-  <!-- Dependencies which this package needs to build itself. -->
-  <buildtool_depend>catkin</buildtool_depend>
+  <author>Giuseppe Silano</author>
 
-  <!-- Dependencies needed to compile this package. -->
-  <build_depend>message_generation</build_depend>
-  <build_depend>geometry_msgs</build_depend>
-  <build_depend>octomap_msgs</build_depend>
-  <build_depend>cmake_modules</build_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>rosidl_default_generators</buildtool_depend>
 
-  <!-- Dependencies needed after this package is compiled. -->
-  <run_depend>message_runtime</run_depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
+
+  <exec_depend>rosidl_default_runtime</exec_depend>
+
+  <member_of_group>rosidl_interface_packages</member_of_group>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 </package>
