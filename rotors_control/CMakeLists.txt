@@ -19,7 +19,7 @@ catkin_package(
   INCLUDE_DIRS include ${Eigen3_INCLUDE_DIRS}
   LIBRARIES lee_position_controller position_controller crazyflie_onboard_controller
     roll_pitch_yawrate_thrust_controller sensfusion6 crazyflie_complementary_filter
-    mellinger_controller internal_model_controller 
+    mellinger_controller internal_model_controller lee_geometric_controller
     roll_pitch_yawrate_thrust_controller_crazyflie
   CATKIN_DEPENDS geometry_msgs mav_msgs nav_msgs roscpp sensor_msgs
   DEPENDS Eigen3
@@ -68,6 +68,10 @@ add_library(internal_model_controller
   src/library/internal_model_controller.cpp
 )
 
+add_library(lee_geometric_controller
+  src/library/lee_geometric_controller.cpp
+)
+
 target_link_libraries(lee_position_controller ${catkin_LIBRARIES})
 add_dependencies(lee_position_controller ${catkin_EXPORTED_TARGETS})
 
@@ -79,6 +83,9 @@ add_dependencies(mellinger_controller ${catkin_EXPORTED_TARGETS})
 
 target_link_libraries(internal_model_controller ${catkin_LIBRARIES})
 add_dependencies(internal_model_controller ${catkin_EXPORTED_TARGETS})
+
+target_link_libraries(lee_geometric_controller ${catkin_LIBRARIES})
+add_dependencies(lee_geometric_controller ${catkin_EXPORTED_TARGETS})
 
 target_link_libraries(roll_pitch_yawrate_thrust_controller ${catkin_LIBRARIES})
 add_dependencies(roll_pitch_yawrate_thrust_controller ${catkin_EXPORTED_TARGETS})
@@ -106,6 +113,11 @@ target_link_libraries(position_controller_node
   position_controller crazyflie_complementary_filter crazyflie_onboard_controller
   sensfusion6 mellinger_controller internal_model_controller ${catkin_LIBRARIES})
 
+add_executable(lee_geometric_controller_node src/nodes/lee_geometric_controller_node.cpp)
+add_dependencies(lee_geometric_controller_node ${catkin_EXPORTED_TARGETS})
+target_link_libraries(lee_geometric_controller_node
+  lee_geometric_controller ${catkin_LIBRARIES})
+
 add_executable(roll_pitch_yawrate_thrust_controller_node
   src/nodes/roll_pitch_yawrate_thrust_controller_node.cpp)
 add_dependencies(roll_pitch_yawrate_thrust_controller_node ${catkin_EXPORTED_TARGETS})
@@ -120,12 +132,12 @@ target_link_libraries(roll_pitch_yawrate_thrust_crazyflie_node
 
 install(TARGETS lee_position_controller position_controller crazyflie_onboard_controller
   roll_pitch_yawrate_thrust_controller mellinger_controller internal_model_controller
-  roll_pitch_yawrate_thrust_controller_crazyflie
+  roll_pitch_yawrate_thrust_controller_crazyflie lee_geometric_controller
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )
 
 install(TARGETS lee_position_controller_node position_controller_node roll_pitch_yawrate_thrust_controller_node
-  roll_pitch_yawrate_thrust_crazyflie_node
+  roll_pitch_yawrate_thrust_crazyflie_node lee_geometric_controller_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
