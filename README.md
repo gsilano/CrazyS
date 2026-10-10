@@ -471,6 +471,13 @@ At a minimum, Gazebo `v2.x` is required (which is installed by default with ROS 
 1. `iris.sdf` can only be generated with Gazebo >= `v3.0`, as it requires use of the `gz sdf ...` tool. If this requirement is not met, you will not be able to use the Iris MAV in any of the simulations.
 2. The Gazebo plugins `GazeboGeotaggedImagesPlugin`, `LidarPlugin` and the `LiftDragPlugin` all require Gazebo >= `v5.0`, and will not be built if this requirement is not met.
 
+Credits
+-------
+
+The Lee geometric controller was developed by Stefano Grossi in his MSc thesis at the University of Modena and Reggio Emilia (2021), supervised by Lorenzo Sabattini, Beatrice Capelli and Federico Pratissoli. His original code is available at [sgrossi/estensione_crazys](https://github.com/sgrossi/estensione_crazys).
+
+> **Note** The integration of the controller in the 4.1.0, 5.1.0, 6.1.0 and 7.1.0 releases (bug fixes, trajectory generator, launch files, documentation and the GitHub Actions workflow) was carried out with the help of Claude, an AI model by Anthropic, used through Claude Code. The commits written this way list Claude as author or co-author. The controller was built and tested in Gazebo simulation, not on a real Crazyflie. If something does not work as expected, please open an issue.
+
 Bugs & Feature Requests
 --------------
 
