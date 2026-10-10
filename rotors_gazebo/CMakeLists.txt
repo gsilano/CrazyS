@@ -97,6 +97,10 @@ add_executable(hovering_example_spline_swarm src/nodes/hovering_example_spline_s
 target_link_libraries(hovering_example_spline_swarm spline_trajectory_generator ${catkin_LIBRARIES})
 add_dependencies(hovering_example_spline_swarm ${catkin_EXPORTED_TARGETS})
 
+add_executable(piecewise_trajectory_generator src/nodes/piecewise_trajectory_generator.cpp)
+target_link_libraries(piecewise_trajectory_generator ${catkin_LIBRARIES})
+add_dependencies(piecewise_trajectory_generator ${catkin_EXPORTED_TARGETS})
+
 add_executable(quaternion_to_rpy src/nodes/quaternion_to_rpy.cpp)
 target_link_libraries(quaternion_to_rpy ${catkin_LIBRARIES})
 add_dependencies(quaternion_to_rpy ${catkin_EXPORTED_TARGETS})
@@ -108,6 +112,7 @@ endforeach(dir)
 
 install(TARGETS waypoint_publisher waypoint_publisher_file hovering_example
   quaternion_to_rpy hovering_example_spline hovering_example_spline_swarm
+  piecewise_trajectory_generator
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
