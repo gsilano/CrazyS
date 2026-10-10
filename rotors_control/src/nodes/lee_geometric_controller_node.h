@@ -32,8 +32,9 @@ namespace rotors_control {
 // ROS node for the Lee geometric controller.
 //   in:  drone_state (mav_msgs/DroneState), odometry (nav_msgs/Odometry)
 //   out: command/motor_speed (mav_msgs/Actuators)
-// The control loop runs on a timer at 1 / Ts (sim time), not at the odometry rate,
-// because the dirty derivatives assume a fixed sampling time.
+// One control step every Ts seconds of simulation time, triggered by the time stamps of
+// the odometry messages (1 kHz) rather than by a ROS timer: the state is then sampled
+// at regular times even when the computer is loaded and the messages arrive late.
 class LeeGeometricControllerNode {
  public:
   LeeGeometricControllerNode(const ros::NodeHandle& nh, const ros::NodeHandle& private_nh);
@@ -45,18 +46,17 @@ class LeeGeometricControllerNode {
 
   LeeGeometricController lee_geometric_controller_;
 
-  bool odometry_received_;
+  // Time stamp of the odometry message that triggers the next control step [s].
+  double next_control_time_;
 
   ros::Subscriber drone_state_sub_;
   ros::Subscriber odometry_sub_;
   ros::Publisher motor_velocity_reference_pub_;
-  ros::Timer control_timer_;
 
   void InitializeParams();
 
   void DroneStateCallback(const mav_msgs::DroneStateConstPtr& drone_state_msg);
   void OdometryCallback(const nav_msgs::OdometryConstPtr& odometry_msg);
-  void ControlTimerCallback(const ros::TimerEvent& /*event*/);
 };
 
 }  // namespace rotors_control

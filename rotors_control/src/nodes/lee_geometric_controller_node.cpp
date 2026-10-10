@@ -30,7 +30,7 @@ namespace rotors_control {
 
 LeeGeometricControllerNode::LeeGeometricControllerNode(const ros::NodeHandle& nh,
                                                        const ros::NodeHandle& private_nh)
-    : nh_(nh), private_nh_(private_nh), odometry_received_(false) {
+    : nh_(nh), private_nh_(private_nh), next_control_time_(-1.0) {
   InitializeParams();
 
   drone_state_sub_ = nh_.subscribe(mav_msgs::default_topics::DRONE_STATE, 1,
@@ -39,10 +39,6 @@ LeeGeometricControllerNode::LeeGeometricControllerNode(const ros::NodeHandle& nh
                                 &LeeGeometricControllerNode::OdometryCallback, this);
   motor_velocity_reference_pub_ = nh_.advertise<mav_msgs::Actuators>(
       mav_msgs::default_topics::COMMAND_ACTUATORS, 1);
-
-  control_timer_ = nh_.createTimer(
-      ros::Duration(lee_geometric_controller_.controller_parameters_.sampling_time),
-      &LeeGeometricControllerNode::ControlTimerCallback, this);
 
   ROS_INFO("[Lee geometric controller] Started.");
 }
@@ -108,7 +104,10 @@ void LeeGeometricControllerNode::DroneStateCallback(
     eigen_reference.orientation_W_B = Eigen::Quaterniond::Identity();
   }
 
-  lee_geometric_controller_.SetTrajectoryPoint(eigen_reference);
+  // Messages without a time stamp get the time of arrival.
+  const ros::Time stamp = drone_state_msg->header.stamp.isZero() ? ros::Time::now()
+                                                                  : drone_state_msg->header.stamp;
+  lee_geometric_controller_.SetTrajectoryPoint(eigen_reference, stamp.toSec());
 
   ROS_DEBUG("[Lee geometric controller] Desired position: [%f, %f, %f]",
             eigen_reference.position_W.x(), eigen_reference.position_W.y(),
@@ -121,14 +120,16 @@ void LeeGeometricControllerNode::OdometryCallback(
 
   EigenOdometry odometry;
   eigenOdometryFromMsg(odometry_msg, &odometry);
-  lee_geometric_controller_.SetOdometry(odometry);
-  odometry_received_ = true;
-}
+  const double time = odometry_msg->header.stamp.toSec();
+  lee_geometric_controller_.SetOdometry(odometry, time);
 
-void LeeGeometricControllerNode::ControlTimerCallback(const ros::TimerEvent& /*event*/) {
-  if (!odometry_received_) {
+  const double ts = lee_geometric_controller_.controller_parameters_.sampling_time;
+  if (next_control_time_ >= 0.0 && time < next_control_time_ - 1e-6) {
     return;
   }
+  // Next step Ts seconds later. If messages were lost, restart from now.
+  next_control_time_ = (next_control_time_ < 0.0 || time - next_control_time_ > ts)
+                           ? time + ts : next_control_time_ + ts;
 
   Eigen::Vector4d rotor_velocities;
   lee_geometric_controller_.CalculateRotorVelocities(&rotor_velocities);
@@ -138,7 +139,7 @@ void LeeGeometricControllerNode::ControlTimerCallback(const ros::TimerEvent& /*e
   for (int i = 0; i < rotor_velocities.size(); i++) {
     actuator_msg->angular_velocities.push_back(rotor_velocities[i]);
   }
-  actuator_msg->header.stamp = ros::Time::now();
+  actuator_msg->header.stamp = odometry_msg->header.stamp;
 
   motor_velocity_reference_pub_.publish(actuator_msg);
 }

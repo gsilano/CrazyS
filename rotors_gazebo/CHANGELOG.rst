@@ -7,6 +7,7 @@ Changelog for package rotors_gazebo
 * Add the piecewise_trajectory_generator node: DroneState references built from line, arc and hold segments in a YAML file
 * Add the trajectories used in Stefano Grossi's thesis (resource/trajectories)
 * Add crazyflie2_lee_geometric_controller.launch and crazyflie2_swarm_lee_geometric_controller.launch
+* Swarm trajectories: drone 1 waits 8 s before leaving, so it does not cross drone 2
 * Add the forster_parameters argument to spawn_mav_crazyflie.launch
 * Contributors: Stefano Grossi, Lorenzo Sabattini, Federico Pratissoli, Beatrice Capelli, Giuseppe Silano
 
