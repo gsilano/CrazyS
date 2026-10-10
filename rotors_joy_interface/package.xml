@@ -1,10 +1,17 @@
-<package>
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
   <name>rotors_joy_interface</name>
-  <version>7.1.0</version>
-  <description>The rotors_joy_interface package to control MAVs with a joystick</description>
+  <version>8.0.0</version>
+  <description>Joystick interface to pilot the Crazyflie 2.x in simulation.</description>
 
   <maintainer email="giuseppe.silano@fel.cvut.cz">Giuseppe Silano</maintainer>
   <maintainer email="luigi.iannelli@unisannio.it">Luigi Iannelli</maintainer>
+
+  <license>Apache-2.0</license>
+
+  <url type="website">https://github.com/gsilano/CrazyS</url>
+  <url type="bugtracker">https://github.com/gsilano/CrazyS/issues</url>
 
   <author>Giuseppe Silano</author>
   <author>Luigi Iannelli</author>
@@ -12,25 +19,15 @@
   <author>Benjamin Rodriguez</author>
   <author>Daniele Morra</author>
 
-  <license>ASL 2.0</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <url type="website">https://github.com/gsilano/CrazyS</url>
-  <url type="bugtracker">https://github.com/gsilano/CrazyS/issues</url>
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
+  <depend>rotors_comm</depend>
 
-  <buildtool_depend>catkin</buildtool_depend>
+  <exec_depend>joy</exec_depend>
 
-  <!-- Dependencies needed to compile this package. -->
-  <build_depend>sensor_msgs</build_depend>
-  <build_depend>geometry_msgs</build_depend>
-  <build_depend>mav_msgs</build_depend>
-  <build_depend>roscpp</build_depend>
-  <build_depend>trajectory_msgs</build_depend>
-
-  <!-- Dependencies needed after this package is compiled. -->
-  <run_depend>sensor_msgs</run_depend>
-  <run_depend>geometry_msgs</run_depend>
-  <run_depend>mav_msgs</run_depend>
-  <run_depend>roscpp</run_depend>
-  <run_depend>trajectory_msgs</run_depend>
-
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 </package>

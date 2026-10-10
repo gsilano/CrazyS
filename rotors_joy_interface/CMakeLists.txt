@@ -1,33 +1,20 @@
-cmake_minimum_required(VERSION 3.0.2)
-project(rotors_joy_interface VERSION 7.1.0)
-add_definitions(-std=c++11)
+cmake_minimum_required(VERSION 3.16)
+project(rotors_joy_interface)
 
-find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  geometry_msgs
-  mav_msgs
-  sensor_msgs
-  trajectory_msgs
-)
-include_directories(include ${catkin_INCLUDE_DIRS})
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
+endif()
 
-catkin_package(
-  DEPENDS
-  INCLUDE_DIRS include
-  CATKIN_DEPENDS roscpp geometry_msgs mav_msgs sensor_msgs trajectory_msgs
-  LIBRARIES
-)
-
-add_executable(rotors_joy_interface src/joy.cpp)
-add_dependencies(rotors_joy_interface ${catkin_EXPORTED_TARGETS})
-target_link_libraries(rotors_joy_interface ${catkin_LIBRARIES})
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(rotors_comm REQUIRED)
 
 add_executable(rotors_joy_interface_crazyflie src/joy_crazyflie.cpp)
-add_dependencies(rotors_joy_interface_crazyflie ${catkin_EXPORTED_TARGETS})
-target_link_libraries(rotors_joy_interface_crazyflie ${catkin_LIBRARIES})
+ament_target_dependencies(rotors_joy_interface_crazyflie rclcpp sensor_msgs rotors_comm)
 
-install(TARGETS rotors_joy_interface rotors_joy_interface_crazyflie
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+install(TARGETS rotors_joy_interface_crazyflie DESTINATION lib/${PROJECT_NAME})
+install(PROGRAMS scripts/key_joystick.py DESTINATION lib/${PROJECT_NAME})
+install(DIRECTORY media DESTINATION share/${PROJECT_NAME})
+
+ament_package()

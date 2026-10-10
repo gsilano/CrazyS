@@ -1,5 +1,6 @@
 /*
  * Copyright 2020 Giuseppe Silano, University of Sannio in Benevento, Italy
+ * Copyright 2026 Giuseppe Silano, Czech Technical University in Prague, Czech Republic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,98 +15,81 @@
  * limitations under the License.
  */
 
+// Converts the joystick input (sensor_msgs/Joy on "joy") into roll, pitch, yaw rate
+// and thrust commands for the Crazyflie (rotors_comm/RollPitchYawrateThrustCrazyflie on
+// "command/roll_pitch_yawrate_thrust").
+//
+// Parameters: axis_roll, axis_pitch, axis_thrust, axis_yaw_rate, axis_direction_roll,
+// axis_direction_pitch, max_roll [rad], max_pitch [rad], max_yaw_rate [rad/s],
+// max_thrust [PWM].
 
-#include "rotors_joy_interface/joy_crazyflie.h"
+#include <cmath>
+#include <memory>
 
-#include <mav_msgs/default_topics.h>
+#include <rclcpp/rclcpp.hpp>
+#include <rotors_comm/msg/roll_pitch_yawrate_thrust_crazyflie.hpp>
+#include <sensor_msgs/msg/joy.hpp>
 
-#define MAX_THRUST 8162.0 // propeller angular velocities [PWM]
-#define MAX_ROLL 30.0 * M_PI / 180.0 // [rad]
-#define MAX_PITCH 30.0 * M_PI / 180.0 // [rad]
-#define MAX_YAWRATE 200.0 * M_PI / 180.0 // [rad/s]
+namespace {
 
-Joy::Joy() {
-  ros::NodeHandle nh;
-  ros::NodeHandle pnh("~");
-  ctrl_pub_ = nh_.advertise<mav_msgs::RollPitchYawrateThrustCrazyflie> (
-    mav_msgs::default_topics::COMMAND_ROLL_PITCH_YAWRATE_THRUST, 10);
+constexpr double kMaxThrust = 8162.0;                 // [PWM]
+constexpr double kMaxRoll = 30.0 * M_PI / 180.0;      // [rad]
+constexpr double kMaxPitch = 30.0 * M_PI / 180.0;     // [rad]
+constexpr double kMaxYawRate = 200.0 * M_PI / 180.0;  // [rad/s]
 
-  control_msg_.roll = 0;
-  control_msg_.pitch = 0;
-  control_msg_.yaw_rate = 0;
-  control_msg_.thrust = 0;
-  current_yaw_vel_ = 0;
+}  // namespace
 
-  pnh.param("axis_roll_", axes_.roll, 0);
-  pnh.param("axis_pitch_", axes_.pitch, 1);
-  pnh.param("axis_thrust_", axes_.thrust, 3);
-  pnh.param("axis_yaw_rate_", axes_.yaw_rate, 2);
+class JoyCrazyflie : public rclcpp::Node {
+ public:
+  JoyCrazyflie() : Node("rotors_joy_interface_crazyflie") {
+    axis_roll_ = declare_parameter("axis_roll", 0);
+    axis_pitch_ = declare_parameter("axis_pitch", 1);
+    axis_thrust_ = declare_parameter("axis_thrust", 3);
+    axis_yaw_rate_ = declare_parameter("axis_yaw_rate", 2);
+    roll_direction_ = declare_parameter("axis_direction_roll", -1);
+    pitch_direction_ = declare_parameter("axis_direction_pitch", 1);
+    max_roll_ = declare_parameter("max_roll", kMaxRoll);
+    max_pitch_ = declare_parameter("max_pitch", kMaxPitch);
+    max_yaw_rate_ = declare_parameter("max_yaw_rate", kMaxYawRate);
+    max_thrust_ = declare_parameter("max_thrust", kMaxThrust);
 
-  pnh.param("axis_direction_roll", axes_.roll_direction, -1);
-  pnh.param("axis_direction_pitch", axes_.pitch_direction, 1);
-
-  pnh.param("max_roll", max_.roll, MAX_ROLL);
-  pnh.param("max_pitch", max_.pitch, MAX_PITCH);
-  pnh.param("max_yaw_rate", max_.rate_yaw, MAX_YAWRATE);
-  pnh.param("max_thrust", max_.thrust, MAX_THRUST);
-
-  pnh.param("button_ctrl_enable_", buttons_.ctrl_enable, 8);
-  pnh.param("button_ctrl_mode_", buttons_.ctrl_mode, 9);
-  pnh.param("button_takeoff_", buttons_.takeoff, 10);
-  pnh.param("button_land_", buttons_.land, 11);
-
-  namespace_ = nh_.getNamespace();
-  joy_sub_ = nh_.subscribe("joy", 10, &Joy::JoyCallback, this);
-}
-
-void Joy::StopMav() {
-  control_msg_.roll = 0;
-  control_msg_.pitch = 0;
-  control_msg_.yaw_rate = 0;
-  control_msg_.thrust = 0;
-}
-
-void Joy::JoyCallback(const sensor_msgs::JoyConstPtr& msg) {
-  current_joy_ = *msg;
-
-  //Set pitch and roll
-  control_msg_.roll = msg->axes[axes_.roll] * max_.roll * axes_.roll_direction;
-  control_msg_.pitch = msg->axes[axes_.pitch] * max_.pitch * axes_.pitch_direction;
-
-  //Set yaw rate
-  if (msg->axes[axes_.yaw_rate] > 0) {
-    current_yaw_vel_ = max_.rate_yaw;
+    ctrl_pub_ = create_publisher<rotors_comm::msg::RollPitchYawrateThrustCrazyflie>(
+        "command/roll_pitch_yawrate_thrust", 10);
+    joy_sub_ = create_subscription<sensor_msgs::msg::Joy>(
+        "joy", 10, [this](const sensor_msgs::msg::Joy& msg) { JoyCallback(msg); });
   }
-  else if (msg->axes[axes_.yaw_rate] < 0) {
-    current_yaw_vel_ = -max_.rate_yaw;
+
+ private:
+  int axis_roll_, axis_pitch_, axis_thrust_, axis_yaw_rate_;
+  int roll_direction_, pitch_direction_;
+  double max_roll_, max_pitch_, max_yaw_rate_, max_thrust_;
+
+  rclcpp::Publisher<rotors_comm::msg::RollPitchYawrateThrustCrazyflie>::SharedPtr ctrl_pub_;
+  rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_sub_;
+
+  double Axis(const sensor_msgs::msg::Joy& msg, int index) const {
+    return index >= 0 && index < static_cast<int>(msg.axes.size()) ? msg.axes[index] : 0.0;
   }
-  else {
-    current_yaw_vel_ = 0;
+
+  void JoyCallback(const sensor_msgs::msg::Joy& msg) {
+    rotors_comm::msg::RollPitchYawrateThrustCrazyflie command;
+    command.header.stamp = now();
+    command.header.frame_id = "rotors_joy_frame";
+    command.roll = Axis(msg, axis_roll_) * max_roll_ * roll_direction_;
+    command.pitch = Axis(msg, axis_pitch_) * max_pitch_ * pitch_direction_;
+
+    // Yaw rate and thrust are on/off, as in the ROS 1 version.
+    const double yaw_axis = Axis(msg, axis_yaw_rate_);
+    command.yaw_rate = yaw_axis > 0.0 ? max_yaw_rate_ : (yaw_axis < 0.0 ? -max_yaw_rate_ : 0.0);
+    command.thrust = Axis(msg, axis_thrust_) > 0.0 ? max_thrust_ : 0.0;
+
+    ctrl_pub_->publish(command);
   }
-  control_msg_.yaw_rate = current_yaw_vel_;
-
-  //Set thrust
-  if(msg->axes[axes_.thrust] > 0)
-    control_msg_.thrust = max_.thrust;
-  else
-    control_msg_.thrust = 0;
-
-
-  ros::Time update_time = ros::Time::now();
-  control_msg_.header.stamp = update_time;
-  control_msg_.header.frame_id = "rotors_joy_frame";
-  Publish();
-}
-
-void Joy::Publish() {
-  ctrl_pub_.publish(control_msg_);
-}
+};
 
 int main(int argc, char** argv) {
-  ros::init(argc, argv, "rotors_joy_interface_crazyflie");
-  Joy joy;
-
-  ros::spin();
-
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<JoyCrazyflie>());
+  rclcpp::shutdown();
   return 0;
 }
