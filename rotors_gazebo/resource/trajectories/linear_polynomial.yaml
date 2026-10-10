@@ -1,0 +1,8 @@
+# Same path as linear.yaml, with cubic timing laws: no velocity steps (thesis, 6.6.1).
+sampling_time: 0.01
+start_time: 3.0
+yaw: 0.0
+segments:
+  - {type: line, goal: [0.0, 0.0, 1.0], duration: 2.0, profile: cubic}
+  - {type: hold, duration: 4.0}
+  - {type: line, goal: [1.0, 1.0, 1.0], duration: 3.0, profile: cubic}
