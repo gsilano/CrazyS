@@ -69,7 +69,7 @@ Language: English
 Installation Instructions - Ubuntu 24.04 with ROS 2 Jazzy and Gazebo Harmonic
 ------------------------------------------------------------------------------
 
-The ROS 2 version lives on the `dev/ros2-jazzy` branch. It uses the systems of Gazebo Sim (Harmonic) instead of the RotorS plugins and does not need `mav_comm`. Only the Crazyflie and its controllers are ported; the other RotorS vehicles are not. The [README of that branch](https://github.com/gsilano/CrazyS/tree/dev/ros2-jazzy) lists the examples and the differences from the ROS 1 version.
+The ROS 2 version lives on the `dev/ros2-jazzy` branch. It uses the systems of Gazebo Sim (Harmonic) instead of the RotorS plugins and does not need `mav_comm`. Only the Crazyflie and its controllers are ported; the other RotorS vehicles are not. The examples are listed in [Basic Usage with ROS 2](#basic-usage-with-ros-2) below; the [README of that branch](https://github.com/gsilano/CrazyS/tree/dev/ros2-jazzy) also describes the topics and the differences from the ROS 1 version.
 
 ```console
 $ sudo apt install ros-jazzy-desktop ros-jazzy-ros-gz ros-jazzy-actuator-msgs ros-jazzy-xacro ros-jazzy-joy python3-colcon-common-extensions
@@ -399,6 +399,8 @@ $ source ~/.bashrc
 Basic Usage
 -----------
 
+The commands below are for the ROS 1 branches (Kinetic, Melodic and Noetic). For ROS 2 Jazzy see [Basic Usage with ROS 2](#basic-usage-with-ros-2).
+
 To start the simulation run
 
 ```console
@@ -480,6 +482,37 @@ $ roslaunch rotors_gazebo crazyflie2_with_joy.launch
 ```
 
 > **Note** As explained in [#90](https://github.com/gsilano/CrazyS/issues/90), the recent updates in the xacro file format may break the simulation. To avoid these issue, simply downgrade the version of `xacro` to the 1.13.3 version. Remove `xacro` and `xacro-1.14.11.egg-info` directories from `/opt/ros/noetic/lib/python3/dist-packages` folder using `sudo rm -r ...` command and install the 1.13.3 version of xacro using `pip3 install xacro==1.13.3`. This avoid further modifications to the launch files.
+
+Basic Usage with ROS 2
+----------------------
+
+On the `dev/ros2-jazzy` branch the launch files are Python files started with `ros2 launch`. After building the workspace (see the [installation instructions](#installation-instructions---ubuntu-2404-with-ros-2-jazzy-and-gazebo-harmonic)) and sourcing `install/setup.bash`, start the hovering example with
+
+```console
+$ ros2 launch rotors_gazebo crazyflie2_hovering_example.launch.py
+```
+
+As in ROS 1, the drone takes off and hovers one meter above the ground with the controller of the Crazyflie firmware. The other examples:
+
+| Command | What it does |
+|---|---|
+| `ros2 launch rotors_gazebo crazyflie2_hovering_example.launch.py enable_state_estimator:=true` | Hovering with the attitude estimated from the IMU by the complementary filter of the firmware |
+| `ros2 launch rotors_gazebo crazyflie2_internal_model_controller.launch.py` | Internal Model Controller following a quintic spline |
+| `ros2 launch rotors_gazebo crazyflie2_lee_geometric_controller.launch.py trajectory:=semicircle` | Lee's geometric controller; trajectories: `hovering`, `linear`, `linear_polynomial`, `semicircle`, `semicircle_polynomial` |
+| `ros2 launch rotors_gazebo crazyflie2_swarm_hovering_example.launch.py` | Five drones with the Internal Model Controller |
+| `ros2 launch rotors_gazebo crazyflie2_swarm_lee_geometric_controller.launch.py` | Three drones with Lee's controller |
+| `ros2 launch rotors_gazebo crazyflie2_with_joy.launch.py` | Piloting with a joystick |
+| `ros2 launch rotors_gazebo crazyflie2_without_controller.launch.py` | Only the drone: send the motor speeds yourself |
+
+Every launch file accepts `gui:=false` to run Gazebo without the graphical interface. A waypoint for the firmware position controller can be sent with
+
+```console
+$ ros2 run rotors_gazebo waypoint_publisher <x> <y> <z> <yaw_deg> --ros-args -r __ns:=/crazyflie2
+```
+
+with x, y, z in meters and the yaw in degrees. To record a flight use `ros2 bag record /crazyflie2/odometry /crazyflie2/command/motor_speed`; the CSV logging of the ROS 1 version is not available.
+
+> **Note** The firmware position controller has the same limits in ROS 2 as in ROS 1: the altitude oscillates for about 30 s after take-off, lateral waypoints are tracked poorly and in long flights the position slowly drifts. For trajectories and long flights use Lee's controller or the Internal Model Controller.
 
 Gazebo Version
 --------------
