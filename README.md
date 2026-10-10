@@ -10,17 +10,15 @@ CrazyS
 
 The build workflow checks every release branch: `master` (Kinetic + Gazebo 7), `dev/gazebo9` (Kinetic + Gazebo 9), `dev/ros-melodic` (Melodic + Gazebo 9) and `dev/ros-noetic` (Noetic + Gazebo 11).
 
-CrazyS is an extension of the ROS package [RotorS](https://github.com/ethz-asl/rotors_simulator), aimed to modeling, developing and integrating the [Crazyflie 2.0](https://www.bitcraze.io/crazyflie-2/) nano-quadcopter in the physics based simulation environment Gazebo. The contribution can be also considered as a reference guide for expanding the RotorS functionalities in the Unmanned Aerial Vehicles (UAVs) field, by facilitating the integration of new aircraft.
+CrazyS extends the ROS package [RotorS](https://github.com/ethz-asl/rotors_simulator) with a model of the [Crazyflie 2.0](https://www.bitcraze.io/crazyflie-2/) nano-quadcopter for the Gazebo simulator. It can also be used as a guide for adding new aircraft to RotorS.
 
-Such simulation platform allows to understand quickly the behavior of the flight control system by comparing and evaluating different indoor and outdoor scenarios, with a details level quite close to reality. The proposed extension expands RotorS capabilities by considering the Crazyflie 2.0 physical model and its flight control system, as well (the [2018.01.1](https://github.com/bitcraze/crazyflie-firmware/releases/tag/2018.01.1) firmware release).
+Besides the physical model of the drone, CrazyS includes its flight control system, taken from the [2018.01.1](https://github.com/bitcraze/crazyflie-firmware/releases/tag/2018.01.1) firmware release, so control algorithms can be tested in indoor and outdoor scenarios before flying the real drone. The `crazyflie2_hovering_example.launch` file is a simple starting point. The code is released under the Apache license.
 
-A simple case study is considered (`crazyflie2_hovering_example.launch`) in order to show how the package works and the validity of the employed dynamical model together with the control architecture of the quadrotor. The code is released under Apache license, thus making it available for scientific and educational activities.
+CrazyS was developed on Ubuntu 16.04 with ROS Kinetic, and it also works with ROS Melodic (Ubuntu 18.04) and ROS Noetic (Ubuntu 20.04). Instructions for ROS Indigo (Ubuntu 14.04) are kept below, but that setup is no longer recommended.
 
-The platform was developed using Ubuntu 16.04 and the Kinetic Kame version of ROS, but it is also fully compatible with Ubuntu 18.04 along with the Melodic Morenia distribution of ROS and Ubuntu 20.04 along with the Noetic Ninjemys release. Although backwards compatibility is guaranteed, i.e., the platform is fully compatible with Indigo Igloo version of ROS and Ubuntu 14.04, such configuration is not recommended since the ROS support is expected to be closed in April 2019.
+The instructions to get started are below. More examples are in the [wiki](https://github.com/gsilano/CrazyS/wiki).
 
-Below we provide the instructions necessary for getting started. See [CrazyS' wiki](https://github.com/gsilano/CrazyS/wiki) for more instructions and examples.
-
-If you are using this simulator for research purposes especially for your publication, please take a look at the [Publications page](https://github.com/gsilano/CrazyS/wiki/Publications). The page contains the core papers and all related works (using the platform). For the sake of simplicity, here the references to the core papers are reported.
+If you use CrazyS in your research, please cite the papers below. The [Publications page](https://github.com/gsilano/CrazyS/wiki/Publications) lists them together with the works that used the platform.
 
 ```console
 @INBOOK{Silano2019ROSVolume4,
@@ -382,35 +380,35 @@ $ source ~/.bashrc
 Basic Usage
 -----------
 
-Launching the simulation is quite simple, so as customizing it: it is enough to run in a terminal the command
+To start the simulation run
 
 ```console
 $ roslaunch rotors_gazebo crazyflie2_hovering_example.launch
 ```
 
-> **Note** The first run of gazebo might take considerably long, as it will download some models from an online database. To avoid any problems when starting the simulation for the first time, you may run the `gazebo` command in the terminal line.
+> **Note** The first time, Gazebo can take a long time to start because it downloads some models. Running `gazebo` once in a terminal before launching the simulation avoids problems.
 
-By default the state estimator is disabled since on-board Crazyflie's sensors are replaced by the odometry one. For running the simulation by taking into account the Crazyflie's IMU and the complementary filter, it is enough to give a command that turns on the flag `enable state estimator`:
+By default the state estimator is off and the controller uses the ideal odometry sensor. To use the Crazyflie IMU and the complementary filter instead, set `enable_state_estimator`:
 
 ```console
 $ roslaunch rotors_gazebo crazyflie2_hovering_example.launch enable_state_estimator:=true
 ```
 
-The visual outcome will see the nano-quadcopter taking off after 5s (time after which the hovering example node publishes the trajectory to follow) and flying one meter above the ground, at the same time keeping near to zero the position components along x and y-axis.
+After 5 s the drone takes off and hovers one meter above the ground, keeping x and y close to zero.
 
-The whole process is the following: the desired trajectory coordinates (x_r, y_r, z_r and \psi_r) are published by the `hovering_example` node on the topic `command/trajectory`, to whom the `position_controller` node (i.e., the Crazyflie controller) is subscribed. The drone state (`odometry_sensor1/odometry` topic) and the references are used to run the control strategy designed for the position tracking. The outputs of the control algorithm consist into the actuation commands (\omega_1, \omega_2, \omega_3 and \omega_4) sent to Gazebo (`command/motor_speed`) for the physical simulation and the corresponding graphical rendering, so to visually update the aircraft position and orientation. When the state estimator is turned off, the drone orientation (\phi_k, \theta_k and \psi_k) and angular velocities (p_k, q_k and r_k) published on the topic odometry are replaced by the ideal values coming from the odometry sensor.
+How it works: the `hovering_example` node publishes the reference (x_r, y_r, z_r and \psi_r) on `command/trajectory`. The `position_controller` node, i.e., the Crazyflie controller, reads it together with the drone state (`odometry_sensor1/odometry`) and computes the motor speeds (\omega_1, \omega_2, \omega_3 and \omega_4), which are sent to Gazebo on `command/motor_speed`. With the state estimator off, attitude (\phi_k, \theta_k and \psi_k) and angular velocity (p_k, q_k and r_k) come straight from the ideal odometry sensor.
 
-There are some basic launch files where you can load the different multicopters with additional sensors. They can all be found in `~/catkin_ws/src/CrazyS/rotors_gazebo/launch`. Such scenarios are better explained in the [RotorS](https://github.com/ethz-asl/rotors_simulator) repository.
+The other launch files in `rotors_gazebo/launch` load the RotorS multicopters with different sensors; they are described in the [RotorS](https://github.com/ethz-asl/rotors_simulator) repository.
 
-The `world_name` argument looks for a `.world` file with a corresponding name in `~/catkin_ws/src/CrazyS/rotors_gazebo/worlds`. By default, all launch files, with the exception of those that have the world name explicitly included in the file name, use the empty world described in `basic.world`.
+The `world_name` argument selects a `.world` file in `rotors_gazebo/worlds`. Unless the launch file name says otherwise, the empty `basic.world` is used.
 
-Using the `csvFilesStoring` variable is possible to enable (true) or disable (false) the data storage. The log files are saved in the home directory (the path can be easily changed modifying the `position_controller.cpp` file). The recording time can be set via the `csvFilesStoringTime` while the user account can be set via the `user_account` variable. Of course, the log features can be used with and without the complementary filter.
+Set `csvFilesStoring:=true` to save the flight data in CSV files in the home directory (the path is set in `position_controller.cpp`). `csvFilesStoringTime` sets how long to record and `user_account` the user name used in the path. Logging works with and without the complementary filter.
 
 ```console
 $ roslaunch rotors_gazebo crazyflie2_hovering_example.launch csvFilesStoring:=true
 ```
 
-An alternative controller is available on the repository. For running the simulation by using the Internal Model Control as described in [#27](https://github.com/gsilano/CrazyS/issues/27), [#28](https://github.com/gsilano/CrazyS/issues/28), [#29](https://github.com/gsilano/CrazyS/issues/29), and [#48](https://github.com/gsilano/CrazyS/issues/48) simply run
+The Internal Model Controller ([#27](https://github.com/gsilano/CrazyS/issues/27), [#28](https://github.com/gsilano/CrazyS/issues/28), [#29](https://github.com/gsilano/CrazyS/issues/29), [#48](https://github.com/gsilano/CrazyS/issues/48)) can be started with
 
 ```console
 $ roslaunch rotors_gazebo crazyflie2_internal_model_controller.launch
@@ -422,7 +420,7 @@ or
 $ roslaunch rotors_gazebo crazyflie2_internal_model_controller_vi_sensor.launch
 ```
 
-while a simple swarm example is available at
+and a simple swarm example with
 
 ```console
 $ roslaunch rotors_gazebo crazyflie2_swarm_hovering_example.launch
