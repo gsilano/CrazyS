@@ -5,6 +5,7 @@
   Copyright 2015 Mina Kamel, ASL, ETH Zurich, Switzerland
   Copyright 2015 Janosch Nikolic, ASL, ETH Zurich, Switzerland
   Copyright 2015 Markus Achtelik, ASL, ETH Zurich, Switzerland
+  Copyright 2018 Giuseppe Silano, University of Sannio in Benevento, Italy
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -19,128 +20,95 @@
   limitations under the License.
 -->
 
+<!-- Base link and rotors of a multicopter, Gazebo Sim version of the RotorS macros. -->
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
-  <!-- Macro for the inertia of a box -->
   <xacro:macro name="box_inertia" params="x y z mass">
     <inertia ixx="${0.0833333 * mass * (y*y + z*z)}" ixy="0.0" ixz="0.0"
       iyy="${0.0833333 * mass * (x*x + z*z)}" iyz="0.0"
       izz="${0.0833333 * mass * (x*x + y*y)}" />
   </xacro:macro>
 
-  <!-- Macro for the inertial properties of a box -->
-  <xacro:macro name="box_inertial" params="x y z mass *origin">
-    <inertial>
-      <mass value="${mass}" />
-      <xacro:insert_block name="origin" />
-      <xacro:box_inertia x="${x}" y="${y}" z="${z}" mass="${mass}" />
-    </inertial>
-  </xacro:macro>
-
-  <!-- Main multirotor link -->
-  <xacro:macro name="multirotor_base_macro"
-    params="robot_namespace mass body_width body_height use_mesh_file mesh_file *inertia">
-    <link name="${robot_namespace}/base_link"></link>
-
-    <joint name="${robot_namespace}/base_joint" type="fixed">
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <parent link="${robot_namespace}/base_link" />
-      <child link="${robot_namespace}/base_link_inertia" />
+  <xacro:macro name="multirotor_base_macro" params="namespace mass body_width body_height mesh_file *inertia">
+    <!-- base_link has no inertia (KDL does not support it on the root link), the body
+         is the fixed child base_link_inertia, merged into base_link by Gazebo. -->
+    <link name="base_link" />
+    <joint name="base_joint" type="fixed">
+      <parent link="base_link" />
+      <child link="base_link_inertia" />
     </joint>
-
-    <link name="${robot_namespace}/base_link_inertia">
+    <link name="base_link_inertia">
       <inertial>
-        <mass value="${mass}" />  <!-- [kg] -->
+        <mass value="${mass}" />
         <origin xyz="0 0 0" />
         <xacro:insert_block name="inertia" />
       </inertial>
-
       <visual>
-        <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <xacro:if value="${use_mesh_file}">
-            <mesh filename="${mesh_file}" scale="1 1 1" />
-          </xacro:if>
-          <xacro:unless value="${use_mesh_file}">
-            <box size="${body_width} ${body_width} ${body_height}"/> <!-- [m] [m] [m] -->
-          </xacro:unless>
+          <mesh filename="${mesh_file}" scale="1 1 1" />
         </geometry>
       </visual>
-
       <collision>
-        <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <box size="${body_width} ${body_width} ${body_height}" /> <!-- [m] [m] [m] -->
+          <box size="${body_width} ${body_width} ${body_height}" />
         </geometry>
       </collision>
     </link>
-
-    <!-- attach multirotor_base_plugin to the base_link -->
-    <gazebo>
-      <plugin filename="librotors_gazebo_multirotor_base_plugin.so" name="multirotor_base_plugin">
-        <robotNamespace>${robot_namespace}</robotNamespace>
-        <linkName>${robot_namespace}/base_link</linkName>
-        <rotorVelocitySlowdownSim>${rotor_velocity_slowdown_sim}</rotorVelocitySlowdownSim>
-      </plugin>
-    </gazebo>
   </xacro:macro>
 
-  <!-- Rotor joint and link -->
-  <xacro:macro name="vertical_rotor"
-    params="robot_namespace suffix direction motor_constant moment_constant parent mass_rotor radius_rotor time_constant_up time_constant_down max_rot_velocity motor_number rotor_drag_coefficient rolling_moment_coefficient color use_own_mesh mesh *origin *inertia">
-    <joint name="${robot_namespace}/rotor_${motor_number}_joint" type="continuous">
+  <!-- One propeller: continuous joint, link and MulticopterMotorModel system -->
+  <xacro:macro name="vertical_rotor" params="namespace motor_number direction color *origin">
+    <joint name="rotor_${motor_number}_joint" type="continuous">
       <xacro:insert_block name="origin" />
       <axis xyz="0 0 1" />
-      <!-- TODO(ff): not currently set because it's not yet supported -->
-      <!-- <limit effort="2000" velocity="${max_rot_velocity}" /> -->
-      <parent link="${parent}" />
-      <child link="${robot_namespace}/rotor_${motor_number}" />
+      <parent link="base_link" />
+      <child link="rotor_${motor_number}" />
     </joint>
-    <link name="${robot_namespace}/rotor_${motor_number}">
+    <link name="rotor_${motor_number}">
       <inertial>
-        <mass value="${mass_rotor}" /> <!-- [kg] -->
-        <xacro:insert_block name="inertia" />
+        <mass value="${mass_rotor}" />
+        <!-- The rotor turns rotor_velocity_slowdown_sim times slower than the real one, its
+             inertia is scaled by the same factor (as in RotorS). -->
+        <xacro:box_inertia x="${radius_rotor}" y="0.007" z="0.003" mass="${mass_rotor*rotor_velocity_slowdown_sim}" />
       </inertial>
       <visual>
         <geometry>
-          <!-- <cylinder length="0.005" radius="${radius_rotor}"/> --> <!-- [m] -->
-          <xacro:if value="${use_own_mesh}">
-            <mesh filename="${mesh}"
-              scale="1 1 1" />
-          </xacro:if>
-          <xacro:unless value="${use_own_mesh}">
-            <mesh filename="package://rotors_description/meshes/propeller_${direction}.dae"
-              scale="${radius_rotor} ${radius_rotor} ${radius_rotor}" /> <!-- The propeller meshes have a radius of 1m -->
-            <!-- <box size="${2*radius_rotor} 0.01 0.005"/> -->
-          </xacro:unless>
+          <mesh filename="package://rotors_description/meshes/propeller_${direction}.dae"
+            scale="${radius_rotor} ${radius_rotor} ${radius_rotor}" />
         </geometry>
       </visual>
       <collision>
         <geometry>
-          <cylinder length="0.005" radius="${radius_rotor}" /> <!-- [m] -->
+          <cylinder length="0.005" radius="${radius_rotor}" />
         </geometry>
       </collision>
     </link>
+    <gazebo reference="rotor_${motor_number}">
+      <visual>
+        <material>
+          <xacro:if value="${color == 'Red'}"><diffuse>0.8 0.1 0.1 1</diffuse><ambient>0.8 0.1 0.1 1</ambient></xacro:if>
+          <xacro:if value="${color == 'Blue'}"><diffuse>0.1 0.1 0.8 1</diffuse><ambient>0.1 0.1 0.8 1</ambient></xacro:if>
+        </material>
+      </visual>
+    </gazebo>
     <gazebo>
-      <plugin name="${robot_namespace}_${suffix}_motor_model" filename="librotors_gazebo_motor_model.so">
-        <robotNamespace>${robot_namespace}</robotNamespace>
-        <jointName>${robot_namespace}/rotor_${motor_number}_joint</jointName>
-        <linkName>${robot_namespace}/rotor_${motor_number}</linkName>
+      <plugin filename="gz-sim-multicopter-motor-model-system" name="gz::sim::systems::MulticopterMotorModel">
+        <robotNamespace>${namespace}</robotNamespace>
+        <jointName>rotor_${motor_number}_joint</jointName>
+        <linkName>rotor_${motor_number}</linkName>
         <turningDirection>${direction}</turningDirection>
         <timeConstantUp>${time_constant_up}</timeConstantUp>
         <timeConstantDown>${time_constant_down}</timeConstantDown>
         <maxRotVelocity>${max_rot_velocity}</maxRotVelocity>
         <motorConstant>${motor_constant}</motorConstant>
         <momentConstant>${moment_constant}</momentConstant>
-        <commandSubTopic>gazebo/command/motor_speed</commandSubTopic>
+        <commandSubTopic>command/motor_speed</commandSubTopic>
         <motorNumber>${motor_number}</motorNumber>
         <rotorDragCoefficient>${rotor_drag_coefficient}</rotorDragCoefficient>
         <rollingMomentCoefficient>${rolling_moment_coefficient}</rollingMomentCoefficient>
         <motorSpeedPubTopic>motor_speed/${motor_number}</motorSpeedPubTopic>
         <rotorVelocitySlowdownSim>${rotor_velocity_slowdown_sim}</rotorVelocitySlowdownSim>
+        <motorType>velocity</motorType>
       </plugin>
-    </gazebo>
-    <gazebo reference="${robot_namespace}/rotor_${motor_number}">
-      <material>Gazebo/${color}</material>
     </gazebo>
   </xacro:macro>
 </robot>

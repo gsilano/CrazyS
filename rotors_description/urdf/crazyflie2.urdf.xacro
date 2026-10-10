@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<!--
+  Crazyflie 2.x for Gazebo Sim.
+
+  The RotorS plugins of the ROS 1 version are replaced by the systems shipped with
+  Gazebo Sim:
+    - MulticopterMotorModel (same motor model as RotorS): one per propeller, listens
+      to gz.msgs.Actuators on /<namespace>/command/motor_speed;
+    - OdometryPublisher: ideal odometry on /<namespace>/odometry (pose in the world
+      frame, twist in the body frame, as in RotorS);
+    - an IMU sensor on /<namespace>/imu, ideal or with the MPU-9250 noise used by
+      CrazyS when the state estimator is enabled.
+  ros_gz_bridge moves these topics to ROS 2 (see rotors_gazebo/launch).
+
+  Arguments:
+    namespace           model name and topic prefix (default: crazyflie2)
+    forster_parameters  use Forster's propeller coefficients (default: false)
+    noisy_imu           add the MPU-9250 noise model to the IMU (default: false)
+    odometry_rate       odometry publishing rate [Hz] (default: 1000)
+-->
+<robot name="crazyflie2" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:arg name="namespace" default="crazyflie2" />
+  <xacro:arg name="forster_parameters" default="false" />
+  <xacro:arg name="noisy_imu" default="false" />
+  <xacro:arg name="odometry_rate" default="1000" />
+
+  <xacro:property name="namespace" value="$(arg namespace)" />
+  <xacro:property name="forster_parameters" value="$(arg forster_parameters)" />
+  <xacro:property name="noisy_imu" value="$(arg noisy_imu)" />
+
+  <xacro:include filename="$(find rotors_description)/urdf/crazyflie2_parameters.xacro" />
+  <xacro:include filename="$(find rotors_description)/urdf/multirotor_base.xacro" />
+
+  <xacro:multirotor_base_macro namespace="${namespace}" mass="${mass}" body_width="${body_width}"
+    body_height="${body_height}" mesh_file="${mesh_file}">
+    <inertia ixx="${inertia_xx}" ixy="0.0" ixz="0.0" iyy="${inertia_yy}" iyz="0.0" izz="${inertia_zz}" />
+  </xacro:multirotor_base_macro>
+
+  <!-- Rotors, X configuration. Rotor 0 is front-right, then clockwise seen from above. -->
+  <xacro:vertical_rotor namespace="${namespace}" motor_number="0" direction="ccw" color="Red">
+    <origin xyz="${cos45*arm_length} -${sin45*arm_length} ${rotor_offset_top}" rpy="0 0 0" />
+  </xacro:vertical_rotor>
+  <xacro:vertical_rotor namespace="${namespace}" motor_number="1" direction="cw" color="Blue">
+    <origin xyz="-${cos45*arm_length} -${sin45*arm_length} ${rotor_offset_top}" rpy="0 0 0" />
+  </xacro:vertical_rotor>
+  <xacro:vertical_rotor namespace="${namespace}" motor_number="2" direction="ccw" color="Blue">
+    <origin xyz="-${cos45*arm_length} ${sin45*arm_length} ${rotor_offset_top}" rpy="0 0 0" />
+  </xacro:vertical_rotor>
+  <xacro:vertical_rotor namespace="${namespace}" motor_number="3" direction="cw" color="Red">
+    <origin xyz="${cos45*arm_length} ${sin45*arm_length} ${rotor_offset_top}" rpy="0 0 0" />
+  </xacro:vertical_rotor>
+
+  <!-- Ideal odometry: position, orientation, linear and angular velocity (body frame) -->
+  <gazebo>
+    <plugin filename="gz-sim-odometry-publisher-system" name="gz::sim::systems::OdometryPublisher">
+      <odom_frame>world</odom_frame>
+      <robot_base_frame>${namespace}/base_link</robot_base_frame>
+      <odom_publish_frequency>$(arg odometry_rate)</odom_publish_frequency>
+      <odom_topic>/${namespace}/odometry</odom_topic>
+      <tf_topic>/${namespace}/odometry/tf</tf_topic>
+      <dimensions>3</dimensions>
+    </plugin>
+  </gazebo>
+
+  <!-- Rotor joint states, used by robot_state_publisher for the TF of the propellers -->
+  <gazebo>
+    <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher">
+      <topic>/${namespace}/joint_states</topic>
+    </plugin>
+  </gazebo>
+
+  <!-- IMU (500 Hz). The noise values are the MPU-9250 ones used by CrazyS. -->
+  <gazebo reference="base_link">
+    <sensor name="imu" type="imu">
+      <always_on>true</always_on>
+      <update_rate>500</update_rate>
+      <topic>/${namespace}/imu</topic>
+      <xacro:if value="${noisy_imu}">
+        <imu>
+          <angular_velocity>
+            <x><noise type="gaussian"><mean>0</mean><stddev>0.0039</stddev><bias_mean>0.0</bias_mean><bias_stddev>0.09</bias_stddev></noise></x>
+            <y><noise type="gaussian"><mean>0</mean><stddev>0.0039</stddev><bias_mean>0.0</bias_mean><bias_stddev>0.09</bias_stddev></noise></y>
+            <z><noise type="gaussian"><mean>0</mean><stddev>0.0039</stddev><bias_mean>0.0</bias_mean><bias_stddev>0.09</bias_stddev></noise></z>
+          </angular_velocity>
+          <linear_acceleration>
+            <x><noise type="gaussian"><mean>0</mean><stddev>0.067</stddev><bias_mean>0.0</bias_mean><bias_stddev>0.588</bias_stddev></noise></x>
+            <y><noise type="gaussian"><mean>0</mean><stddev>0.067</stddev><bias_mean>0.0</bias_mean><bias_stddev>0.588</bias_stddev></noise></y>
+            <z><noise type="gaussian"><mean>0</mean><stddev>0.067</stddev><bias_mean>0.0</bias_mean><bias_stddev>0.588</bias_stddev></noise></z>
+          </linear_acceleration>
+        </imu>
+      </xacro:if>
+    </sensor>
+  </gazebo>
+</robot>

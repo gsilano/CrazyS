@@ -1,10 +1,17 @@
-<package>
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
   <name>rotors_description</name>
-  <version>7.1.0</version>
-  <description>The rotors_description package provides URDF models of the AscTec multicopters.</description>
+  <version>8.0.0</version>
+  <description>Model of the Crazyflie 2.x for Gazebo Sim.</description>
 
   <maintainer email="giuseppe.silano@fel.cvut.cz">Giuseppe Silano</maintainer>
   <maintainer email="luigi.iannelli@unisannio.it">Luigi Iannelli</maintainer>
+
+  <license>Apache-2.0</license>
+
+  <url type="website">https://github.com/gsilano/CrazyS</url>
+  <url type="bugtracker">https://github.com/gsilano/CrazyS/issues</url>
 
   <author>Giuseppe Silano</author>
   <author>Emanuele Aucone</author>
@@ -17,11 +24,11 @@
   <author>Federico Pratissoli</author>
   <author>Beatrice Capelli</author>
 
-  <license>ASL 2.0</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <url type="website">https://github.com/gsilano/CrazyS</url>
-  <url type="bugtracker">https://github.com/gsilano/CrazyS/issues</url>
+  <exec_depend>xacro</exec_depend>
 
-  <buildtool_depend>catkin</buildtool_depend>
-
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 </package>

@@ -1,10 +1,11 @@
-cmake_minimum_required(VERSION 3.0.2)
-project(rotors_description VERSION 7.1.0)
+cmake_minimum_required(VERSION 3.16)
+project(rotors_description)
 
-find_package(catkin REQUIRED)
+find_package(ament_cmake REQUIRED)
 
-catkin_package()
+install(DIRECTORY meshes urdf DESTINATION share/${PROJECT_NAME})
 
-install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-install(DIRECTORY meshes DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-install(DIRECTORY urdf DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+# Lets Gazebo Sim resolve the package:// URIs of the meshes.
+ament_environment_hooks("${CMAKE_CURRENT_SOURCE_DIR}/env-hooks/${PROJECT_NAME}.dsv.in")
+
+ament_package()
