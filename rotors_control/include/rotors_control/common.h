@@ -21,109 +21,111 @@
 #ifndef INCLUDE_ROTORS_CONTROL_COMMON_H_
 #define INCLUDE_ROTORS_CONTROL_COMMON_H_
 
-#include <assert.h>
+// Data types shared by the controllers. The control library does not depend on ROS:
+// the nodes convert the ROS messages into these structures.
 
-#include <mav_msgs/conversions.h>
-#include <mav_msgs/default_topics.h>
-#include <nav_msgs/Odometry.h>
+#include <algorithm>
+#include <cmath>
 
-#include "rotors_control/parameters.h"
+#include <Eigen/Eigen>
 
 namespace rotors_control {
 
-// Default values.
-static const std::string kDefaultNamespace = "";
-static const std::string kDefaultCommandMotorSpeedTopic =
-    mav_msgs::default_topics::COMMAND_ACTUATORS; // "command/motor_speed";
-static const std::string kDefaultCommandMultiDofJointTrajectoryTopic =
-    mav_msgs::default_topics::COMMAND_TRAJECTORY; // "command/trajectory"
-static const std::string kDefaultCommandRollPitchYawrateThrustTopic =
-    mav_msgs::default_topics::COMMAND_ROLL_PITCH_YAWRATE_THRUST;
-    // "command/roll_pitch_yawrate_thrust"
-static const std::string kDefaultImuTopic =
-    mav_msgs::default_topics::IMU; // "imu
-static const std::string kDefaultOdometryTopic =
-    mav_msgs::default_topics::ODOMETRY; // "odometry"
-
+// Drone state given by the odometry sensor.
 struct EigenOdometry {
   EigenOdometry()
-      : position(0.0, 0.0, 0.0),
+      : timeStampSec(0.0),
+        timeStampNsec(0.0),
+        position(Eigen::Vector3d::Zero()),
         orientation(Eigen::Quaterniond::Identity()),
-        velocity(0.0, 0.0, 0.0),
-        angular_velocity(0.0, 0.0, 0.0) {};
+        velocity(Eigen::Vector3d::Zero()),
+        angular_velocity(Eigen::Vector3d::Zero()) {}
 
-  EigenOdometry(const double _timeStampSec,
-                const double _timeStampNsec,
-                const Eigen::Vector3d& _position,
-                const Eigen::Quaterniond& _orientation,
-                const Eigen::Vector3d& _velocity,
-                const Eigen::Vector3d& _angular_velocity) {
-    timeStampSec = _timeStampSec;
-    timeStampNsec = _timeStampNsec;
-    position = _position;
-    orientation = _orientation;
-    velocity = _velocity;
-    angular_velocity = _angular_velocity;
-  };
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  double timeStampSec; //nano seconds timeStamp Odometry message
-  double timeStampNsec; //nano seconds timeStamp Odometry message
-  Eigen::Vector3d position;
-  Eigen::Quaterniond orientation;
-  Eigen::Vector3d velocity; // Velocity is expressed in the Body frame!
-  Eigen::Vector3d angular_velocity;
+  double timeStampSec;
+  double timeStampNsec;
+  Eigen::Vector3d position;          // world frame [m]
+  Eigen::Quaterniond orientation;    // body to world
+  Eigen::Vector3d velocity;          // body frame [m/s]
+  Eigen::Vector3d angular_velocity;  // body frame [rad/s]
 };
 
-inline void eigenOdometryFromMsg(const nav_msgs::OdometryConstPtr& msg,
-                                 EigenOdometry* odometry) {
-  odometry->timeStampSec = msg->header.stamp.sec;
-  odometry->timeStampNsec = msg->header.stamp.nsec;
-  odometry->position = mav_msgs::vector3FromPointMsg(msg->pose.pose.position);
-  odometry->orientation = mav_msgs::quaternionFromMsg(msg->pose.pose.orientation);
-  odometry->velocity = mav_msgs::vector3FromMsg(msg->twist.twist.linear);
-  odometry->angular_velocity = mav_msgs::vector3FromMsg(msg->twist.twist.angular);
-}
+// Waypoint used by the position controller (from trajectory_msgs/MultiDOFJointTrajectory).
+struct EigenTrajectoryPoint {
+  EigenTrajectoryPoint()
+      : position_W(Eigen::Vector3d::Zero()),
+        orientation_W_B(Eigen::Quaterniond::Identity()) {}
 
-inline void calculateAllocationMatrix(const RotorConfiguration& rotor_configuration,
-                                      Eigen::Matrix4Xd* allocation_matrix) {
-  assert(allocation_matrix != nullptr);
-  allocation_matrix->resize(4, rotor_configuration.rotors.size());
-  unsigned int i = 0;
-  for (const Rotor& rotor : rotor_configuration.rotors) {
-    // Set first row of allocation matrix.
-    (*allocation_matrix)(0, i) = sin(rotor.angle) * rotor.arm_length
-                                 * rotor.rotor_force_constant;
-    // Set second row of allocation matrix.
-    (*allocation_matrix)(1, i) = -cos(rotor.angle) * rotor.arm_length
-                                 * rotor.rotor_force_constant;
-    // Set third row of allocation matrix.
-    (*allocation_matrix)(2, i) = -rotor.direction * rotor.rotor_force_constant
-                                 * rotor.rotor_moment_constant;
-    // Set forth row of allocation matrix.
-    (*allocation_matrix)(3, i) = rotor.rotor_force_constant;
-    ++i;
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  Eigen::Vector3d position_W;
+  Eigen::Quaterniond orientation_W_B;
+
+  double getYaw() const {
+    const Eigen::Quaterniond& q = orientation_W_B;
+    return std::atan2(2.0 * (q.w() * q.z() + q.x() * q.y()),
+                      1.0 - 2.0 * (q.y() * q.y() + q.z() * q.z()));
   }
-  Eigen::FullPivLU<Eigen::Matrix4Xd> lu(*allocation_matrix);
-  // Setting the threshold for when pivots of the rank calculation should be considered nonzero.
-  lu.setThreshold(1e-9);
-  int rank = lu.rank();
-  if (rank < 4) {
-    std::cout << "The rank of the allocation matrix is " << lu.rank()
-              << ", it should have rank 4, to have a fully controllable system,"
-              << " check your configuration." << std::endl;
+};
+
+// Full reference state (from rotors_comm/DroneState).
+struct EigenDroneState {
+  EigenDroneState()
+      : position_W(Eigen::Vector3f::Zero()),
+        orientation_W_B(Eigen::Quaterniond::Identity()),
+        velocity(Eigen::Vector3f::Zero()),
+        acceleration(Eigen::Vector3f::Zero()),
+        angular_velocity_B(Eigen::Vector3f::Zero()),
+        angular_acceleration_B(Eigen::Vector3f::Zero()) {}
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  Eigen::Vector3f position_W;
+  Eigen::Quaterniond orientation_W_B;
+  Eigen::Vector3f velocity;
+  Eigen::Vector3f acceleration;
+  Eigen::Vector3f angular_velocity_B;
+  Eigen::Vector3f angular_acceleration_B;
+};
+
+// Attitude and thrust command (from rotors_comm/RollPitchYawrateThrustCrazyflie).
+struct EigenRollPitchYawrateThrustCrazyflie {
+  EigenRollPitchYawrateThrustCrazyflie()
+      : roll(0.0), pitch(0.0), yaw_rate(0.0), thrust(0.0) {}
+
+  double roll;      // [rad]
+  double pitch;     // [rad]
+  double yaw_rate;  // [rad/s]
+  double thrust;    // [PWM]
+};
+
+// Roll, pitch and yaw (z-y'-x'' convention) of a quaternion. Same result as
+// tf::Matrix3x3::getRPY(), used by the ROS 1 version of the controllers.
+inline void QuaternionToRPY(double x, double y, double z, double w,
+                            double* roll, double* pitch, double* yaw) {
+  const Eigen::Matrix3d m = Eigen::Quaterniond(w, x, y, z).normalized().toRotationMatrix();
+  if (std::fabs(m(2, 0)) >= 1.0) {  // gimbal lock
+    const double delta = std::atan2(m(0, 0), m(0, 2));
+    *yaw = 0.0;
+    if (m(2, 0) > 0.0) {
+      *pitch = M_PI / 2.0;
+      *roll = *pitch + delta;
+    } else {
+      *pitch = -M_PI / 2.0;
+      *roll = -*pitch + delta;
+    }
+    return;
   }
-
+  *pitch = -std::asin(m(2, 0));
+  *roll = std::atan2(m(2, 1) / std::cos(*pitch), m(2, 2) / std::cos(*pitch));
+  *yaw = std::atan2(m(1, 0) / std::cos(*pitch), m(0, 0) / std::cos(*pitch));
 }
 
-inline void skewMatrixFromVector(Eigen::Vector3d& vector, Eigen::Matrix3d* skew_matrix) {
-  *skew_matrix << 0, -vector.z(), vector.y(),
-                  vector.z(), 0, -vector.x(),
-                  -vector.y(), vector.x(), 0;
+inline double Saturate(double value, double min_value, double max_value) {
+  return std::min(std::max(value, min_value), max_value);
 }
 
-inline void vectorFromSkewMatrix(Eigen::Matrix3d& skew_matrix, Eigen::Vector3d* vector) {
-  *vector << skew_matrix(2, 1), skew_matrix(0,2), skew_matrix(1, 0);
-}
-}
+}  // namespace rotors_control
 
-#endif /* INCLUDE_ROTORS_CONTROL_COMMON_H_ */
+#endif  // INCLUDE_ROTORS_CONTROL_COMMON_H_

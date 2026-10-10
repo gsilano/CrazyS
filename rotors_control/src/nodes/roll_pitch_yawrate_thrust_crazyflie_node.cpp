@@ -1,12 +1,13 @@
 /*
  * Copyright 2020 Giuseppe Silano, University of Sannio in Benevento, Italy
+ * Copyright 2026 Giuseppe Silano, Czech Technical University in Prague, Czech Republic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
-
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,127 +15,85 @@
  * limitations under the License.
  */
 
-#include "roll_pitch_yawrate_thrust_crazyflie_node.h"
+// Attitude and rate controller of the Crazyflie driven by roll, pitch, yaw rate and
+// thrust commands (e.g. from the joystick interface).
+//   in:  command/roll_pitch_yawrate_thrust (rotors_comm/RollPitchYawrateThrustCrazyflie),
+//        odometry (nav_msgs/Odometry)
+//   out: command/motor_speed (actuator_msgs/Actuators), one message per odometry message
 
-#include <ros/ros.h>
-#include <mav_msgs/default_topics.h>
-#include <ros/console.h>
-#include "rotors_control/parameters_ros.h"
+#include <memory>
+
+#include "rotors_control/roll_pitch_yawrate_thrust_crazyflie.h"
+#include "ros_conversions.h"
 
 namespace rotors_control {
 
-RollPitchYawrateThrustCrazyflieNode::RollPitchYawrateThrustCrazyflieNode() {
+class RollPitchYawrateThrustCrazyflieNode : public rclcpp::Node {
+ public:
+  RollPitchYawrateThrustCrazyflieNode() : Node("roll_pitch_yawrate_thrust_crazyflie_node") {
+    InitializeParams();
+    command_sub_ = create_subscription<rotors_comm::msg::RollPitchYawrateThrustCrazyflie>(
+        kCommandRollPitchYawrateThrustTopic, 1,
+        std::bind(&RollPitchYawrateThrustCrazyflieNode::CommandCallback, this,
+                  std::placeholders::_1));
+    odometry_sub_ = create_subscription<nav_msgs::msg::Odometry>(
+        kOdometryTopic, 1,
+        std::bind(&RollPitchYawrateThrustCrazyflieNode::OdometryCallback, this,
+                  std::placeholders::_1));
+    motor_velocity_reference_pub_ = create_publisher<actuator_msgs::msg::Actuators>(
+        kCommandMotorSpeedTopic, 1);
+    RCLCPP_INFO(get_logger(), "Started.");
+  }
 
-  ROS_INFO_ONCE("Started position controller with the joystick");
+ private:
+  RollPitchYawrateThrustControllerCrazyflie controller_;
 
-  InitializeParams();
+  rclcpp::Subscription<rotors_comm::msg::RollPitchYawrateThrustCrazyflie>::SharedPtr command_sub_;
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odometry_sub_;
+  rclcpp::Publisher<actuator_msgs::msg::Actuators>::SharedPtr motor_velocity_reference_pub_;
 
-  ros::NodeHandle nh;
+  void InitializeParams() {
+    RollPitchYawrateThrustControllerCrazyflieParameters& p = controller_.controller_parameters_;
+    p.attitude_gain_kp_.x() = declare_parameter("attitude_gain_kp.phi", p.attitude_gain_kp_.x());
+    p.attitude_gain_kp_.y() =
+        declare_parameter("attitude_gain_kp.theta", p.attitude_gain_kp_.y());
+    p.attitude_gain_ki_.x() = declare_parameter("attitude_gain_ki.phi", p.attitude_gain_ki_.x());
+    p.attitude_gain_ki_.y() =
+        declare_parameter("attitude_gain_ki.theta", p.attitude_gain_ki_.y());
+    p.rate_gain_kp_.x() = declare_parameter("rate_gain_kp.p", p.rate_gain_kp_.x());
+    p.rate_gain_kp_.y() = declare_parameter("rate_gain_kp.q", p.rate_gain_kp_.y());
+    p.rate_gain_kp_.z() = declare_parameter("rate_gain_kp.r", p.rate_gain_kp_.z());
+    p.rate_gain_ki_.x() = declare_parameter("rate_gain_ki.p", p.rate_gain_ki_.x());
+    p.rate_gain_ki_.y() = declare_parameter("rate_gain_ki.q", p.rate_gain_ki_.y());
+    p.rate_gain_ki_.z() = declare_parameter("rate_gain_ki.r", p.rate_gain_ki_.z());
+    p.thrust_percentage_ = declare_parameter("thrust_percentage.p", p.thrust_percentage_);
+    controller_.SetControllerGains();
+  }
 
-  // rotors_control/include/rotors_control/common.h
-  cmd_roll_pitch_yawrate_thrust_sub_ = nh.subscribe(mav_msgs::default_topics::COMMAND_ROLL_PITCH_YAWRATE_THRUST, 1,
-                                     &RollPitchYawrateThrustCrazyflieNode::RollPitchYawrateThrustCallback, this);
+  void CommandCallback(const rotors_comm::msg::RollPitchYawrateThrustCrazyflie& msg) {
+    EigenRollPitchYawrateThrustCrazyflie command;
+    command.roll = msg.roll;
+    command.pitch = msg.pitch;
+    command.yaw_rate = msg.yaw_rate;
+    command.thrust = msg.thrust;
+    controller_.SetRollPitchYawrateThrust(command);
+  }
 
-  odometry_sub_ = nh.subscribe(mav_msgs::default_topics::ODOMETRY, 1, &RollPitchYawrateThrustCrazyflieNode::OdometryCallback, this);
-
-  // rotors_control/include/rotors_control/common.h
-  motor_velocity_reference_pub_ = nh.advertise<mav_msgs::Actuators>(mav_msgs::default_topics::COMMAND_ACTUATORS, 1);
-}
-
-RollPitchYawrateThrustCrazyflieNode::~RollPitchYawrateThrustCrazyflieNode() { }
-
-void RollPitchYawrateThrustCrazyflieNode::InitializeParams() {
-  ros::NodeHandle pnh("~");
-
-  // Read parameters from rosparam.
-  GetRosParameter(pnh, "attitude_gain_kp/phi",
-                  roll_pitch_yawrate_thrust_crazyflie_.controller_parameters_.attitude_gain_kp_.x(),
-                  &roll_pitch_yawrate_thrust_crazyflie_.controller_parameters_.attitude_gain_kp_.x());
-  GetRosParameter(pnh, "attitude_gain_kp/phi",
-                  roll_pitch_yawrate_thrust_crazyflie_.controller_parameters_.attitude_gain_kp_.y(),
-                  &roll_pitch_yawrate_thrust_crazyflie_.controller_parameters_.attitude_gain_kp_.y());
-  GetRosParameter(pnh, "attitude_gain_ki/theta",
-                  roll_pitch_yawrate_thrust_crazyflie_.controller_parameters_.attitude_gain_ki_.x(),
-                  &roll_pitch_yawrate_thrust_crazyflie_.controller_parameters_.attitude_gain_ki_.x());
-  GetRosParameter(pnh, "attitude_gain_ki/phi",
-                  roll_pitch_yawrate_thrust_crazyflie_.controller_parameters_.attitude_gain_ki_.y(),
-                  &roll_pitch_yawrate_thrust_crazyflie_.controller_parameters_.attitude_gain_ki_.y());
-
-  GetRosParameter(pnh, "rate_gain_kp/p",
-                  roll_pitch_yawrate_thrust_crazyflie_.controller_parameters_.rate_gain_kp_.x(),
-                  &roll_pitch_yawrate_thrust_crazyflie_.controller_parameters_.rate_gain_kp_.x());
-  GetRosParameter(pnh, "rate_gain_kp/q",
-                  roll_pitch_yawrate_thrust_crazyflie_.controller_parameters_.rate_gain_kp_.y(),
-                  &roll_pitch_yawrate_thrust_crazyflie_.controller_parameters_.rate_gain_kp_.y());
-  GetRosParameter(pnh, "rate_gain_kp/r",
-                  roll_pitch_yawrate_thrust_crazyflie_.controller_parameters_.rate_gain_kp_.z(),
-                  &roll_pitch_yawrate_thrust_crazyflie_.controller_parameters_.rate_gain_kp_.z());
-  GetRosParameter(pnh, "rate_gain_ki/p",
-                  roll_pitch_yawrate_thrust_crazyflie_.controller_parameters_.rate_gain_ki_.x(),
-                  &roll_pitch_yawrate_thrust_crazyflie_.controller_parameters_.rate_gain_ki_.x());
-  GetRosParameter(pnh, "rate_gain_ki/q",
-                  roll_pitch_yawrate_thrust_crazyflie_.controller_parameters_.rate_gain_ki_.y(),
-                  &roll_pitch_yawrate_thrust_crazyflie_.controller_parameters_.rate_gain_ki_.y());
-  GetRosParameter(pnh, "rate_gain_ki/r",
-                  roll_pitch_yawrate_thrust_crazyflie_.controller_parameters_.rate_gain_ki_.z(),
-                  &roll_pitch_yawrate_thrust_crazyflie_.controller_parameters_.rate_gain_ki_.z());
-
-  GetRosParameter(pnh, "thrust_percentage/p",
-                  roll_pitch_yawrate_thrust_crazyflie_.controller_parameters_.thrust_percentage_,
-                  &roll_pitch_yawrate_thrust_crazyflie_.controller_parameters_.thrust_percentage_);
-
-  roll_pitch_yawrate_thrust_crazyflie_.SetControllerGains();
-
-}
-
-void RollPitchYawrateThrustCrazyflieNode::Publish() {
-}
-
-void RollPitchYawrateThrustCrazyflieNode::RollPitchYawrateThrustCallback(const mav_msgs::RollPitchYawrateThrustCrazyflieConstPtr& roll_pitch_yawrate_thrust_crazyflie_reference_msg) {
-
-  mav_msgs::EigenRollPitchYawrateThrustCrazyflie roll_pitch_yawrate_thrust;
-  mav_msgs::eigenRollPitchYawrateThrustCrazyflieFromMsg(*roll_pitch_yawrate_thrust_crazyflie_reference_msg, &roll_pitch_yawrate_thrust);
-  roll_pitch_yawrate_thrust_crazyflie_.SetRollPitchYawrateThrust(roll_pitch_yawrate_thrust);
-
-}
-
-
-void RollPitchYawrateThrustCrazyflieNode::OdometryCallback(const nav_msgs::OdometryConstPtr& odometry_msg) {
-
-  ROS_INFO_ONCE("RollPitchYawrateThrustCrazyflie got first odometry message.");
-
-    //This functions allows us to put the odometry message into the odometry variable--> _position, _orientation,_velocit_body,
-    //_angular_velocity
+  void OdometryCallback(const nav_msgs::msg::Odometry& msg) {
     EigenOdometry odometry;
-    eigenOdometryFromMsg(odometry_msg, &odometry);
-    roll_pitch_yawrate_thrust_crazyflie_.SetOdometry(odometry);
+    EigenOdometryFromMsg(msg, &odometry);
+    controller_.SetOdometry(odometry);
+    Eigen::Vector4d rotor_velocities;
+    controller_.CalculateRotorVelocities(&rotor_velocities);
+    motor_velocity_reference_pub_->publish(ActuatorsMsg(rotor_velocities, msg.header.stamp));
+  }
+};
 
-    Eigen::Vector4d ref_rotor_velocities;
-    roll_pitch_yawrate_thrust_crazyflie_.CalculateRotorVelocities(&ref_rotor_velocities);
-
-    //creating a new mav message. actuator_msg is used to send the velocities of the propellers.
-    mav_msgs::ActuatorsPtr actuator_msg(new mav_msgs::Actuators);
-
-    //we use clear because we later want to be sure that we used the previously calculated velocity.
-    actuator_msg->angular_velocities.clear();
-    //for all propellers, we put them into actuator_msg so they will later be used to control the crazyflie.
-    for (int i = 0; i < ref_rotor_velocities.size(); i++)
-       actuator_msg->angular_velocities.push_back(ref_rotor_velocities[i]);
-    actuator_msg->header.stamp = odometry_msg->header.stamp;
-
-    motor_velocity_reference_pub_.publish(actuator_msg);
-}
-
-}
+}  // namespace rotors_control
 
 int main(int argc, char** argv) {
-  ros::init(argc, argv, "roll_pitch_yawrate_thrust_crazyflie_node");
-
-  ros::NodeHandle nh2;
-
-  rotors_control::RollPitchYawrateThrustCrazyflieNode roll_pitch_yawrate_thrust_crazyflie_node;
-
-  ros::spin();
-
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<rotors_control::RollPitchYawrateThrustCrazyflieNode>());
+  rclcpp::shutdown();
   return 0;
 }

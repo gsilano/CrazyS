@@ -17,13 +17,9 @@
 #ifndef INTERNAL_MODEL_CONTROLLER_H
 #define INTERNAL_MODEL_CONTROLLER_H
 
-#include <mav_msgs/conversions.h>
-#include <mav_msgs/eigen_mav_msgs.h>
-#include <mav_msgs/DroneState.h>
 
 #include <string>
 
-#include <ros/time.h>
 
 #include "stabilizer_types.h"
 #include "parameters.h"
@@ -33,14 +29,17 @@ using namespace std;
 
 namespace rotors_control {
 
+static constexpr double kAttitudeSamplingTime = 5e-3;  // [s]
+static constexpr double kPositionSamplingTime = 10e-3;  // [s]
+
 // Default values for the Parrot Bebop controller. For more information about the control architecture, please take a look
 // at the publications page into the Wiki section.
-static const Eigen::Vector2d kPDefaultXYController = Eigen::Vector2d(-26.4259, -26.3627);
-static const double kPDefaultAltitudeController = -27.2277;
+static const Eigen::Vector2d kImcDefaultXYController = Eigen::Vector2d(-26.4259, -26.3627);
+static const double kImcDefaultAltitudeController = -27.2277;
 
-static const double kPDefaultRollController = -1.7514;
-static const double kPDefaultPitchController = -1.7513;
-static const double kPDefaultYawRateController = -14.3431;
+static const double kImcDefaultRollController = -1.7514;
+static const double kImcDefaultPitchController = -1.7513;
+static const double kImcDefaultYawRateController = -14.3431;
 
 static const Eigen::Vector2d MuDefaultXYController = Eigen::Vector2d(1, 1);
 static const double MuDefaultAltitudeController = 1;
@@ -55,11 +54,11 @@ class InternalModelControllerParameters {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   InternalModelControllerParameters()
-      : beta_xy_(kPDefaultXYController),
-        beta_z_(kPDefaultAltitudeController),
-        beta_phi_(kPDefaultRollController),
-        beta_theta_(kPDefaultPitchController),
-        beta_psi_(kPDefaultYawRateController),
+      : beta_xy_(kImcDefaultXYController),
+        beta_z_(kImcDefaultAltitudeController),
+        beta_phi_(kImcDefaultRollController),
+        beta_theta_(kImcDefaultPitchController),
+        beta_psi_(kImcDefaultYawRateController),
         mu_xy_(MuDefaultXYController),
         mu_z_(MuDefaultAltitudeController),
         mu_theta_(MuDefaultPitchController),
@@ -92,9 +91,14 @@ class InternalModelControllerParameters {
             void CalculateRotorVelocities(Eigen::Vector4d* rotor_velocities);
 
             void SetOdometryWithoutStateEstimator(const EigenOdometry& odometry);
-            void SetTrajectoryPoint(const mav_msgs::EigenDroneState& command_trajectory);
+            void SetTrajectoryPoint(const EigenDroneState& command_trajectory);
             void SetControllerGains();
             void SetVehicleParameters();
+
+            // Errors of the inner (attitude) and outer (position) loops. The node calls
+            // them every kAttitudeSamplingTime and kPositionSamplingTime seconds.
+            void CallbackAttitude();
+            void CallbackPosition();
 
             InternalModelControllerParameters controller_parameters_im_;
             VehicleParameters vehicle_parameters_;
@@ -103,13 +107,6 @@ class InternalModelControllerParameters {
         private:
             //Boolean variables to active/unactive the controller and the data storage
             bool controller_active_;
-
-            //Gazebo Message for attitude and position
-            ros::NodeHandle clientHandlePosition_;
-            ros::ServiceClient clientPosition_;
-
-            ros::NodeHandle clientHandleAttitude_;
-            ros::ServiceClient clientAttitude_;
 
             //Controller gains
             double beta_x_, beta_y_, beta_z_;
@@ -147,18 +144,9 @@ class InternalModelControllerParameters {
             double l_, bm_;
             double Ix_, Iy_, Iz_;
 
-            ros::NodeHandle n1_;
-            ros::NodeHandle n2_;
-            ros::Timer timer1_;
-            ros::Timer timer2_;
-
-            //Callback functions to compute the errors among axis and angles
-            void CallbackAttitude(const ros::TimerEvent& event);
-            void CallbackPosition(const ros::TimerEvent& event);
-
 	          state_t state_;
             control_t control_;
-            mav_msgs::EigenDroneState command_trajectory_;
+            EigenDroneState command_trajectory_;
             EigenOdometry odometry_;
 
             void SetOdometryEstimated();

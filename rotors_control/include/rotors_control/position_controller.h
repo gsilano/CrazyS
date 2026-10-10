@@ -20,12 +20,9 @@
 #ifndef CRAZYFLIE_2_POSITION_CONTROLLER_H
 #define CRAZYFLIE_2_POSITION_CONTROLLER_H
 
-#include <mav_msgs/conversions.h>
-#include <mav_msgs/eigen_mav_msgs.h>
 
 #include <string>
 
-#include <ros/time.h>
 
 #include "common.h"
 #include "parameters.h"
@@ -35,9 +32,7 @@
 #include "sensfusion6.h"
 #include "controller_parameters.h"
 
-#include <time.h>
 
-using namespace std;
 
 namespace rotors_control {
 
@@ -50,16 +45,10 @@ namespace rotors_control {
             void SetOdometryWithStateEstimator(const EigenOdometry& odometry);
 	          void SetOdometryWithoutStateEstimator(const EigenOdometry& odometry);
             void SetSensorData(const sensorData_t& sensors);
-            void SetTrajectoryPoint(const mav_msgs::EigenTrajectoryPoint& command_trajectory);
+            void SetTrajectoryPoint(const EigenTrajectoryPoint& command_trajectory);
 	          void SetControllerGains();
             void CallbackAttitudeEstimation();
             void CallbackHightLevelControl();
-            void SetLaunchFileParameters();
-
-            // Lunch file parameters
-            std::string user_;
-            double dataStoringTime_;
-            bool dataStoring_active_;
             bool waypointFilter_active_;
             bool EKF_active_;
 
@@ -73,24 +62,6 @@ namespace rotors_control {
             bool state_estimator_active_;
 
             control_s control_t_;
-
-            // Lists for data saving
-            std::vector<string> listPropellersVelocity_;
-            std::vector<string> listDroneAttiude_;
-            std::vector<string> listPWM_;
-            std::vector<string> listPWMComponents_;
-            std::vector<string> listCommandAttiude_;
-            std::vector<string> listRCommand_;
-            std::vector<string> listOmegaCommand_;
-            std::vector<string> listXeYe_;
-            std::vector<string> listDeltaCommands_;
-            std::vector<string> listPQCommands_;
-            std::vector<string> listDronePosition_;
-
-            // Callbacks
-            ros::NodeHandle n_;
-            ros::Timer timer_;
-            void CallbackSaveData(const ros::TimerEvent& event);
 
             //Integrator initial conditions
             double theta_command_ki_;
@@ -110,7 +81,7 @@ namespace rotors_control {
 
             void SetSensorData();
 
-            mav_msgs::EigenTrajectoryPoint command_trajectory_;
+            EigenTrajectoryPoint command_trajectory_;
             EigenOdometry odometry_;
             sensorData_t sensors_;
             state_t state_;

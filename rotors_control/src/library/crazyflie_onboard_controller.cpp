@@ -15,12 +15,8 @@
  * limitations under the License.
  */
 
-#include <mav_msgs/eigen_mav_msgs.h>
 
-#include "rotors_control/transform_datatypes.h"
-#include "rotors_control/Matrix3x3.h"
-#include "rotors_control/Quaternion.h"
-
+#include "rotors_control/common.h"
 #include "rotors_control/crazyflie_onboard_controller.h"
 
 #define SAMPLING_TIME_ATTITUDE_CONTROLLER         0.004 /* SAMPLING TIME ATTITUDE CONTROLLER [s] */
@@ -61,11 +57,6 @@ void CrazyflieOnboardController::SetControllerGains(PositionControllerParameters
       rate_gain_kp_private_ = Eigen::Vector3f(controller_parameters_.rate_gain_kp_.x(), controller_parameters_.rate_gain_kp_.y(), controller_parameters_.rate_gain_kp_.z());
       rate_gain_ki_private_ = Eigen::Vector3f(controller_parameters_.rate_gain_ki_.x(), controller_parameters_.rate_gain_ki_.y(), controller_parameters_.rate_gain_ki_.z());
 
-      ROS_DEBUG("Attitude gains - Kp_p: %f, Ki_p: %f, Kp_q: %f, Ki_q: %f", attitude_gain_kp_private_.x(),
-                 attitude_gain_ki_private_.x(), attitude_gain_kp_private_.y(), attitude_gain_ki_private_.y());
-      ROS_DEBUG("Rate gains - Kp_phi: %f, Ki_phi: %f, Kp_theta: %f, Ki_theta: %f, Kp_psi: %f, Ki_psi: %f", rate_gain_kp_private_.x(),
-                 rate_gain_ki_private_.x(), rate_gain_kp_private_.y(), rate_gain_ki_private_.y(), rate_gain_kp_private_.z(),
-                 rate_gain_ki_private_.z());
 
 }
 
@@ -95,7 +86,6 @@ void CrazyflieOnboardController::RateController(double* delta_phi, double* delta
     q_error = q_command_ - q;
     r_error = r_command - r;
 
-    ROS_DEBUG("p_command: %f, q_command: %f", p_command_, q_command_);
 
     double delta_phi_kp, delta_theta_kp, delta_psi_kp;
     delta_phi_kp = rate_gain_kp_private_.x() * p_error;
@@ -135,10 +125,7 @@ void CrazyflieOnboardController::AttitudeController(double* p_command_internal, 
     q_command_ki_ = q_command_ki_ + (attitude_gain_ki_private_.y() * theta_error * SAMPLING_TIME_ATTITUDE_CONTROLLER);
     *q_command_internal = q_command_kp + q_command_ki_;
 
-    ROS_INFO_ONCE("The complementary is running");
 
-    ROS_DEBUG("Phi_c: %f, Phi_e: %f, Theta_c: %f, Theta_e: %f", phi_command, phi_error, theta_command, theta_error);
-    ROS_DEBUG("p_command: %f, q_command: %f", *p_command_internal, *q_command_internal);
 
 }
 
@@ -154,11 +141,8 @@ void CrazyflieOnboardController::Quaternion2Euler(double* roll, double* pitch, d
     z = state_t_private_.attitudeQuaternion.z;
     w = state_t_private_.attitudeQuaternion.w;
 
-    tf::Quaternion q(x, y, z, w);
-    tf::Matrix3x3 m(q);
-    m.getRPY(*roll, *pitch, *yaw);
+        QuaternionToRPY(x, y, z, w, roll, pitch, yaw);
 
-    ROS_DEBUG("Roll: %f, Pitch: %f, Yaw: %f", *roll, *pitch, *yaw);
 }
 
 }

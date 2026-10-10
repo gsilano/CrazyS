@@ -1,150 +1,54 @@
-cmake_minimum_required(VERSION 3.0.2)
-project(rotors_control VERSION 7.1.0)
-add_definitions(-std=c++11)
+cmake_minimum_required(VERSION 3.16)
+project(rotors_control)
 
-find_package(catkin REQUIRED COMPONENTS
-  geometry_msgs
-  mav_msgs
-  nav_msgs
-  roscpp
-  sensor_msgs
-  cmake_modules
-)
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
+endif()
 
-find_package(
-  Eigen3 REQUIRED
-)
+find_package(ament_cmake REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(trajectory_msgs REQUIRED)
+find_package(actuator_msgs REQUIRED)
+find_package(rotors_comm REQUIRED)
 
-catkin_package(
-  INCLUDE_DIRS include ${Eigen3_INCLUDE_DIRS}
-  LIBRARIES lee_position_controller position_controller crazyflie_onboard_controller
-    roll_pitch_yawrate_thrust_controller sensfusion6 crazyflie_complementary_filter
-    mellinger_controller internal_model_controller lee_geometric_controller
-    roll_pitch_yawrate_thrust_controller_crazyflie
-  CATKIN_DEPENDS geometry_msgs mav_msgs nav_msgs roscpp sensor_msgs
-  DEPENDS Eigen3
-)
-
-
-include_directories(
-  include
-  ${catkin_INCLUDE_DIRS}
-  ${Eigen3_INCLUDE_DIRS}
-)
-
-add_library(lee_position_controller
-  src/library/lee_position_controller.cpp
-)
-
-add_library(position_controller
-   src/library/position_controller.cpp
-)
-
-add_library(crazyflie_onboard_controller
-   src/library/crazyflie_onboard_controller.cpp
-)
-
-add_library(roll_pitch_yawrate_thrust_controller
-  src/library/roll_pitch_yawrate_thrust_controller.cpp
-)
-
-add_library(roll_pitch_yawrate_thrust_controller_crazyflie
-  src/library/roll_pitch_yawrate_thrust_crazyflie.cpp
-)
-
-add_library(crazyflie_complementary_filter
+# Control library: plain C++ and Eigen, no ROS.
+add_library(rotors_control_lib SHARED
   src/library/crazyflie_complementary_filter.cpp
-)
-
-add_library(sensfusion6
+  src/library/crazyflie_onboard_controller.cpp
+  src/library/internal_model_controller.cpp
+  src/library/lee_geometric_controller.cpp
+  src/library/position_controller.cpp
+  src/library/roll_pitch_yawrate_thrust_crazyflie.cpp
   src/library/sensfusion6.cpp
 )
+target_include_directories(rotors_control_lib PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
+target_link_libraries(rotors_control_lib PUBLIC Eigen3::Eigen)
 
-add_library(mellinger_controller
-  src/library/mellinger_controller.cpp
-)
+# ROS 2 nodes
+set(node_dependencies rclcpp nav_msgs sensor_msgs trajectory_msgs actuator_msgs rotors_comm)
+foreach(node position_controller_node lee_geometric_controller_node
+             roll_pitch_yawrate_thrust_crazyflie_node)
+  add_executable(${node} src/nodes/${node}.cpp)
+  target_link_libraries(${node} rotors_control_lib)
+  ament_target_dependencies(${node} ${node_dependencies})
+  install(TARGETS ${node} DESTINATION lib/${PROJECT_NAME})
+endforeach()
 
-add_library(internal_model_controller
-  src/library/internal_model_controller.cpp
-)
+install(TARGETS rotors_control_lib EXPORT export_${PROJECT_NAME}
+  LIBRARY DESTINATION lib ARCHIVE DESTINATION lib RUNTIME DESTINATION bin)
+install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 
-add_library(lee_geometric_controller
-  src/library/lee_geometric_controller.cpp
-)
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_add_gtest(test_controllers test/test_controllers.cpp)
+  target_link_libraries(test_controllers rotors_control_lib)
+endif()
 
-target_link_libraries(lee_position_controller ${catkin_LIBRARIES})
-add_dependencies(lee_position_controller ${catkin_EXPORTED_TARGETS})
-
-target_link_libraries(position_controller ${catkin_LIBRARIES})
-add_dependencies(position_controller ${catkin_EXPORTED_TARGETS})
-
-target_link_libraries(mellinger_controller ${catkin_LIBRARIES})
-add_dependencies(mellinger_controller ${catkin_EXPORTED_TARGETS})
-
-target_link_libraries(internal_model_controller ${catkin_LIBRARIES})
-add_dependencies(internal_model_controller ${catkin_EXPORTED_TARGETS})
-
-target_link_libraries(lee_geometric_controller ${catkin_LIBRARIES})
-add_dependencies(lee_geometric_controller ${catkin_EXPORTED_TARGETS})
-
-target_link_libraries(roll_pitch_yawrate_thrust_controller ${catkin_LIBRARIES})
-add_dependencies(roll_pitch_yawrate_thrust_controller ${catkin_EXPORTED_TARGETS})
-
-target_link_libraries(roll_pitch_yawrate_thrust_controller_crazyflie ${catkin_LIBRARIES})
-add_dependencies(roll_pitch_yawrate_thrust_controller_crazyflie ${catkin_EXPORTED_TARGETS})
-
-target_link_libraries(crazyflie_onboard_controller ${catkin_LIBRARIES})
-add_dependencies(crazyflie_onboard_controller ${catkin_EXPORTED_TARGETS})
-
-target_link_libraries(crazyflie_complementary_filter ${catkin_LIBRARIES})
-add_dependencies(crazyflie_complementary_filter ${catkin_EXPORTED_TARGETS})
-
-target_link_libraries(sensfusion6 ${catkin_LIBRARIES})
-add_dependencies(sensfusion6 ${catkin_EXPORTED_TARGETS})
-
-add_executable(lee_position_controller_node src/nodes/lee_position_controller_node.cpp)
-add_dependencies(lee_position_controller_node ${catkin_EXPORTED_TARGETS})
-target_link_libraries(lee_position_controller_node
-  lee_position_controller ${catkin_LIBRARIES})
-
-add_executable(position_controller_node src/nodes/position_controller_node.cpp)
-add_dependencies(position_controller_node ${catkin_EXPORTED_TARGETS})
-target_link_libraries(position_controller_node
-  position_controller crazyflie_complementary_filter crazyflie_onboard_controller
-  sensfusion6 mellinger_controller internal_model_controller ${catkin_LIBRARIES})
-
-add_executable(lee_geometric_controller_node src/nodes/lee_geometric_controller_node.cpp)
-add_dependencies(lee_geometric_controller_node ${catkin_EXPORTED_TARGETS})
-target_link_libraries(lee_geometric_controller_node
-  lee_geometric_controller ${catkin_LIBRARIES})
-
-add_executable(roll_pitch_yawrate_thrust_controller_node
-  src/nodes/roll_pitch_yawrate_thrust_controller_node.cpp)
-add_dependencies(roll_pitch_yawrate_thrust_controller_node ${catkin_EXPORTED_TARGETS})
-target_link_libraries(roll_pitch_yawrate_thrust_controller_node
-  roll_pitch_yawrate_thrust_controller ${catkin_LIBRARIES})
-
-add_executable(roll_pitch_yawrate_thrust_crazyflie_node 
-  src/nodes/roll_pitch_yawrate_thrust_crazyflie_node.cpp)
-add_dependencies(roll_pitch_yawrate_thrust_crazyflie_node ${catkin_EXPORTED_TARGETS})
-target_link_libraries(roll_pitch_yawrate_thrust_crazyflie_node
-  roll_pitch_yawrate_thrust_controller_crazyflie ${catkin_LIBRARIES})
-
-install(TARGETS lee_position_controller position_controller crazyflie_onboard_controller
-  roll_pitch_yawrate_thrust_controller mellinger_controller internal_model_controller
-  roll_pitch_yawrate_thrust_controller_crazyflie lee_geometric_controller
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-)
-
-install(TARGETS lee_position_controller_node position_controller_node roll_pitch_yawrate_thrust_controller_node
-  roll_pitch_yawrate_thrust_crazyflie_node lee_geometric_controller_node
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-install(
-  DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  FILES_MATCHING PATTERN "*.h"
-)
+ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+ament_export_dependencies(Eigen3)
+ament_package()

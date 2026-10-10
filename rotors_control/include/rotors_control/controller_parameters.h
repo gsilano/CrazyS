@@ -20,6 +20,8 @@
 #ifndef CONTROLLER_PARAMETERS_H
 #define CONTROLLER_PARAMETERS_H
 
+#include <Eigen/Eigen>
+
 // Default values for the position controller of the Crazyflie2. XYController [x,y], AttitudeController [phi,theta] 
 //RateController [p,q,r], YawController[yaw], HoveringController[z]
 static const Eigen::Vector2f kPDefaultXYController = Eigen::Vector2f(3.594, -3.594);

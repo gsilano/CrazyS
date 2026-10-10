@@ -41,13 +41,11 @@
  * sensfusion6.cpp - Sensor fusion
  */
 
+#include "rotors_control/common.h"
 #include "rotors_control/sensfusion6.h"
-#include "rotors_control/Matrix3x3.h"
-#include "rotors_control/Quaternion.h" 
 #include "rotors_control/stabilizer_types.h"
 
 #include <math.h>
-#include <ros/ros.h>
 
 #define GRAVITY_MAGNITUDE 9.81 // m/s^2
 
@@ -311,9 +309,7 @@ void SensFusion::Sensfusion6GetEulerRPY(double* roll, double* pitch, double* yaw
   assert(pitch);
   assert(yaw);
     
-  tf::Quaternion q(q1_, q2_, q3_, q0_);
-  tf::Matrix3x3 m(q);
-  m.getRPY(*roll, *pitch, *yaw);
+    QuaternionToRPY(q1_, q2_, q3_, q0_, roll, pitch, yaw);
 
 }
 

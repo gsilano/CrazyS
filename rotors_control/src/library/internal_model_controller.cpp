@@ -14,31 +14,17 @@
  * limitations under the License.
  */
 
+#include "rotors_control/common.h"
 #include "rotors_control/internal_model_controller.h"
-#include "rotors_control/transform_datatypes.h"
-#include "rotors_control/Matrix3x3.h"
-#include "rotors_control/Quaternion.h"
 #include "rotors_control/stabilizer_types.h"
 
 #include <math.h>
-#include <time.h>
 #include <iostream>
-#include <fstream>
 #include <string>
-#include <sstream>
-#include <iterator>
-
-#include <ros/ros.h>
-#include <chrono>
-#include <inttypes.h>
-
-#include <nav_msgs/Odometry.h>
-#include <ros/console.h>
 
 
-#define M_PI                      3.14159265358979323846  /* pi */
-#define TsP                       10e-3  /* Position control sampling time */
-#define TsA                       5e-3 /* Attitude control sampling time */
+
+
 #define MAX_ROTOR_VELOCITY        2618 /* Max rotors velocity [rad/s] */
 #define MIN_ROTOR_VELOCITY        0 /* Min rotors velocity [rad/s] */
 #define POW_MAX_ROTOR_VELOCITY    MAX_ROTOR_VELOCITY*MAX_ROTOR_VELOCITY /* Squared max rotors velocity [rad/s] */
@@ -122,9 +108,6 @@ InternalModelController::InternalModelController()
       command_trajectory_.velocity[1] = 0;
       command_trajectory_.velocity[2] = 0;
 
-      // Timers set the outer and inner loops working frequency
-      timer1_ = n1_.createTimer(ros::Duration(TsA), &InternalModelController::CallbackAttitude, this, false, true);
-      timer2_ = n2_.createTimer(ros::Duration(TsP), &InternalModelController::CallbackPosition, this, false, true);
 
 
 }
@@ -173,7 +156,6 @@ void InternalModelController::SetControllerGains(){
     K_z_1_ = 1/mu_z_;
     K_z_2_ = -2 * (beta_z_/mu_z_);
 
-    ROS_INFO_ONCE("[Internal Model Controller] Controller gains successful setup");
 
 }
 
@@ -189,7 +171,6 @@ void InternalModelController::SetVehicleParameters(){
     Iy_ = vehicle_parameters_.inertia_(1,1);
     Iz_ = vehicle_parameters_.inertia_(2,2);
 
-    ROS_INFO_ONCE("[Internal Model Controller] Vehicle parameters successful setup");
 
 }
 
@@ -205,9 +186,7 @@ void InternalModelController::Quaternion2Euler(double* roll, double* pitch, doub
     z = odometry_.orientation.z();
     w = odometry_.orientation.w();
 
-    tf::Quaternion q(x, y, z, w);
-    tf::Matrix3x3 m(q);
-    m.getRPY(*roll, *pitch, *yaw);
+        QuaternionToRPY(x, y, z, w, roll, pitch, yaw);
 
 }
 
@@ -232,25 +211,17 @@ void InternalModelController::SetOdometryWithoutStateEstimator(const EigenOdomet
     state_.linearVelocity.y = odometry_.velocity[1];
     state_.linearVelocity.z = odometry_.velocity[2];
 
-    ROS_DEBUG("Drone position [x: %f, y: %f, z: %f]", state_.position.x, state_.position.y, state_.position.z);
-    ROS_DEBUG("Drone attitude [roll: %f, pitch: %f, yaw: %f]", state_.attitude.roll, state_.attitude.pitch, state_.attitude.yaw);
-    ROS_DEBUG("Drone linear velocity [x: %f, y: %f, z: %f]", state_.linearVelocity.x, state_.linearVelocity.y, state_.linearVelocity.z);
 
 }
 
 // The function sets the filter trajectory points
-void InternalModelController::SetTrajectoryPoint(const mav_msgs::EigenDroneState& command_trajectory) {
+void InternalModelController::SetTrajectoryPoint(const EigenDroneState& command_trajectory) {
 
     command_trajectory_ = command_trajectory;
 
     double psi_r, roll_r, pitch_r;
     Quaternion2EulerCommandTrajectory(&roll_r, &pitch_r, &psi_r);
 
-    ROS_DEBUG("Drone desired position [x_d: %f, y_d: %f, z_d: %f]",  command_trajectory_.position_W[0],
-            command_trajectory_.position_W[1], command_trajectory_.position_W[2]);
-    ROS_DEBUG("Drone desired attitude [roll_d: %f, pitch_d: %f, yaw_d: %f]", roll_r, pitch_r, psi_r);
-    ROS_DEBUG("Drone desired linear velocity [x_d_dot: %f, y_d_dot: %f, z_d_dot: %f]", command_trajectory_.velocity[0],
-          command_trajectory_.velocity[1], command_trajectory_.velocity[2]);
 
 
 }
@@ -272,7 +243,6 @@ void InternalModelController::CalculateRotorVelocities(Eigen::Vector4d* rotor_ve
     // control_.pitch = theta_r, desired pitch angle
 	  PosController(&control_.thrust, &control_.roll, &control_.pitch, &u_x, &u_y, &u_z, &u_Terr);
 
-    ROS_DEBUG("Thrust: %f U_phi: %f U_theta: %f U_psi: %f", control_.thrust, u_phi, u_theta, u_psi);
 
     double first, second, third, fourth;
     first = (1 / ( 4 * bf_ )) * control_.thrust;
@@ -344,7 +314,6 @@ void InternalModelController::CalculateRotorVelocities(Eigen::Vector4d* rotor_ve
 
     *rotor_velocities = Eigen::Vector4d(omega_1, omega_2, omega_3, omega_4);
 
-    ROS_DEBUG("Omega_1: %f Omega_2: %f Omega_3: %f Omega_4: %f", omega_1, omega_2, omega_3, omega_4);
 
 }
 
@@ -388,8 +357,6 @@ void InternalModelController::PositionErrors(double* e_x, double* e_y, double* e
    *e_y = command_trajectory_.position_W[1] - state_.position.y;
    *e_z = command_trajectory_.position_W[2] - state_.position.z;
 
-   ROS_DEBUG("Position Error components along the z-axis: [z_d: %f, z: %f]", command_trajectory_.position_W[2], state_.position.z);
-   ROS_DEBUG("Position Error: [%f %f %f]", *e_x, *e_y, *e_z);
 
 }
 
@@ -466,7 +433,6 @@ void InternalModelController::PosController(double* u_T, double* phi_r, double* 
    //u_T computing
    *u_T = sqrt( pow(*u_x,2) + pow(*u_y,2) + pow(*u_Terr,2) );
 
-   ROS_DEBUG("Position Control Signals: [%f %f %f %f %f]", *u_x, *u_y, *u_z, *u_T, *u_Terr);
 
 
    double psi_r, temp_a, temp_b;
@@ -491,9 +457,6 @@ void InternalModelController::AttitudeErrors(double* e_phi, double* e_theta, dou
    *e_theta = pitch_r - state_.attitude.pitch;
    *e_psi = psi_r - state_.attitude.yaw;
 
-   ROS_DEBUG("Drone attitude: [roll: %f, pitch: %f, yaw: %f]", state_.attitude.roll, state_.attitude.pitch, state_.attitude.yaw);
-   ROS_DEBUG("Angular Error: [e_phi: %f, e_pitch: %f, e_psi: %f]", *e_phi, *e_theta, *e_psi);
-   ROS_DEBUG("Desired Attitude: [phi_d: %f, pitch_d: %f, psi_d: %f]", roll_r, pitch_r, psi_r);
 
 }
 
@@ -530,7 +493,6 @@ void InternalModelController::AngularVelocityErrors(double* dot_e_phi, double* d
    *dot_e_theta =  dot_e_theta_W_d - dot_e_theta_W_s;
    *dot_e_psi = dot_e_psi_W_d - dot_e_psi_W_s;
 
-    ROS_DEBUG("Desired Attitude Rate: [phi_d_dot: %f, pitch_d_dot: %f, psi_d_dot: %f]", dot_e_phi_W_d, dot_e_theta_W_d, dot_e_psi_W_d);
 
 }
 
@@ -546,11 +508,8 @@ void InternalModelController::Quaternion2EulerCommandTrajectory(double* roll, do
     z = command_trajectory_.orientation_W_B.z();
     w = command_trajectory_.orientation_W_B.w();
 
-    tf::Quaternion q(x, y, z, w);
-    tf::Matrix3x3 m(q);
-    m.getRPY(*roll, *pitch, *yaw);
+        QuaternionToRPY(x, y, z, w, roll, pitch, yaw);
 
-    ROS_DEBUG("Roll Trajectory: %f, Pitch Trajectory: %f, Yaw Trajectory: %f", *roll, *pitch, *yaw);
 
 }
 
@@ -570,15 +529,15 @@ void InternalModelController::AttitudeController(double* u_phi, double* u_theta,
 }
 
 
-//Every TsA this function computes the attitude and the angular rate errors
-void InternalModelController::CallbackAttitude(const ros::TimerEvent& event){
+//Every kAttitudeSamplingTime seconds this function computes the attitude and the angular rate errors
+void InternalModelController::CallbackAttitude(){
 
      AttitudeErrors(&e_phi_, &e_theta_, &e_psi_);
      AngularVelocityErrors(&dot_e_phi_, &dot_e_theta_, &dot_e_psi_);
 }
 
-//Every TsP this function computes the position and velocity errors
-void InternalModelController::CallbackPosition(const ros::TimerEvent& event){
+//Every kPositionSamplingTime seconds this function computes the position and velocity errors
+void InternalModelController::CallbackPosition(){
 
      PositionErrors(&e_x_, &e_y_, &e_z_);
      VelocityErrors(&dot_e_x_, &dot_e_y_, &dot_e_z_);

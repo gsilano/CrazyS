@@ -17,8 +17,6 @@
 #ifndef ROTORS_CONTROL_ROLL_PITCH_YAWRATE_THRUST_CRAZYFLIE_H
 #define ROTORS_CONTROL_ROLL_PITCH_YAWRATE_THRUST_CRAZYFLIE_H
 
-#include <mav_msgs/conversions.h>
-#include <mav_msgs/eigen_mav_msgs.h>
 
 #include "common.h"
 #include "parameters.h"
@@ -29,11 +27,11 @@ namespace rotors_control {
 
 // Default values for the position controller for the Crazyflie2: AttitudeController [phi,theta]
 //RateController [p,q,r]
-static const Eigen::Vector2d kPDefaultAttitudeController = Eigen::Vector2d(0.0611, 0.0611);
-static const Eigen::Vector2d kIDefaultAttitudeController = Eigen::Vector2d(0.0349, 0.0349);
+static const Eigen::Vector2d kPDefaultJoyAttitudeController = Eigen::Vector2d(0.0611, 0.0611);
+static const Eigen::Vector2d kIDefaultJoyAttitudeController = Eigen::Vector2d(0.0349, 0.0349);
 
-static const Eigen::Vector3d kPDefaultRateController = Eigen::Vector3d(1000, 1000, 1000);
-static const Eigen::Vector3d kIDefaultRateController = Eigen::Vector3d(0, 0, 95.6839);
+static const Eigen::Vector3d kPDefaultJoyRateController = Eigen::Vector3d(1000, 1000, 1000);
+static const Eigen::Vector3d kIDefaultJoyRateController = Eigen::Vector3d(0, 0, 95.6839);
 
 static const double DefaultThrust_percentage = 1.0;
 
@@ -41,10 +39,10 @@ class RollPitchYawrateThrustControllerCrazyflieParameters {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   RollPitchYawrateThrustControllerCrazyflieParameters()
-      : attitude_gain_kp_(kPDefaultAttitudeController),
-        attitude_gain_ki_(kIDefaultAttitudeController),
-        rate_gain_kp_(kPDefaultRateController),
-        rate_gain_ki_(kIDefaultRateController),
+      : attitude_gain_kp_(kPDefaultJoyAttitudeController),
+        attitude_gain_ki_(kIDefaultJoyAttitudeController),
+        rate_gain_kp_(kPDefaultJoyRateController),
+        rate_gain_ki_(kIDefaultJoyRateController),
         thrust_percentage_(DefaultThrust_percentage) {
   }
 
@@ -66,7 +64,7 @@ class RollPitchYawrateThrustControllerCrazyflieParameters {
 
             void SetOdometry(const EigenOdometry& odometry);
             void SetRollPitchYawrateThrust(
-                const mav_msgs::EigenRollPitchYawrateThrustCrazyflie& roll_pitch_yawrate_thrust);
+                const EigenRollPitchYawrateThrustCrazyflie& roll_pitch_yawrate_thrust);
 
             void SetControllerGains();
 
@@ -85,7 +83,7 @@ class RollPitchYawrateThrustControllerCrazyflieParameters {
             double delta_psi_ki_;
             double p_command_ki_, q_command_ki_;
 
-            mav_msgs::EigenRollPitchYawrateThrustCrazyflie roll_pitch_yawrate_thrust_;
+            EigenRollPitchYawrateThrustCrazyflie roll_pitch_yawrate_thrust_;
             EigenOdometry odometry_;
 
             void AttitudeController(double* p_command, double* q_command);

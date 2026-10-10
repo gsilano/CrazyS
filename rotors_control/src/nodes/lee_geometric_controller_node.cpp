@@ -18,141 +18,118 @@
  * limitations under the License.
  */
 
-#include "lee_geometric_controller_node.h"
+// ROS 2 node for the Lee geometric controller.
+//   in:  drone_state (rotors_comm/DroneState), odometry (nav_msgs/Odometry)
+//   out: command/motor_speed (actuator_msgs/Actuators)
+// One control step every Ts seconds of simulation time, triggered by the time stamps of
+// the odometry messages (1 kHz) rather than by a ROS timer: the state is then sampled
+// at regular times even when the computer is loaded and the messages arrive late.
 
-#include <mav_msgs/Actuators.h>
-#include <mav_msgs/conversions.h>
-#include <mav_msgs/default_topics.h>
+#include <memory>
 
-#include "rotors_control/parameters_ros.h"
+#include "rotors_control/lee_geometric_controller.h"
+#include "ros_conversions.h"
 
 namespace rotors_control {
 
-LeeGeometricControllerNode::LeeGeometricControllerNode(const ros::NodeHandle& nh,
-                                                       const ros::NodeHandle& private_nh)
-    : nh_(nh), private_nh_(private_nh), odometry_received_(false) {
-  InitializeParams();
+class LeeGeometricControllerNode : public rclcpp::Node {
+ public:
+  LeeGeometricControllerNode() : Node("lee_geometric_controller_node") {
+    InitializeParams();
 
-  drone_state_sub_ = nh_.subscribe(mav_msgs::default_topics::DRONE_STATE, 1,
-                                   &LeeGeometricControllerNode::DroneStateCallback, this);
-  odometry_sub_ = nh_.subscribe(mav_msgs::default_topics::ODOMETRY, 1,
-                                &LeeGeometricControllerNode::OdometryCallback, this);
-  motor_velocity_reference_pub_ = nh_.advertise<mav_msgs::Actuators>(
-      mav_msgs::default_topics::COMMAND_ACTUATORS, 1);
+    drone_state_sub_ = create_subscription<rotors_comm::msg::DroneState>(
+        kDroneStateTopic, 1,
+        std::bind(&LeeGeometricControllerNode::DroneStateCallback, this, std::placeholders::_1));
+    odometry_sub_ = create_subscription<nav_msgs::msg::Odometry>(
+        kOdometryTopic, 1,
+        std::bind(&LeeGeometricControllerNode::OdometryCallback, this, std::placeholders::_1));
+    motor_velocity_reference_pub_ = create_publisher<actuator_msgs::msg::Actuators>(
+        kCommandMotorSpeedTopic, 1);
 
-  control_timer_ = nh_.createTimer(
-      ros::Duration(lee_geometric_controller_.controller_parameters_.sampling_time),
-      &LeeGeometricControllerNode::ControlTimerCallback, this);
-
-  ROS_INFO("[Lee geometric controller] Started.");
-}
-
-LeeGeometricControllerNode::~LeeGeometricControllerNode() {}
-
-void LeeGeometricControllerNode::InitializeParams() {
-  LeeGeometricControllerParameters& p = lee_geometric_controller_.controller_parameters_;
-  double inertia_xx = p.inertia(0, 0);
-  double inertia_yy = p.inertia(1, 1);
-  double inertia_zz = p.inertia(2, 2);
-
-  // Missing parameters keep the defaults of LeeGeometricControllerParameters.
-  GetRosParameter(private_nh_, "sampling_time", p.sampling_time, &p.sampling_time);
-  GetRosParameter(private_nh_, "gravity", p.gravity, &p.gravity);
-  GetRosParameter(private_nh_, "mass", p.mass, &p.mass);
-  GetRosParameter(private_nh_, "inertia/xx", inertia_xx, &inertia_xx);
-  GetRosParameter(private_nh_, "inertia/yy", inertia_yy, &inertia_yy);
-  GetRosParameter(private_nh_, "inertia/zz", inertia_zz, &inertia_zz);
-  GetRosParameter(private_nh_, "arm_length", p.arm_length, &p.arm_length);
-  GetRosParameter(private_nh_, "motor_constant", p.motor_constant, &p.motor_constant);
-  GetRosParameter(private_nh_, "moment_constant", p.moment_constant, &p.moment_constant);
-  GetRosParameter(private_nh_, "max_rotor_velocity", p.max_rotor_velocity,
-                  &p.max_rotor_velocity);
-  GetRosParameter(private_nh_, "dirty_derivative/tau_first_order", p.tau_first_order,
-                  &p.tau_first_order);
-  GetRosParameter(private_nh_, "dirty_derivative/tau_higher_order", p.tau_higher_order,
-                  &p.tau_higher_order);
-  GetRosParameter(private_nh_, "gains/position", p.k_x, &p.k_x);
-  GetRosParameter(private_nh_, "gains/velocity", p.k_v, &p.k_v);
-  GetRosParameter(private_nh_, "gains/attitude", p.k_R, &p.k_R);
-  GetRosParameter(private_nh_, "gains/angular_rate", p.k_omega, &p.k_omega);
-
-  p.inertia = Eigen::Vector3d(inertia_xx, inertia_yy, inertia_zz).asDiagonal();
-
-  if (p.sampling_time <= 0.0) {
-    ROS_ERROR("[Lee geometric controller] The sampling time must be positive, using %f s.",
-              kDefaultLeeSamplingTime);
-    p.sampling_time = kDefaultLeeSamplingTime;
+    RCLCPP_INFO(get_logger(), "Started, running at %.1f Hz (simulation time).",
+                1.0 / controller_.controller_parameters_.sampling_time);
   }
 
-  lee_geometric_controller_.InitializeParameters();
-  ROS_INFO("[Lee geometric controller] Parameters loaded, running at %.1f Hz.",
-           1.0 / p.sampling_time);
-}
+ private:
+  LeeGeometricController controller_;
+  double next_control_time_ = -1.0;
 
-void LeeGeometricControllerNode::DroneStateCallback(
-    const mav_msgs::DroneStateConstPtr& drone_state_msg) {
-  // Same check as the other CrazyS controllers: ignore references below the ground.
-  if (drone_state_msg->position.z < 0.0) {
-    ROS_WARN_THROTTLE(1.0, "[Lee geometric controller] Discarding a reference point "
-                      "with negative altitude.");
-    return;
+  rclcpp::Subscription<rotors_comm::msg::DroneState>::SharedPtr drone_state_sub_;
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odometry_sub_;
+  rclcpp::Publisher<actuator_msgs::msg::Actuators>::SharedPtr motor_velocity_reference_pub_;
+
+  void InitializeParams() {
+    // Missing parameters keep the defaults of LeeGeometricControllerParameters.
+    LeeGeometricControllerParameters& p = controller_.controller_parameters_;
+    p.sampling_time = declare_parameter("sampling_time", p.sampling_time);
+    p.gravity = declare_parameter("gravity", p.gravity);
+    p.mass = declare_parameter("mass", p.mass);
+    const double inertia_xx = declare_parameter("inertia.xx", p.inertia(0, 0));
+    const double inertia_yy = declare_parameter("inertia.yy", p.inertia(1, 1));
+    const double inertia_zz = declare_parameter("inertia.zz", p.inertia(2, 2));
+    p.inertia = Eigen::Vector3d(inertia_xx, inertia_yy, inertia_zz).asDiagonal();
+    p.arm_length = declare_parameter("arm_length", p.arm_length);
+    p.motor_constant = declare_parameter("motor_constant", p.motor_constant);
+    p.moment_constant = declare_parameter("moment_constant", p.moment_constant);
+    p.max_rotor_velocity = declare_parameter("max_rotor_velocity", p.max_rotor_velocity);
+    p.tau_first_order = declare_parameter("dirty_derivative.tau_first_order", p.tau_first_order);
+    p.tau_higher_order =
+        declare_parameter("dirty_derivative.tau_higher_order", p.tau_higher_order);
+    p.k_x = declare_parameter("gains.position", p.k_x);
+    p.k_v = declare_parameter("gains.velocity", p.k_v);
+    p.k_R = declare_parameter("gains.attitude", p.k_R);
+    p.k_omega = declare_parameter("gains.angular_rate", p.k_omega);
+
+    if (p.sampling_time <= 0.0) {
+      RCLCPP_ERROR(get_logger(), "The sampling time must be positive, using %f s.",
+                   kDefaultLeeSamplingTime);
+      p.sampling_time = kDefaultLeeSamplingTime;
+    }
+    controller_.InitializeParameters();
   }
 
-  ROS_INFO_ONCE("[Lee geometric controller] Got the first reference trajectory point.");
-
-  mav_msgs::EigenDroneState eigen_reference;
-  mav_msgs::eigenDroneStateFromMsg(*drone_state_msg, &eigen_reference);
-
-  // An empty (all zeros) quaternion means zero yaw.
-  if (eigen_reference.orientation_W_B.norm() < 1e-6) {
-    eigen_reference.orientation_W_B = Eigen::Quaterniond::Identity();
+  void DroneStateCallback(const rotors_comm::msg::DroneState& msg) {
+    // Same check as the other CrazyS controllers: ignore references below the ground.
+    if (msg.position.z < 0.0) {
+      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                           "Ignoring a reference point below the ground.");
+      return;
+    }
+    EigenDroneState reference;
+    EigenDroneStateFromMsg(msg, &reference);
+    // An empty (all zeros) quaternion means zero yaw.
+    if (reference.orientation_W_B.norm() < 1e-6) {
+      reference.orientation_W_B = Eigen::Quaterniond::Identity();
+    }
+    controller_.SetTrajectoryPoint(reference, rclcpp::Time(msg.header.stamp).seconds());
+    RCLCPP_INFO_ONCE(get_logger(), "Got the first reference point.");
   }
 
-  lee_geometric_controller_.SetTrajectoryPoint(eigen_reference);
+  void OdometryCallback(const nav_msgs::msg::Odometry& msg) {
+    const double time = rclcpp::Time(msg.header.stamp).seconds();
+    EigenOdometry odometry;
+    EigenOdometryFromMsg(msg, &odometry);
+    controller_.SetOdometry(odometry, time);
 
-  ROS_DEBUG("[Lee geometric controller] Desired position: [%f, %f, %f]",
-            eigen_reference.position_W.x(), eigen_reference.position_W.y(),
-            eigen_reference.position_W.z());
-}
+    const double ts = controller_.controller_parameters_.sampling_time;
+    if (next_control_time_ >= 0.0 && time < next_control_time_ - 1e-6) {
+      return;
+    }
+    // Next step Ts seconds later. If messages were lost, restart from now.
+    next_control_time_ = (next_control_time_ < 0.0 || time - next_control_time_ > ts)
+                             ? time + ts : next_control_time_ + ts;
 
-void LeeGeometricControllerNode::OdometryCallback(
-    const nav_msgs::OdometryConstPtr& odometry_msg) {
-  ROS_INFO_ONCE("[Lee geometric controller] Got the first odometry message.");
-
-  EigenOdometry odometry;
-  eigenOdometryFromMsg(odometry_msg, &odometry);
-  lee_geometric_controller_.SetOdometry(odometry);
-  odometry_received_ = true;
-}
-
-void LeeGeometricControllerNode::ControlTimerCallback(const ros::TimerEvent& /*event*/) {
-  if (!odometry_received_) {
-    return;
+    Eigen::Vector4d rotor_velocities;
+    controller_.CalculateRotorVelocities(&rotor_velocities);
+    motor_velocity_reference_pub_->publish(ActuatorsMsg(rotor_velocities, msg.header.stamp));
   }
-
-  Eigen::Vector4d rotor_velocities;
-  lee_geometric_controller_.CalculateRotorVelocities(&rotor_velocities);
-
-  mav_msgs::ActuatorsPtr actuator_msg(new mav_msgs::Actuators);
-  actuator_msg->angular_velocities.clear();
-  for (int i = 0; i < rotor_velocities.size(); i++) {
-    actuator_msg->angular_velocities.push_back(rotor_velocities[i]);
-  }
-  actuator_msg->header.stamp = ros::Time::now();
-
-  motor_velocity_reference_pub_.publish(actuator_msg);
-}
+};
 
 }  // namespace rotors_control
 
 int main(int argc, char** argv) {
-  ros::init(argc, argv, "lee_geometric_controller_node");
-
-  ros::NodeHandle nh;
-  ros::NodeHandle private_nh("~");
-  rotors_control::LeeGeometricControllerNode lee_geometric_controller_node(nh, private_nh);
-
-  ros::spin();
-
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<rotors_control::LeeGeometricControllerNode>());
+  rclcpp::shutdown();
   return 0;
 }

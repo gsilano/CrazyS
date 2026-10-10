@@ -14,17 +14,12 @@
  * limitations under the License.
  */
 
+#include "rotors_control/common.h"
 #include "rotors_control/roll_pitch_yawrate_thrust_crazyflie.h"
 
-#include "rotors_control/transform_datatypes.h"
-
-#include <angles/angles.h>
 
 #include <math.h>
-#include <ros/console.h>
-#include <nav_msgs/Odometry.h>
 
-#define M_PI                                     3.14159265358979323846  /* pi */
 #define ANGULAR_MOTOR_COEFFICIENT                0.2685 /* ANGULAR_MOTOR_COEFFICIENT */
 #define MOTORS_INTERCEPT                         426.24 /* MOTORS_INTERCEPT [rad/s]*/
 #define SAMPLING_TIME                            0.01 /* SAMPLING TIME [s] */
@@ -102,7 +97,6 @@ void RollPitchYawrateThrustControllerCrazyflie::CalculateRotorVelocities(Eigen::
       else
          omega_4 = 0;
 
-  ROS_DEBUG("Omega_1: %f Omega_2: %f Omega_3: %f Omega_4: %f", omega_1, omega_2, omega_3, omega_4);
   *rotor_velocities = Eigen::Vector4d(omega_1, omega_2, omega_3, omega_4);
 
 }
@@ -123,8 +117,6 @@ void RollPitchYawrateThrustControllerCrazyflie::ControlMixer(double* PWM_1, doub
     *PWM_3 = roll_pitch_yawrate_thrust_.thrust + (delta_theta/2) + (delta_phi/2) - delta_psi;
     *PWM_4 = roll_pitch_yawrate_thrust_.thrust - (delta_theta/2) + (delta_phi/2) + delta_psi;
 
-    ROS_DEBUG("Omega: %f, Delta_theta: %f, Delta_phi: %f, delta_psi: %f", roll_pitch_yawrate_thrust_.thrust, delta_theta, delta_phi, delta_psi);
-    ROS_DEBUG("PWM1: %f, PWM2: %f, PWM3: %f, PWM4: %f", *PWM_1, *PWM_2, *PWM_3, *PWM_4);
 
 }
 
@@ -187,7 +179,6 @@ void RollPitchYawrateThrustControllerCrazyflie::AttitudeController(double* p_com
     q_command_ki_ = q_command_ki_ + (attitude_gain_ki_.y() * theta_error * SAMPLING_TIME);
     *q_command = q_command_kp + q_command_ki_;
 
-    ROS_INFO("Phi_c: %f, Phi_e: %f, Theta_c: %f, Theta_e: %f", phi_command, phi_error, theta_command, theta_error);
 
 }
 
@@ -221,7 +212,7 @@ void RollPitchYawrateThrustControllerCrazyflie::SetSensorData() {
 }
 
 void RollPitchYawrateThrustControllerCrazyflie::SetRollPitchYawrateThrust(
-    const mav_msgs::EigenRollPitchYawrateThrustCrazyflie& roll_pitch_yawrate_thrust) {
+    const EigenRollPitchYawrateThrustCrazyflie& roll_pitch_yawrate_thrust) {
 
   roll_pitch_yawrate_thrust_ = roll_pitch_yawrate_thrust;
   controller_active_ = true;
@@ -239,11 +230,8 @@ void RollPitchYawrateThrustControllerCrazyflie::Quaternion2Euler(double* roll, d
     z = state_.attitudeQuaternion.z;
     w = state_.attitudeQuaternion.w;
 
-    tf::Quaternion q(x, y, z, w);
-    tf::Matrix3x3 m(q);
-    m.getRPY(*roll, *pitch, *yaw);
+        QuaternionToRPY(x, y, z, w, roll, pitch, yaw);
 
-    ROS_DEBUG("Roll: %f, Pitch: %f, Yaw: %f", *roll, *pitch, *yaw);
 
 }
 

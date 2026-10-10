@@ -45,7 +45,7 @@
 #ifndef __STABILIZER_TYPES_H__
 #define __STABILIZER_TYPES_H__
 
-#include <ros/ros.h>
+#include <cstdint>
 
 namespace rotors_control {
 

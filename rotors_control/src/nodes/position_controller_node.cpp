@@ -4,13 +4,14 @@
  * Copyright 2018 Emanuele Aucone, University of Sannio in Benevento, Italy
  * Copyright 2018 Benjamin Rodriguez, MIT, USA
  * Copyright 2020 Ria Sonecha, MIT, USA
+ * Copyright 2026 Giuseppe Silano, Czech Technical University in Prague, Czech Republic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
-
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,602 +19,266 @@
  * limitations under the License.
  */
 
-#include "position_controller_node.h"
+// Position controller node of the Crazyflie. Three modes, selected by parameters:
+//
+//  - default: the controller of the Crazyflie firmware (2018.01.1) with the ideal
+//    odometry. Reference on command/trajectory, one control step per odometry message.
+//  - enable_state_estimator: same controller, but attitude and angular rate come from
+//    the IMU through the complementary filter of the firmware. The position and the
+//    linear velocity still come from the odometry. The gyroscope bias is estimated on
+//    the ground, before the first waypoint arrives.
+//  - enable_internal_model_controller: the Internal Model Controller (reference on
+//    drone_state).
+//
+// The output is always command/motor_speed.
 
-#include <ros/ros.h>
-#include <mav_msgs/default_topics.h>
-#include <ros/console.h>
-#include <sensor_msgs/Imu.h>
-#include <time.h>
-#include <chrono>
+#include <memory>
 
-#include "rotors_control/parameters_ros.h"
-#include "rotors_control/stabilizer_types.h"
-#include "rotors_control/crazyflie_complementary_filter.h"
+#include <sensor_msgs/msg/imu.hpp>
 
-#define ATTITUDE_UPDATE_DT 0.004  /* ATTITUDE UPDATE RATE [s] - 500Hz */
-#define RATE_UPDATE_DT 0.002      /* RATE UPDATE RATE [s] - 250Hz */
-#define SAMPLING_TIME  0.01       /* SAMPLING CONTROLLER TIME [s] - 100Hz */
+#include "rotors_control/internal_model_controller.h"
+#include "rotors_control/position_controller.h"
+#include "ros_conversions.h"
 
 namespace rotors_control {
 
-PositionControllerNode::PositionControllerNode() {
+// Rates of the firmware tasks when the state estimator is enabled.
+static constexpr double kAttitudeEstimationPeriod = 0.004;  // [s], complementary filter
+static constexpr double kImuUpdatePeriod = 0.002;           // [s], rate estimation and motors
+static constexpr double kHighLevelControlPeriod = 0.01;     // [s], position control
 
-    ROS_INFO_ONCE("Started position controller");
+class PositionControllerNode : public rclcpp::Node {
+ public:
+  PositionControllerNode() : Node("position_controller_node") {
+    enable_state_estimator_ = declare_parameter("enable_state_estimator", false);
+    enable_internal_model_controller_ =
+        declare_parameter("enable_internal_model_controller", false);
 
-    ros::NodeHandle nh;
-    ros::NodeHandle pnh_node("~");
+    motor_velocity_reference_pub_ = create_publisher<actuator_msgs::msg::Actuators>(
+        kCommandMotorSpeedTopic, 1);
 
-    // This command diplays which controller is enabled
-    if(pnh_node.getParam("enable_mellinger_controller", enable_mellinger_controller_)){
-      ROS_INFO("Got param 'enable_mellinger_controller': %d", enable_mellinger_controller_);
+    if (enable_internal_model_controller_) {
+      InitializeInternalModelController();
+      drone_state_sub_ = create_subscription<rotors_comm::msg::DroneState>(
+          kDroneStateTopic, 1,
+          std::bind(&PositionControllerNode::DroneStateCallback, this, std::placeholders::_1));
+      attitude_timer_ = rclcpp::create_timer(
+          this, get_clock(), rclcpp::Duration::from_seconds(kAttitudeSamplingTime),
+          [this]() { internal_model_controller_.CallbackAttitude(); });
+      position_timer_ = rclcpp::create_timer(
+          this, get_clock(), rclcpp::Duration::from_seconds(kPositionSamplingTime),
+          [this]() { internal_model_controller_.CallbackPosition(); });
+    } else {
+      InitializePositionController();
+      trajectory_sub_ = create_subscription<trajectory_msgs::msg::MultiDOFJointTrajectory>(
+          kCommandTrajectoryTopic, 1,
+          std::bind(&PositionControllerNode::TrajectoryCallback, this, std::placeholders::_1));
     }
 
-    if(pnh_node.getParam("enable_internal_model_controller", enable_internal_model_controller_)){
-      ROS_INFO("Got param 'enable_internal_model_controller': %d", enable_internal_model_controller_);
+    odometry_sub_ = create_subscription<nav_msgs::msg::Odometry>(
+        kOdometryTopic, 1,
+        std::bind(&PositionControllerNode::OdometryCallback, this, std::placeholders::_1));
+
+    if (enable_state_estimator_ && !enable_internal_model_controller_) {
+      imu_sub_ = create_subscription<sensor_msgs::msg::Imu>(
+          kImuTopic, 1,
+          std::bind(&PositionControllerNode::ImuCallback, this, std::placeholders::_1));
+      attitude_timer_ = rclcpp::create_timer(
+          this, get_clock(), rclcpp::Duration::from_seconds(kAttitudeEstimationPeriod),
+          [this]() {
+            if (waypoint_received_) position_controller_.CallbackAttitudeEstimation();
+          });
+      position_timer_ = rclcpp::create_timer(
+          this, get_clock(), rclcpp::Duration::from_seconds(kHighLevelControlPeriod),
+          [this]() {
+            if (waypoint_received_) position_controller_.CallbackHightLevelControl();
+          });
+      imu_timer_ = rclcpp::create_timer(
+          this, get_clock(), rclcpp::Duration::from_seconds(kImuUpdatePeriod),
+          std::bind(&PositionControllerNode::ImuUpdateCallback, this));
     }
 
-    InitializeParams();
-
-    // Topics subscribe
-    if (!enable_mellinger_controller_ && !enable_internal_model_controller_){
-
-      cmd_multi_dof_joint_trajectory_sub_ = nh.subscribe(mav_msgs::default_topics::COMMAND_TRAJECTORY, 1,
-        &PositionControllerNode::MultiDofJointTrajectoryCallback, this);
-
-      odometry_sub_ = nh.subscribe(mav_msgs::default_topics::ODOMETRY, 1,
-        &PositionControllerNode::OdometryCallback, this);
-
-    }
-    else{
-
-      imu_ideal_sub_ = nh.subscribe(mav_msgs::default_topics::IMU, 1,
-        &PositionControllerNode::IMUMellingerCallback, this);
-
-      cmd_multi_dof_joint_trajectory_spline_sub_ = nh.subscribe(mav_msgs::default_topics::DRONE_STATE, 1,
-        &PositionControllerNode::MultiDofJointTrajectoryMellingerCallback, this);
-
-      odometry_sub_ = nh.subscribe(mav_msgs::default_topics::ODOMETRY, 1,
-        &PositionControllerNode::MellingerOdometryCallback, this);
-
-    }
-
-    // To publish the propellers angular velocities
-    motor_velocity_reference_pub_ = nh.advertise<mav_msgs::Actuators>(mav_msgs::default_topics::COMMAND_ACTUATORS, 1);
-
-    // The subscription to the IMU topic is made only if it is available, when simulating the Crazyflie dynamics considering the also IMU values
-    if(pnh_node.getParam("enable_state_estimator", enable_state_estimator_)){
-      ROS_INFO("Got param 'enable_state_estimator': %d", enable_state_estimator_);
-    }
-
-    if (enable_state_estimator_){
-        imu_sub_ = nh.subscribe(mav_msgs::default_topics::IMU, 1, &PositionControllerNode::IMUCallback, this);
-
-        //Timers allow to set up the working frequency of the control system
-        timer_Attitude_ = n_.createTimer(ros::Duration(ATTITUDE_UPDATE_DT), &PositionControllerNode::CallbackAttitudeEstimation, this, false, true);
-
-        timer_highLevelControl = n_.createTimer(ros::Duration(SAMPLING_TIME), &PositionControllerNode::CallbackHightLevelControl, this, false, true);
-
-        timer_IMUUpdate = n_.createTimer(ros::Duration(RATE_UPDATE_DT), &PositionControllerNode::CallbackIMUUpdate, this, false, true);
-
-    }
-
-
-}
-
-PositionControllerNode::~PositionControllerNode(){}
-
-
-void PositionControllerNode::MultiDofJointTrajectoryCallback(const trajectory_msgs::MultiDOFJointTrajectoryConstPtr& msg) {
-  // Clear all pending commands.
-  command_timer_.stop();
-  commands_.clear();
-  command_waiting_times_.clear();
-
-  const size_t n_commands = msg->points.size();
-
-  if(n_commands < 1){
-    ROS_WARN_STREAM("Got MultiDOFJointTrajectory message, but message has no points.");
-    return;
+    RCLCPP_INFO(get_logger(), "Started (%s%s).",
+                enable_internal_model_controller_ ? "internal model controller"
+                                                  : "position controller",
+                enable_state_estimator_ ? ", with state estimator" : "");
   }
 
-  mav_msgs::EigenTrajectoryPoint eigen_reference;
-  mav_msgs::eigenTrajectoryPointFromMsg(msg->points.front(), &eigen_reference);
-  commands_.push_front(eigen_reference);
+ private:
+  bool enable_state_estimator_;
+  bool enable_internal_model_controller_;
+  bool waypoint_received_ = false;
+  bool imu_received_ = false;
 
-  // We can trigger the first command immediately.
-  position_controller_.SetTrajectoryPoint(eigen_reference);
-  commands_.pop_front();
+  // Gyroscope bias, estimated while the drone waits on the ground for the first
+  // waypoint, as the Crazyflie firmware does at start-up.
+  Eigen::Vector3d gyro_bias_sum_ = Eigen::Vector3d::Zero();
+  int gyro_bias_samples_ = 0;
 
-  if (n_commands >= 1) {
-    waypointHasBeenPublished_ = true;
-    ROS_INFO("PositionController got first MultiDOFJointTrajectory message.");
+  PositionController position_controller_;
+  InternalModelController internal_model_controller_;
+  sensorData_t sensors_{};
+
+  rclcpp::Publisher<actuator_msgs::msg::Actuators>::SharedPtr motor_velocity_reference_pub_;
+  rclcpp::Subscription<trajectory_msgs::msg::MultiDOFJointTrajectory>::SharedPtr trajectory_sub_;
+  rclcpp::Subscription<rotors_comm::msg::DroneState>::SharedPtr drone_state_sub_;
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odometry_sub_;
+  rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_sub_;
+  rclcpp::TimerBase::SharedPtr attitude_timer_;
+  rclcpp::TimerBase::SharedPtr position_timer_;
+  rclcpp::TimerBase::SharedPtr imu_timer_;
+
+  double Param(const std::string& name, double default_value) {
+    return declare_parameter(name, default_value);
   }
-}
 
-void PositionControllerNode::MultiDofJointTrajectoryMellingerCallback(const mav_msgs::DroneState& drone_state_msg){
-    // Clear all pending commands.
-    command_timer_.stop();
-    commands_.clear();
-    command_waiting_times_.clear();
-
-    if(drone_state_msg.position.z <= 0){
-      ROS_WARN_STREAM("Got MultiDOFJointTrajectoryMellinger message, but message has no points.");
-      return;
-    }
-
-    // We can trigger the first command immediately.
-    mav_msgs::EigenDroneState eigen_reference;
-    mav_msgs::eigenDroneStateFromMsg(drone_state_msg, &eigen_reference);
-    if (enable_mellinger_controller_)
-      mellinger_controller_.SetTrajectoryPoint(eigen_reference);
-    else
-      internal_model_controller_.SetTrajectoryPoint(eigen_reference);
-
-    ROS_DEBUG("Drone desired position [x_d: %f, y_d: %f, z_d: %f]", eigen_reference.position_W[0],
-            eigen_reference.position_W[1], eigen_reference.position_W[2]);
-
-    if (drone_state_msg.position.z > 0) {
-      waypointHasBeenPublished_ = true;
-      if (enable_mellinger_controller_)
-        ROS_INFO_ONCE("PositionController got first [Mellinger] MultiDOFJointTrajectory message.");
-      else
-        ROS_INFO_ONCE("PositionController got first [InternalModel] MultiDOFJointTrajectory message.");
-    }
-}
-
-
-void PositionControllerNode::InitializeParams() {
-  ros::NodeHandle pnh("~");
-
-  if(!enable_mellinger_controller_ && !enable_internal_model_controller_){
-
-    // Parameters reading from rosparam.
-    GetRosParameter(pnh, "xy_gain_kp/x",
-                   position_controller_.controller_parameters_.xy_gain_kp_.x(),
-                   &position_controller_.controller_parameters_.xy_gain_kp_.x());
-    GetRosParameter(pnh, "xy_gain_kp/y",
-                   position_controller_.controller_parameters_.xy_gain_kp_.y(),
-                   &position_controller_.controller_parameters_.xy_gain_kp_.y());
-    GetRosParameter(pnh, "xy_gain_ki/x",
-                   position_controller_.controller_parameters_.xy_gain_ki_.x(),
-                   &position_controller_.controller_parameters_.xy_gain_ki_.x());
-    GetRosParameter(pnh, "xy_gain_ki/y",
-                   position_controller_.controller_parameters_.xy_gain_ki_.y(),
-                   &position_controller_.controller_parameters_.xy_gain_ki_.y());
-
-    GetRosParameter(pnh, "attitude_gain_kp/phi",
-                   position_controller_.controller_parameters_.attitude_gain_kp_.x(),
-                   &position_controller_.controller_parameters_.attitude_gain_kp_.x());
-    GetRosParameter(pnh, "attitude_gain_kp/phi",
-                   position_controller_.controller_parameters_.attitude_gain_kp_.y(),
-                   &position_controller_.controller_parameters_.attitude_gain_kp_.y());
-    GetRosParameter(pnh, "attitude_gain_ki/theta",
-                   position_controller_.controller_parameters_.attitude_gain_ki_.x(),
-                   &position_controller_.controller_parameters_.attitude_gain_ki_.x());
-    GetRosParameter(pnh, "attitude_gain_ki/theta",
-                   position_controller_.controller_parameters_.attitude_gain_ki_.y(),
-                   &position_controller_.controller_parameters_.attitude_gain_ki_.y());
-
-    GetRosParameter(pnh, "rate_gain_kp/p",
-                    position_controller_.controller_parameters_.rate_gain_kp_.x(),
-                    &position_controller_.controller_parameters_.rate_gain_kp_.x());
-    GetRosParameter(pnh, "rate_gain_kp/q",
-                    position_controller_.controller_parameters_.rate_gain_kp_.y(),
-                    &position_controller_.controller_parameters_.rate_gain_kp_.y());
-    GetRosParameter(pnh, "rate_gain_kp/r",
-                    position_controller_.controller_parameters_.rate_gain_kp_.z(),
-                    &position_controller_.controller_parameters_.rate_gain_kp_.z());
-    GetRosParameter(pnh, "rate_gain_ki/p",
-                    position_controller_.controller_parameters_.rate_gain_ki_.x(),
-                    &position_controller_.controller_parameters_.rate_gain_ki_.x());
-    GetRosParameter(pnh, "rate_gain_ki/q",
-                    position_controller_.controller_parameters_.rate_gain_ki_.y(),
-                    &position_controller_.controller_parameters_.rate_gain_ki_.y());
-    GetRosParameter(pnh, "rate_gain_ki/r",
-                    position_controller_.controller_parameters_.rate_gain_ki_.z(),
-                    &position_controller_.controller_parameters_.rate_gain_ki_.z());
-
-    GetRosParameter(pnh, "yaw_gain_kp/yaw",
-                    position_controller_.controller_parameters_.yaw_gain_kp_,
-                    &position_controller_.controller_parameters_.yaw_gain_kp_);
-    GetRosParameter(pnh, "yaw_gain_ki/yaw",
-                    position_controller_.controller_parameters_.yaw_gain_ki_,
-                    &position_controller_.controller_parameters_.yaw_gain_ki_);
-
-    GetRosParameter(pnh, "hovering_gain_kp/z",
-                    position_controller_.controller_parameters_.hovering_gain_kp_,
-                    &position_controller_.controller_parameters_.hovering_gain_kp_);
-    GetRosParameter(pnh, "hovering_gain_ki/z",
-                    position_controller_.controller_parameters_.hovering_gain_ki_,
-                    &position_controller_.controller_parameters_.hovering_gain_ki_);
-    GetRosParameter(pnh, "hovering_gain_kd/z",
-                    position_controller_.controller_parameters_.hovering_gain_kd_,
-                    &position_controller_.controller_parameters_.hovering_gain_kd_);
-
+  void InitializePositionController() {
+    PositionControllerParameters& p = position_controller_.controller_parameters_;
+    p.xy_gain_kp_.x() = Param("xy_gain_kp.x", p.xy_gain_kp_.x());
+    p.xy_gain_kp_.y() = Param("xy_gain_kp.y", p.xy_gain_kp_.y());
+    p.xy_gain_ki_.x() = Param("xy_gain_ki.x", p.xy_gain_ki_.x());
+    p.xy_gain_ki_.y() = Param("xy_gain_ki.y", p.xy_gain_ki_.y());
+    p.attitude_gain_kp_.x() = Param("attitude_gain_kp.phi", p.attitude_gain_kp_.x());
+    p.attitude_gain_kp_.y() = Param("attitude_gain_kp.theta", p.attitude_gain_kp_.y());
+    p.attitude_gain_ki_.x() = Param("attitude_gain_ki.phi", p.attitude_gain_ki_.x());
+    p.attitude_gain_ki_.y() = Param("attitude_gain_ki.theta", p.attitude_gain_ki_.y());
+    p.rate_gain_kp_.x() = Param("rate_gain_kp.p", p.rate_gain_kp_.x());
+    p.rate_gain_kp_.y() = Param("rate_gain_kp.q", p.rate_gain_kp_.y());
+    p.rate_gain_kp_.z() = Param("rate_gain_kp.r", p.rate_gain_kp_.z());
+    p.rate_gain_ki_.x() = Param("rate_gain_ki.p", p.rate_gain_ki_.x());
+    p.rate_gain_ki_.y() = Param("rate_gain_ki.q", p.rate_gain_ki_.y());
+    p.rate_gain_ki_.z() = Param("rate_gain_ki.r", p.rate_gain_ki_.z());
+    p.yaw_gain_kp_ = Param("yaw_gain_kp.yaw", p.yaw_gain_kp_);
+    p.yaw_gain_ki_ = Param("yaw_gain_ki.yaw", p.yaw_gain_ki_);
+    p.hovering_gain_kp_ = Param("hovering_gain_kp.z", p.hovering_gain_kp_);
+    p.hovering_gain_ki_ = Param("hovering_gain_ki.z", p.hovering_gain_ki_);
+    p.hovering_gain_kd_ = Param("hovering_gain_kd.z", p.hovering_gain_kd_);
     position_controller_.SetControllerGains();
-
-    ROS_INFO_ONCE("[Position Controller] Set controller gains and vehicle parameters");
-
-    //Reading the parameters come from the launch file
-    bool dataStoringActive;
-    double dataStoringTime;
-    std::string user;
-
-    if (pnh.getParam("user_account", user)){
-    ROS_INFO("Got param 'user_account': %s", user.c_str());
-    position_controller_.user_ = user;
+    if (enable_state_estimator_) {
+      position_controller_.crazyflie_onboard_controller_.SetControllerGains(p);
     }
-    else
-       ROS_ERROR("Failed to get param 'user'");
+  }
 
-    if (pnh.getParam("csvFilesStoring", dataStoringActive)){
-    ROS_INFO("Got param 'csvFilesStoring': %d", dataStoringActive);
-    position_controller_.dataStoring_active_ = dataStoringActive;
-    }
-    else
-       ROS_ERROR("Failed to get param 'csvFilesStoring'");
-
-    if (pnh.getParam("csvFilesStoringTime", dataStoringTime)){
-    ROS_INFO("Got param 'csvFilesStoringTime': %f", dataStoringTime);
-    position_controller_.dataStoringTime_ = dataStoringTime;
-    }
-    else
-       ROS_ERROR("Failed to get param 'csvFilesStoringTime'");
-
-    position_controller_.SetLaunchFileParameters();
-
-   }
-
- if(enable_mellinger_controller_){
-
-    // Parameters reading from rosparam.
-    GetRosParameter(pnh, "kp_xy/x",
-                    mellinger_controller_.controller_parameters_mellinger_.kpXYPositionController_.x(),
-                    &mellinger_controller_.controller_parameters_mellinger_.kpXYPositionController_.x());
-    GetRosParameter(pnh, "kp_xy/y",
-                    mellinger_controller_.controller_parameters_mellinger_.kpXYPositionController_.y(),
-                    &mellinger_controller_.controller_parameters_mellinger_.kpXYPositionController_.y());
-
-    GetRosParameter(pnh, "kd_xy/x",
-                    mellinger_controller_.controller_parameters_mellinger_.kdXYPositionController_.x(),
-                    &mellinger_controller_.controller_parameters_mellinger_.kdXYPositionController_.x());
-    GetRosParameter(pnh, "kd_xy/y",
-                    mellinger_controller_.controller_parameters_mellinger_.kdXYPositionController_.y(),
-                    &mellinger_controller_.controller_parameters_mellinger_.kdXYPositionController_.y());
-
-    GetRosParameter(pnh, "ki_xy/x",
-                    mellinger_controller_.controller_parameters_mellinger_.kiXYPositionController_.x(),
-                    &mellinger_controller_.controller_parameters_mellinger_.kiXYPositionController_.x());
-    GetRosParameter(pnh, "ki_xy/y",
-                    mellinger_controller_.controller_parameters_mellinger_.kiXYPositionController_.y(),
-                    &mellinger_controller_.controller_parameters_mellinger_.kiXYPositionController_.y());
-
-    GetRosParameter(pnh, "kp_z/z",
-                    mellinger_controller_.controller_parameters_mellinger_.kpZPositionController_,
-                    &mellinger_controller_.controller_parameters_mellinger_.kpZPositionController_);
-    GetRosParameter(pnh, "kd_z/z",
-                    mellinger_controller_.controller_parameters_mellinger_.kdZPositionController_,
-                    &mellinger_controller_.controller_parameters_mellinger_.kdZPositionController_);
-    GetRosParameter(pnh, "ki_z/z",
-                    mellinger_controller_.controller_parameters_mellinger_.kiZPositionController_,
-                    &mellinger_controller_.controller_parameters_mellinger_.kiZPositionController_);
-
-    GetRosParameter(pnh, "kr_xy/x",
-                    mellinger_controller_.controller_parameters_mellinger_.krXYPositionController_.x(),
-                    &mellinger_controller_.controller_parameters_mellinger_.krXYPositionController_.x());
-    GetRosParameter(pnh, "kr_xy/y",
-                    mellinger_controller_.controller_parameters_mellinger_.krXYPositionController_.y(),
-                    &mellinger_controller_.controller_parameters_mellinger_.krXYPositionController_.y());
-
-    GetRosParameter(pnh, "kw_xy/x",
-                    mellinger_controller_.controller_parameters_mellinger_.kwXYPositionController_.x(),
-                    &mellinger_controller_.controller_parameters_mellinger_.kwXYPositionController_.x());
-    GetRosParameter(pnh, "kw_xy/y",
-                    mellinger_controller_.controller_parameters_mellinger_.kwXYPositionController_.y(),
-                    &mellinger_controller_.controller_parameters_mellinger_.kwXYPositionController_.y());
-
-    GetRosParameter(pnh, "ki_m_xy/x",
-                    mellinger_controller_.controller_parameters_mellinger_.ki_mXYPositionController_.x(),
-                    &mellinger_controller_.controller_parameters_mellinger_.ki_mXYPositionController_.x());
-    GetRosParameter(pnh, "ki_m_xy/y",
-                    mellinger_controller_.controller_parameters_mellinger_.ki_mXYPositionController_.y(),
-                    &mellinger_controller_.controller_parameters_mellinger_.ki_mXYPositionController_.y());
-
-    GetRosParameter(pnh, "kr_z/z",
-                    mellinger_controller_.controller_parameters_mellinger_.krZPositionController_,
-                    &mellinger_controller_.controller_parameters_mellinger_.krZPositionController_);
-    GetRosParameter(pnh, "kw_z/z",
-                    mellinger_controller_.controller_parameters_mellinger_.kwZPositionController_,
-                    &mellinger_controller_.controller_parameters_mellinger_.kwZPositionController_);
-    GetRosParameter(pnh, "ki_m_z/z",
-                    mellinger_controller_.controller_parameters_mellinger_.ki_mZPositionController_,
-                    &mellinger_controller_.controller_parameters_mellinger_.ki_mZPositionController_);
-
-    GetRosParameter(pnh, "i_range_m_xy/x",
-                    mellinger_controller_.controller_parameters_mellinger_.iRangeMXY_.x(),
-                    &mellinger_controller_.controller_parameters_mellinger_.iRangeMXY_.x());
-    GetRosParameter(pnh, "i_range_m_xy/y",
-                    mellinger_controller_.controller_parameters_mellinger_.iRangeMXY_.y(),
-                    &mellinger_controller_.controller_parameters_mellinger_.iRangeMXY_.y());
-
-    GetRosParameter(pnh, "i_range_xy/x",
-                    mellinger_controller_.controller_parameters_mellinger_.iRangeXY_.x(),
-                    &mellinger_controller_.controller_parameters_mellinger_.iRangeXY_.x());
-    GetRosParameter(pnh, "i_range_xy/y",
-                    mellinger_controller_.controller_parameters_mellinger_.iRangeXY_.y(),
-                    &mellinger_controller_.controller_parameters_mellinger_.iRangeXY_.y());
-
-    GetRosParameter(pnh, "i_range_m_z/z",
-                    mellinger_controller_.controller_parameters_mellinger_.iRangeMZ_,
-                    &mellinger_controller_.controller_parameters_mellinger_.iRangeMZ_);
-    GetRosParameter(pnh, "i_range_z/z",
-                    mellinger_controller_.controller_parameters_mellinger_.iRangeZ_,
-                    &mellinger_controller_.controller_parameters_mellinger_.iRangeZ_);
-
-    GetRosParameter(pnh, "kd_omega_rp/r",
-                    mellinger_controller_.controller_parameters_mellinger_.kdOmegaRP_.x(),
-                    &mellinger_controller_.controller_parameters_mellinger_.kdOmegaRP_.x());
-    GetRosParameter(pnh, "kd_omega_rp/p",
-                    mellinger_controller_.controller_parameters_mellinger_.kdOmegaRP_.y(),
-                    &mellinger_controller_.controller_parameters_mellinger_.kdOmegaRP_.y());
-
-    mellinger_controller_.SetControllerGains();
-
-    //Analogously, the object "vehicle_parameters_" is created
-    GetFullVehicleParameters(pnh, &mellinger_controller_.vehicle_parameters_);
-    mellinger_controller_.SetVehicleParameters();
-    ROS_INFO_ONCE("[Mellinger Controller] Set controller gains and vehicle parameters");
-
-    }
-
-  if (enable_internal_model_controller_){
-    // Read parameters from rosparam. The parameters are read by the YAML file and they
-    // are used to create the "controller_parameters_" object
-    GetRosParameter(pnh, "beta_xy/beta_x",
-                    internal_model_controller_.controller_parameters_im_.beta_xy_.x(),
-                    &internal_model_controller_.controller_parameters_im_.beta_xy_.x());
-    GetRosParameter(pnh, "beta_xy/beta_y",
-                    internal_model_controller_.controller_parameters_im_.beta_xy_.y(),
-                    &internal_model_controller_.controller_parameters_im_.beta_xy_.y());
-    GetRosParameter(pnh, "beta_z/beta_z",
-                    internal_model_controller_.controller_parameters_im_.beta_z_,
-                    &internal_model_controller_.controller_parameters_im_.beta_z_);
-
-    GetRosParameter(pnh, "beta_phi/beta_phi",
-                    internal_model_controller_.controller_parameters_im_.beta_phi_,
-                    &internal_model_controller_.controller_parameters_im_.beta_phi_);
-    GetRosParameter(pnh, "beta_theta/beta_theta",
-                    internal_model_controller_.controller_parameters_im_.beta_theta_,
-                    &internal_model_controller_.controller_parameters_im_.beta_theta_);
-    GetRosParameter(pnh, "beta_psi/beta_psi",
-                    internal_model_controller_.controller_parameters_im_.beta_psi_,
-                    &internal_model_controller_.controller_parameters_im_.beta_psi_);
-
-    GetRosParameter(pnh, "mu_xy/mu_x",
-                    internal_model_controller_.controller_parameters_im_.mu_xy_.x(),
-                    &internal_model_controller_.controller_parameters_im_.mu_xy_.x());
-    GetRosParameter(pnh, "mu_xy/mu_y",
-                    internal_model_controller_.controller_parameters_im_.mu_xy_.y(),
-                    &internal_model_controller_.controller_parameters_im_.mu_xy_.y());
-    GetRosParameter(pnh, "mu_z/mu_z",
-                    internal_model_controller_.controller_parameters_im_.mu_z_,
-                    &internal_model_controller_.controller_parameters_im_.mu_z_);
-
-    GetRosParameter(pnh, "mu_phi/mu_phi",
-                    internal_model_controller_.controller_parameters_im_.mu_phi_,
-                    &internal_model_controller_.controller_parameters_im_.mu_phi_);
-    GetRosParameter(pnh, "mu_theta/mu_theta",
-                    internal_model_controller_.controller_parameters_im_.mu_theta_,
-                    &internal_model_controller_.controller_parameters_im_.mu_theta_);
-    GetRosParameter(pnh, "mu_psi/mu_psi",
-                    internal_model_controller_.controller_parameters_im_.mu_psi_,
-                    &internal_model_controller_.controller_parameters_im_.mu_psi_);
-
-    GetRosParameter(pnh, "U_xyz/U_x",
-                    internal_model_controller_.controller_parameters_im_.U_q_.x(),
-                    &internal_model_controller_.controller_parameters_im_.U_q_.x());
-    GetRosParameter(pnh, "U_xyz/U_y",
-                    internal_model_controller_.controller_parameters_im_.U_q_.y(),
-                    &internal_model_controller_.controller_parameters_im_.U_q_.y());
-    GetRosParameter(pnh, "U_xyz/U_z",
-                    internal_model_controller_.controller_parameters_im_.U_q_.z(),
-                    &internal_model_controller_.controller_parameters_im_.U_q_.z());
-
+  void InitializeInternalModelController() {
+    InternalModelControllerParameters& p = internal_model_controller_.controller_parameters_im_;
+    p.beta_xy_.x() = Param("beta_xy.beta_x", p.beta_xy_.x());
+    p.beta_xy_.y() = Param("beta_xy.beta_y", p.beta_xy_.y());
+    p.beta_z_ = Param("beta_z.beta_z", p.beta_z_);
+    p.beta_phi_ = Param("beta_phi.beta_phi", p.beta_phi_);
+    p.beta_theta_ = Param("beta_theta.beta_theta", p.beta_theta_);
+    p.beta_psi_ = Param("beta_psi.beta_psi", p.beta_psi_);
+    p.mu_xy_.x() = Param("mu_xy.mu_x", p.mu_xy_.x());
+    p.mu_xy_.y() = Param("mu_xy.mu_y", p.mu_xy_.y());
+    p.mu_z_ = Param("mu_z.mu_z", p.mu_z_);
+    p.mu_phi_ = Param("mu_phi.mu_phi", p.mu_phi_);
+    p.mu_theta_ = Param("mu_theta.mu_theta", p.mu_theta_);
+    p.mu_psi_ = Param("mu_psi.mu_psi", p.mu_psi_);
+    p.U_q_.x() = Param("U_xyz.U_x", p.U_q_.x());
+    p.U_q_.y() = Param("U_xyz.U_y", p.U_q_.y());
+    p.U_q_.z() = Param("U_xyz.U_z", p.U_q_.z());
     internal_model_controller_.SetControllerGains();
 
-    //Analogously, the object "vehicle_parameters_" is created
-    GetFullVehicleParameters(pnh, &internal_model_controller_.vehicle_parameters_);
+    VehicleParameters& v = internal_model_controller_.vehicle_parameters_;
+    v.mass_ = Param("mass", v.mass_);
+    v.inertia_(0, 0) = Param("inertia.xx", v.inertia_(0, 0));
+    v.inertia_(1, 1) = Param("inertia.yy", v.inertia_(1, 1));
+    v.inertia_(2, 2) = Param("inertia.zz", v.inertia_(2, 2));
+    v.bf_ = Param("bf", v.bf_);
+    v.bm_ = Param("bm", v.bm_);
+    v.armLength_ = Param("l", v.armLength_);
     internal_model_controller_.SetVehicleParameters();
-    ROS_INFO_ONCE("[Internal Model Controller] Set controller gains and vehicle parameters");
-
   }
 
-  if (enable_state_estimator_)
-    position_controller_.crazyflie_onboard_controller_.SetControllerGains(position_controller_.controller_parameters_);
-
-}
-
-void PositionControllerNode::Publish(){
-}
-
-void PositionControllerNode::IMUCallback(const sensor_msgs::ImuConstPtr& imu_msg) {
-
-    ROS_INFO_ONCE("PositionController got first imu message.");
-
-    // Angular velocities data
-    sensors_.gyro.x = imu_msg->angular_velocity.x;
-    sensors_.gyro.y = imu_msg->angular_velocity.y;
-    sensors_.gyro.z = imu_msg->angular_velocity.z;
-
-    // Linear acceleration data
-    sensors_.acc.x = imu_msg->linear_acceleration.x;
-    sensors_.acc.y = imu_msg->linear_acceleration.y;
-    sensors_.acc.z = imu_msg->linear_acceleration.z;
-
-    imu_msg_head_stamp_ = imu_msg->header.stamp;
-
-}
-
-void PositionControllerNode::IMUMellingerCallback(const sensor_msgs::ImuConstPtr& imu_msg) {
-
-    ROS_INFO_ONCE("MellingerController got first imu message.");
-
-    // Angular velocities data
-    sensors_.gyro.x = imu_msg->angular_velocity.x;
-    sensors_.gyro.y = imu_msg->angular_velocity.y;
-    sensors_.gyro.z = imu_msg->angular_velocity.z;
-
-    // Linear acceleration data
-    sensors_.acc.x = imu_msg->linear_acceleration.x;
-    sensors_.acc.y = imu_msg->linear_acceleration.y;
-    sensors_.acc.z = imu_msg->linear_acceleration.z;
-
-    imu_msg_head_stamp_ = imu_msg->header.stamp;
-
-    position_controller_.SetSensorData(sensors_);
-
-}
-
-
-void PositionControllerNode::OdometryCallback(const nav_msgs::OdometryConstPtr& odometry_msg) {
-
-    ROS_INFO_ONCE("PositionController got first odometry message.");
-
-    if (waypointHasBeenPublished_ && enable_state_estimator_){
-
-	    //This functions allows us to put the odometry message into the odometry variable--> _position,
- 	    //_orientation,_velocit_body,_angular_velocity
-	    EigenOdometry odometry;
-	    eigenOdometryFromMsg(odometry_msg, &odometry);
-	    position_controller_.SetOdometryWithStateEstimator(odometry);
-
+  void TrajectoryCallback(const trajectory_msgs::msg::MultiDOFJointTrajectory& msg) {
+    if (msg.points.empty()) {
+      RCLCPP_WARN(get_logger(), "Got a MultiDOFJointTrajectory message without points.");
+      return;
     }
+    EigenTrajectoryPoint reference;
+    EigenTrajectoryPointFromMsg(msg.points.front(), &reference);
+    position_controller_.SetTrajectoryPoint(reference);
+    if (!waypoint_received_) {
+      RCLCPP_INFO(get_logger(), "Got the first waypoint.");
+      waypoint_received_ = true;
+    }
+  }
 
-    if(waypointHasBeenPublished_){
+  void DroneStateCallback(const rotors_comm::msg::DroneState& msg) {
+    if (msg.position.z <= 0.0) {
+      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                           "Ignoring a reference point below the ground.");
+      return;
+    }
+    EigenDroneState reference;
+    EigenDroneStateFromMsg(msg, &reference);
+    internal_model_controller_.SetTrajectoryPoint(reference);
+    if (!waypoint_received_) {
+      RCLCPP_INFO(get_logger(), "Got the first reference point.");
+      waypoint_received_ = true;
+    }
+  }
 
-      //This functions allows us to put the odometry message into the odometry variable--> _position,
-      //_orientation,_velocit_body,_angular_velocity
-      EigenOdometry odometry;
-      eigenOdometryFromMsg(odometry_msg, &odometry);
+  void OdometryCallback(const nav_msgs::msg::Odometry& msg) {
+    if (!waypoint_received_) {
+      return;
+    }
+    EigenOdometry odometry;
+    EigenOdometryFromMsg(msg, &odometry);
+
+    Eigen::Vector4d rotor_velocities;
+    if (enable_internal_model_controller_) {
+      internal_model_controller_.SetOdometryWithoutStateEstimator(odometry);
+      internal_model_controller_.CalculateRotorVelocities(&rotor_velocities);
+    } else if (enable_state_estimator_) {
+      // Only position and linear velocity are taken from the odometry, the motors are
+      // updated by ImuUpdateCallback().
+      position_controller_.SetOdometryWithStateEstimator(odometry);
+      return;
+    } else {
       position_controller_.SetOdometryWithoutStateEstimator(odometry);
-
-      Eigen::Vector4d ref_rotor_velocities;
-      position_controller_.CalculateRotorVelocities(&ref_rotor_velocities);
-
-      //creating a new mav message. actuator_msg is used to send the velocities of the propellers.
-      mav_msgs::ActuatorsPtr actuator_msg(new mav_msgs::Actuators);
-
-      //we use clear because we later want to be sure that we used the previously calculated velocity.
-      actuator_msg->angular_velocities.clear();
-      //for all propellers, we put them into actuator_msg so they will later be used to control the crazyflie.
-      for (int i = 0; i < ref_rotor_velocities.size(); i++)
-         actuator_msg->angular_velocities.push_back(ref_rotor_velocities[i]);
-      actuator_msg->header.stamp = odometry_msg->header.stamp;
-
-      motor_velocity_reference_pub_.publish(actuator_msg);
-
+      position_controller_.CalculateRotorVelocities(&rotor_velocities);
     }
+    motor_velocity_reference_pub_->publish(ActuatorsMsg(rotor_velocities, msg.header.stamp));
+  }
 
-}
-
-void PositionControllerNode::MellingerOdometryCallback(const nav_msgs::OdometryConstPtr& odometry_msg) {
-
-    if(enable_mellinger_controller_)
-      ROS_INFO_ONCE("PositionControllerNode got first odometry message (Mellinger).");
-    else
-      ROS_INFO_ONCE("PositionControllerNode got first odometry message (Internal Model Controller).");
-
-    if(waypointHasBeenPublished_){
-
-      //This functions allows us to put the odometry message into the odometry variable--> _position,
-      //_orientation,_velocit_body,_angular_velocity
-      EigenOdometry odometry;
-      eigenOdometryFromMsg(odometry_msg, &odometry);
-
-      if(enable_mellinger_controller_)
-        mellinger_controller_.SetOdometryWithoutStateEstimator(odometry);
-      else
-        internal_model_controller_.SetOdometryWithoutStateEstimator(odometry);
-
-      Eigen::Vector4d ref_rotor_velocities;
-
-      if(enable_mellinger_controller_)
-        mellinger_controller_.CalculateRotorVelocities(&ref_rotor_velocities);
-      else
-        internal_model_controller_.CalculateRotorVelocities(&ref_rotor_velocities);
-
-      //creating a new mav message. actuator_msg is used to send the velocities of the propellers.
-      mav_msgs::ActuatorsPtr actuator_msg(new mav_msgs::Actuators);
-
-      //we use clear because we later want to be sure that we used the previously calculated velocity.
-      actuator_msg->angular_velocities.clear();
-      //for all propellers, we put them into actuator_msg so they will later be used to control the crazyflie.
-      for (int i = 0; i < ref_rotor_velocities.size(); i++)
-         actuator_msg->angular_velocities.push_back(ref_rotor_velocities[i]);
-      actuator_msg->header.stamp = odometry_msg->header.stamp;
-
-      motor_velocity_reference_pub_.publish(actuator_msg);
-
+  void ImuCallback(const sensor_msgs::msg::Imu& msg) {
+    const Eigen::Vector3d gyro(msg.angular_velocity.x, msg.angular_velocity.y,
+                               msg.angular_velocity.z);
+    if (!waypoint_received_) {
+      gyro_bias_sum_ += gyro;
+      ++gyro_bias_samples_;
     }
+    const Eigen::Vector3d bias =
+        gyro_bias_samples_ > 0 ? Eigen::Vector3d(gyro_bias_sum_ / gyro_bias_samples_)
+                               : Eigen::Vector3d::Zero();
+    sensors_.gyro.x = gyro.x() - bias.x();
+    sensors_.gyro.y = gyro.y() - bias.y();
+    sensors_.gyro.z = gyro.z() - bias.z();
+    sensors_.acc.x = msg.linear_acceleration.x;
+    sensors_.acc.y = msg.linear_acceleration.y;
+    sensors_.acc.z = msg.linear_acceleration.z;
+    imu_received_ = true;
+  }
 
-}
-
-// The attitude is estimated only if the waypoint has been published
-void PositionControllerNode::CallbackAttitudeEstimation(const ros::TimerEvent& event){
-
-    if (waypointHasBeenPublished_)
-            position_controller_.CallbackAttitudeEstimation();
-
-}
-
-// The high level control is run only if the waypoint has been published
-void PositionControllerNode::CallbackHightLevelControl(const ros::TimerEvent& event){
-
-    if (waypointHasBeenPublished_)
-            position_controller_.CallbackHightLevelControl();
-
-}
-
-// IMU messages are sent to the controller with a frequency of 500Hz. In other words, with a sampling time of 0.002 seconds
-void PositionControllerNode::CallbackIMUUpdate(const ros::TimerEvent& event){
-
+  void ImuUpdateCallback() {
+    if (!imu_received_) {
+      return;
+    }
     position_controller_.SetSensorData(sensors_);
-
-    ROS_INFO_ONCE("IMU Message sent to position controller");
-
-    if (waypointHasBeenPublished_){
-
-	    Eigen::Vector4d ref_rotor_velocities;
-	    position_controller_.CalculateRotorVelocities(&ref_rotor_velocities);
-
-	    // A new mav message, actuator_msg, is used to send to Gazebo the propellers angular velocities.
-	    mav_msgs::ActuatorsPtr actuator_msg(new mav_msgs::Actuators);
-
-	    // The clear method makes sure the actuator_msg is empty (there are no previous values of the propellers angular velocities).
-	    actuator_msg->angular_velocities.clear();
-	    // for all propellers, we put them into actuator_msg so they will later be used to control the crazyflie.
-	    for (int i = 0; i < ref_rotor_velocities.size(); i++)
-	       actuator_msg->angular_velocities.push_back(ref_rotor_velocities[i]);
-	    actuator_msg->header.stamp = imu_msg_head_stamp_;
-
-	    motor_velocity_reference_pub_.publish(actuator_msg);
-
+    if (!waypoint_received_) {
+      return;
     }
+    Eigen::Vector4d rotor_velocities;
+    position_controller_.CalculateRotorVelocities(&rotor_velocities);
+    motor_velocity_reference_pub_->publish(ActuatorsMsg(rotor_velocities, now()));
+  }
+};
 
-}
+}  // namespace rotors_control
 
-
-}
-
-int main(int argc, char** argv){
-    ros::init(argc, argv, "position_controller_node_with_stateEstimator");
-
-    ros::NodeHandle nh2;
-
-    rotors_control::PositionControllerNode position_controller_node;
-
-    ros::spin();
-
-    return 0;
+int main(int argc, char** argv) {
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<rotors_control::PositionControllerNode>());
+  rclcpp::shutdown();
+  return 0;
 }

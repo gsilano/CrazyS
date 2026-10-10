@@ -33,15 +33,15 @@
  * The controller takes the desired position and heading (yaw) from a DroneState
  * message and returns the four propeller speeds [rad/s]. Velocity, acceleration,
  * jerk and snap of the reference, and the drone acceleration and jerk, are obtained
- * with dirty derivatives (s / (tau * s + 1), Tustin). They assume a fixed sampling
- * time, so CalculateRotorVelocities() must be called every Ts seconds.
+ * with dirty derivatives (s / (tau * s + 1), Tustin). The filters use the time stamps
+ * of the samples, so delays in the delivery of the messages do not corrupt the
+ * derivatives. CalculateRotorVelocities() is meant to be called every Ts seconds.
  */
 
 #ifndef ROTORS_CONTROL_LEE_GEOMETRIC_CONTROLLER_H
 #define ROTORS_CONTROL_LEE_GEOMETRIC_CONTROLLER_H
 
 #include <Eigen/Eigen>
-#include <mav_msgs/eigen_mav_msgs.h>
 
 #include "rotors_control/common.h"
 
@@ -105,7 +105,8 @@ struct LeeGeometricControllerParameters {
 
 // Dirty derivative of a 3D signal: s / (tau * s + 1) discretized with Tustin,
 //   y(k) = a1 * y(k-1) + a2 * (u(k) - u(k-1))
-//   a1 = (2 * tau - Ts) / (2 * tau + Ts),  a2 = 2 / (2 * tau + Ts)
+//   a1 = (2 * tau - dt) / (2 * tau + dt),  a2 = 2 / (2 * tau + dt)
+// where dt is the time between two samples (the nominal Ts if not given).
 // The output stays at zero for the first "order" samples, so a chain of filters
 // (velocity -> acceleration -> jerk -> snap) starts only when its input is valid.
 class DirtyDerivative {
@@ -114,15 +115,16 @@ class DirtyDerivative {
 
   void Configure(unsigned int order, double tau, double sampling_time);
   void Reset();
-  const Eigen::Vector3d& Update(const Eigen::Vector3d& input);
+  const Eigen::Vector3d& Update(const Eigen::Vector3d& input, double dt = -1.0);
+  const Eigen::Vector3d& value() const { return derivative_; }
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
  private:
   unsigned int order_;
   unsigned long iteration_;
-  double a1_;
-  double a2_;
+  double tau_;
+  double sampling_time_;
   Eigen::Vector3d derivative_;
   Eigen::Vector3d previous_input_;
 };
@@ -136,8 +138,9 @@ class LeeGeometricController {
   // controller_parameters_.
   void InitializeParameters();
 
-  void SetOdometry(const EigenOdometry& odometry);
-  void SetTrajectoryPoint(const mav_msgs::EigenDroneState& command_trajectory);
+  // time: time stamp of the sample [s]
+  void SetOdometry(const EigenOdometry& odometry, double time);
+  void SetTrajectoryPoint(const EigenDroneState& command_trajectory, double time);
 
   // One step of the control law, to be called every sampling_time seconds.
   void CalculateRotorVelocities(Eigen::Vector4d* rotor_velocities);
@@ -155,7 +158,14 @@ class LeeGeometricController {
   Eigen::Matrix4d allocation_matrix_inverse_;
 
   EigenOdometry odometry_;
-  mav_msgs::EigenDroneState command_trajectory_;
+  EigenDroneState command_trajectory_;
+
+  // Time stamps of the last samples and of the samples last used by the filters.
+  double odometry_time_;
+  double reference_time_;
+  double last_control_time_;
+  double last_reference_time_;
+  bool new_reference_;
 
   // Derivatives of the reference position x_d, of the reference heading b1_d and of
   // the drone velocity v (world frame).
