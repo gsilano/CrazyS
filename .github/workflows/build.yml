@@ -1,0 +1,99 @@
+# Builds every CrazyS release branch inside a Docker container with the matching
+# Ubuntu/ROS version. The workflow lives on master and clones the branch to test, so
+# all the branches are checked from a single place.
+#
+# Kinetic and Melodic are end-of-life: their packages are no longer on packages.ros.org
+# and are installed from the final snapshot on snapshots.ros.org.
+
+name: Build
+
+on:
+  push:
+    branches: [master]
+  schedule:
+    - cron: '0 3 * * 1'   # every Monday, to catch breakages in the dependencies
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    container: ${{ matrix.image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Kinetic + Gazebo 7 (master)
+            image: ubuntu:16.04
+            distro: kinetic
+            branch: master
+            mav_comm: crazys
+            ros_repo: http://snapshots.ros.org/kinetic/final/ubuntu
+            gazebo9: false
+          - name: Kinetic + Gazebo 9 (dev/gazebo9)
+            image: ubuntu:16.04
+            distro: kinetic
+            branch: dev/gazebo9
+            mav_comm: med18_gazebo9
+            ros_repo: http://snapshots.ros.org/kinetic/final/ubuntu
+            gazebo9: true
+          - name: Melodic + Gazebo 9 (dev/ros-melodic)
+            image: ubuntu:18.04
+            distro: melodic
+            branch: dev/ros-melodic
+            mav_comm: med18_gazebo9
+            ros_repo: http://snapshots.ros.org/melodic/final/ubuntu
+            gazebo9: false
+          - name: Noetic + Gazebo 11 (dev/ros-noetic)
+            image: ubuntu:20.04
+            distro: noetic
+            branch: dev/ros-noetic
+            mav_comm: med18_gazebo9
+            ros_repo: http://packages.ros.org/ros/ubuntu
+            gazebo9: false
+    env:
+      DEBIAN_FRONTEND: noninteractive
+      ROS_DISTRO: ${{ matrix.distro }}
+    steps:
+      - name: Set up the apt repositories
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq lsb-release curl gnupg2 ca-certificates git build-essential
+          echo "deb [trusted=yes] ${{ matrix.ros_repo }} $(lsb_release -sc) main" \
+            > /etc/apt/sources.list.d/ros.list
+          if [ "${{ matrix.gazebo9 }}" = "true" ]; then
+            echo "deb [trusted=yes] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -sc) main" \
+              > /etc/apt/sources.list.d/gazebo-stable.list
+          fi
+          apt-get update -qq
+
+      - name: Install the dependencies
+        run: |
+          if [ "$ROS_DISTRO" = "noetic" ]; then PY=python3; else PY=python; fi
+          if [ "${{ matrix.gazebo9 }}" = "true" ]; then
+            ROS_PKGS="ros-$ROS_DISTRO-desktop gazebo9 libgazebo9-dev ros-$ROS_DISTRO-gazebo9-ros-pkgs ros-$ROS_DISTRO-gazebo9-dev"
+          else
+            ROS_PKGS="ros-$ROS_DISTRO-desktop-full"
+          fi
+          apt-get install -y -qq --no-install-recommends $ROS_PKGS \
+            ros-$ROS_DISTRO-joy ros-$ROS_DISTRO-octomap-ros ros-$ROS_DISTRO-octomap-msgs \
+            ros-$ROS_DISTRO-mavlink ros-$ROS_DISTRO-mavros-msgs \
+            ros-$ROS_DISTRO-control-toolbox ros-$ROS_DISTRO-cmake-modules \
+            ros-$ROS_DISTRO-xacro ros-$ROS_DISTRO-robot-state-publisher \
+            $PY-catkin-tools protobuf-compiler libprotobuf-dev libgoogle-glog-dev \
+            libeigen3-dev libyaml-cpp-dev
+
+      - name: Clone CrazyS and mav_comm
+        run: |
+          mkdir -p ~/catkin_ws/src && cd ~/catkin_ws/src
+          git clone --depth 1 -b ${{ matrix.branch }} https://github.com/${{ github.repository }}.git CrazyS
+          git clone --depth 1 -b ${{ matrix.mav_comm }} https://github.com/gsilano/mav_comm.git
+
+      - name: Build
+        shell: bash
+        run: |
+          source /opt/ros/$ROS_DISTRO/setup.bash
+          cd ~/catkin_ws
+          catkin init
+          catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release -DCATKIN_ENABLE_TESTING=False
+          catkin build --no-status --summarize
