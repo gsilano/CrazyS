@@ -6,9 +6,15 @@
 CrazyS
 ===============
 
-[![Build](https://github.com/gsilano/CrazyS/actions/workflows/build.yml/badge.svg)](https://github.com/gsilano/CrazyS/actions/workflows/build.yml)
+| Branch | ROS and Gazebo | Versions | Build |
+|---|---|---|---|
+| `master` | Kinetic + Gazebo 7 | 4.x | [![Kinetic + Gazebo 7](https://github.com/gsilano/CrazyS/actions/workflows/build-kinetic-gazebo7.yml/badge.svg?branch=master)](https://github.com/gsilano/CrazyS/actions/workflows/build-kinetic-gazebo7.yml) |
+| `dev/gazebo9` | Kinetic + Gazebo 9 | 5.x | [![Kinetic + Gazebo 9](https://github.com/gsilano/CrazyS/actions/workflows/build-kinetic-gazebo9.yml/badge.svg?branch=dev/gazebo9)](https://github.com/gsilano/CrazyS/actions/workflows/build-kinetic-gazebo9.yml) |
+| `dev/ros-melodic` | Melodic + Gazebo 9 | 6.x | [![Melodic + Gazebo 9](https://github.com/gsilano/CrazyS/actions/workflows/build-melodic.yml/badge.svg?branch=dev/ros-melodic)](https://github.com/gsilano/CrazyS/actions/workflows/build-melodic.yml) |
+| `dev/ros-noetic` | Noetic + Gazebo 11 | 7.x | [![Noetic + Gazebo 11](https://github.com/gsilano/CrazyS/actions/workflows/build-noetic.yml/badge.svg?branch=dev/ros-noetic)](https://github.com/gsilano/CrazyS/actions/workflows/build-noetic.yml) |
+| `dev/ros2-jazzy` | ROS 2 Jazzy + Gazebo Harmonic | 8.x | [![ROS 2 Jazzy + Gazebo Harmonic](https://github.com/gsilano/CrazyS/actions/workflows/build-jazzy.yml/badge.svg?branch=dev/ros2-jazzy)](https://github.com/gsilano/CrazyS/actions/workflows/build-jazzy.yml) |
 
-The build workflow checks every release branch: `master` (Kinetic + Gazebo 7), `dev/gazebo9` (Kinetic + Gazebo 9), `dev/ros-melodic` (Melodic + Gazebo 9), `dev/ros-noetic` (Noetic + Gazebo 11) and `dev/ros2-jazzy` (ROS 2 Jazzy + Gazebo Harmonic).
+Each branch is built on every push and pull request to it, so a red badge points to the branch that broke. On top of that, the [weekly check](https://github.com/gsilano/CrazyS/actions/workflows/weekly.yml) builds all the branches every Monday, to catch problems caused by the dependencies.
 
 CrazyS extends the ROS package [RotorS](https://github.com/ethz-asl/rotors_simulator) with a model of the [Crazyflie 2.0](https://www.bitcraze.io/crazyflie-2/) nano-quadcopter for the Gazebo simulator. It can also be used as a guide for adding new aircraft to RotorS.
 
