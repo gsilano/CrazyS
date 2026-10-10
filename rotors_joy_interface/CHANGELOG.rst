@@ -2,6 +2,11 @@
 Changelog for package rotors_joy_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+8.0.0 (2026-10-10)
+------------------
+* Port to ROS 2 Jazzy. Keep only the Crazyflie interface (rotors_joy_interface_crazyflie)
+* Contributors: Giuseppe Silano
+
 7.1.0 (2026-10-10)
 ------------------
 

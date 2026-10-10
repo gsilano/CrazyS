@@ -2,6 +2,11 @@
 Changelog for package rotors_simulator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+8.0.0 (2026-10-10)
+------------------
+* Port to ROS 2 Jazzy. Remove rotors_gazebo_plugins, rotors_evaluation and rqt_rotors from the metapackage
+* Contributors: Giuseppe Silano
+
 7.1.0 (2026-10-10)
 ------------------
 
