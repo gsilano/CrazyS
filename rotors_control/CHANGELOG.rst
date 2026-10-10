@@ -5,6 +5,7 @@ Changelog for package rotors_control
 5.1.0 (2026-10-10)
 ------------------
 * Add Lee's geometric controller (lee_geometric_controller_node), from Stefano Grossi's MSc thesis (#86)
+* Lee controller: one control step every Ts seconds of the odometry time stamps instead of a ROS timer; the dirty derivatives use the time between the samples
 * Contributors: Stefano Grossi, Lorenzo Sabattini, Federico Pratissoli, Beatrice Capelli, Giuseppe Silano
 
 5.0.9 (2021-05-23)
