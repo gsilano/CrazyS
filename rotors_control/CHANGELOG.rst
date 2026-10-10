@@ -2,6 +2,11 @@
 Changelog for package rotors_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.1.0 (2026-10-10)
+------------------
+* Add Lee's geometric controller (lee_geometric_controller_node), from Stefano Grossi's MSc thesis (#86)
+* Contributors: Stefano Grossi, Lorenzo Sabattini, Federico Pratissoli, Beatrice Capelli, Giuseppe Silano
+
 5.0.9 (2021-05-23)
 ------------------
 
