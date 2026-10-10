@@ -17,6 +17,7 @@
   <arg name="enable_mellinger_controller" default="false"/>
   <arg name="enable_internal_model_controller" default="false"/>
   <arg name="enable_vi_sensor" default="false"/>
+  <arg name="forster_parameters" default="false"/>
 
   <!-- send the robot XML to param server -->
   <param name="robot_description" command="
@@ -28,6 +29,7 @@
     enable_state_estimator:=$(arg enable_state_estimator)
     enable_mavlink_interface:=$(arg enable_mavlink_interface)
     enable_vi_sensor:=$(arg enable_vi_sensor)
+    forster_parameters:=$(arg forster_parameters)
     log_file:=$(arg log_file)
     wait_to_record_bag:=$(arg wait_to_record_bag)
     mav_name:=$(arg mav_name)
