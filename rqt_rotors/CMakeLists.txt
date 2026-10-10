@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(rqt_rotors VERSION 7.0.1)
+project(rqt_rotors VERSION 7.1.0)
 
 find_package(mavros_msgs QUIET)
 
