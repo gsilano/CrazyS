@@ -2,6 +2,14 @@
 Changelog for package rotors_gazebo
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.1.0 (2026-10-10)
+------------------
+* Add the piecewise_trajectory_generator node: DroneState references built from line, arc and hold segments in a YAML file
+* Add the trajectories used in Stefano Grossi's thesis (resource/trajectories)
+* Add crazyflie2_lee_geometric_controller.launch and crazyflie2_swarm_lee_geometric_controller.launch
+* Add the forster_parameters argument to spawn_mav_crazyflie.launch
+* Contributors: Stefano Grossi, Lorenzo Sabattini, Federico Pratissoli, Beatrice Capelli, Giuseppe Silano
+
 6.0.9 (2021-05-23)
 ------------------
 

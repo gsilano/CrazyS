@@ -2,6 +2,11 @@
 Changelog for package rotors_description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.1.0 (2026-10-10)
+------------------
+* Add the forster_parameters argument to crazyflie2_base.xacro to load crazyflie2_forster.xacro
+* Contributors: Stefano Grossi, Lorenzo Sabattini, Federico Pratissoli, Beatrice Capelli, Giuseppe Silano
+
 6.0.9 (2021-05-23)
 ------------------
 
