@@ -1,0 +1,77 @@
+# Builds the dev/ros-melodic branch (Melodic + Gazebo 9) in a Docker container with the
+# matching Ubuntu and ROS version, on every push and pull request to this branch.
+# The weekly check on master calls this workflow too, to catch breakages in the
+# dependencies when nobody pushes.
+#
+# ROS Melodic is end-of-life: its packages are no longer on
+# packages.ros.org and are installed from the final snapshot on snapshots.ros.org.
+
+name: Melodic + Gazebo 9
+
+on:
+  push:
+    branches: [dev/ros-melodic]
+  pull_request:
+    branches: [dev/ros-melodic]
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      ref:
+        description: Git ref to build
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build (dev/ros-melodic)
+    runs-on: ubuntu-latest
+    container: ubuntu:18.04
+    env:
+      DEBIAN_FRONTEND: noninteractive
+      ROS_DISTRO: melodic
+    steps:
+      - name: Set up the apt repositories
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq lsb-release curl gnupg2 ca-certificates git build-essential
+          echo "deb [trusted=yes] http://snapshots.ros.org/melodic/final/ubuntu $(lsb_release -sc) main" \
+            > /etc/apt/sources.list.d/ros.list
+          apt-get update -qq
+
+      - name: Install the dependencies
+        run: |
+          apt-get install -y -qq --no-install-recommends ros-$ROS_DISTRO-desktop-full \
+            ros-$ROS_DISTRO-joy ros-$ROS_DISTRO-octomap-ros ros-$ROS_DISTRO-octomap-msgs \
+            ros-$ROS_DISTRO-mavlink ros-$ROS_DISTRO-mavros-msgs \
+            ros-$ROS_DISTRO-control-toolbox ros-$ROS_DISTRO-cmake-modules \
+            ros-$ROS_DISTRO-xacro ros-$ROS_DISTRO-robot-state-publisher \
+            python-catkin-tools protobuf-compiler libprotobuf-dev libgoogle-glog-dev \
+            libeigen3-dev libyaml-cpp-dev
+
+      # actions/checkout needs Node 20, which does not run in the Ubuntu 16.04 and
+      # 18.04 containers, so the code is fetched with plain git. When the workflow is
+      # called by the weekly check on master, inputs.ref names this branch.
+      - name: Get the code
+        shell: bash
+        run: |
+          mkdir -p ~/catkin_ws/src/CrazyS && cd ~/catkin_ws/src/CrazyS
+          git init -q
+          git remote add origin https://github.com/${{ github.repository }}.git
+          git fetch -q --depth 1 origin "${{ inputs.ref || github.ref }}"
+          git checkout -q FETCH_HEAD
+          git log -1 --format='Building %H (%s)'
+
+      - name: Get mav_comm
+        run: git clone -q --depth 1 -b med18_gazebo9 https://github.com/gsilano/mav_comm.git ~/catkin_ws/src/mav_comm
+
+      - name: Build
+        shell: bash
+        run: |
+          source /opt/ros/$ROS_DISTRO/setup.bash
+          cd ~/catkin_ws
+          catkin init
+          catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release -DCATKIN_ENABLE_TESTING=False
+          catkin build --no-status --summarize
