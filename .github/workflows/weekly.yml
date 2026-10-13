@@ -1,0 +1,38 @@
+# Weekly check of all the release branches. Each branch has its own build workflow,
+# which runs on every push and pull request to that branch; this one calls them all
+# once a week, so a breakage caused by the dependencies (apt packages, snapshots,
+# Docker images) shows up even when nobody pushes. GitHub runs scheduled workflows
+# only on the default branch of the repository, so the same file is kept on master
+# and on dev/ros2-jazzy: the check keeps running whichever of the two is the default.
+
+name: Weekly check
+
+on:
+  schedule:
+    - cron: '0 3 * * 1'   # every Monday at 03:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  kinetic-gazebo7:
+    uses: gsilano/CrazyS/.github/workflows/build-kinetic-gazebo7.yml@master
+    with:
+      ref: refs/heads/master
+  kinetic-gazebo9:
+    uses: gsilano/CrazyS/.github/workflows/build-kinetic-gazebo9.yml@dev/gazebo9
+    with:
+      ref: refs/heads/dev/gazebo9
+  melodic:
+    uses: gsilano/CrazyS/.github/workflows/build-melodic.yml@dev/ros-melodic
+    with:
+      ref: refs/heads/dev/ros-melodic
+  noetic:
+    uses: gsilano/CrazyS/.github/workflows/build-noetic.yml@dev/ros-noetic
+    with:
+      ref: refs/heads/dev/ros-noetic
+  jazzy:
+    uses: gsilano/CrazyS/.github/workflows/build-jazzy.yml@dev/ros2-jazzy
+    with:
+      ref: refs/heads/dev/ros2-jazzy

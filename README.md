@@ -1,10 +1,21 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Jazzy + Gazebo Harmonic](https://github.com/gsilano/CrazyS/actions/workflows/build-jazzy.yml/badge.svg?branch=dev/ros2-jazzy)](https://github.com/gsilano/CrazyS/actions/workflows/build-jazzy.yml)
 
 CrazyS for ROS 2
 ================
 
-This branch (`dev/ros2-jazzy`) is the port of [CrazyS](https://github.com/gsilano/CrazyS) to **ROS 2 Jazzy** and **Gazebo Sim (Harmonic)** on Ubuntu 24.04. CrazyS simulates the [Crazyflie 2.x](https://www.bitcraze.io/) nano-quadcopter together with its flight controllers. The ROS 1 versions are on the `master`, `dev/gazebo9`, `dev/ros-melodic` and `dev/ros-noetic` branches.
+CrazyS has one branch for each ROS and Gazebo version:
+
+| Branch | Configuration | Versions | Build | Instructions |
+|---|---|---|---|---|
+| [`dev/ros2-jazzy`](https://github.com/gsilano/CrazyS/tree/dev/ros2-jazzy) | Ubuntu 24.04, ROS 2 Jazzy, Gazebo Harmonic | 8.x | [![build](https://github.com/gsilano/CrazyS/actions/workflows/build-jazzy.yml/badge.svg?branch=dev/ros2-jazzy)](https://github.com/gsilano/CrazyS/actions/workflows/build-jazzy.yml) | this README |
+| [`dev/ros-noetic`](https://github.com/gsilano/CrazyS/tree/dev/ros-noetic) | Ubuntu 20.04, ROS Noetic, Gazebo 11 | 7.x | [![build](https://github.com/gsilano/CrazyS/actions/workflows/build-noetic.yml/badge.svg?branch=dev/ros-noetic)](https://github.com/gsilano/CrazyS/actions/workflows/build-noetic.yml) | [README on `master`](https://github.com/gsilano/CrazyS/tree/master#readme) |
+| [`dev/ros-melodic`](https://github.com/gsilano/CrazyS/tree/dev/ros-melodic) | Ubuntu 18.04, ROS Melodic, Gazebo 9 | 6.x | [![build](https://github.com/gsilano/CrazyS/actions/workflows/build-melodic.yml/badge.svg?branch=dev/ros-melodic)](https://github.com/gsilano/CrazyS/actions/workflows/build-melodic.yml) | [README on `master`](https://github.com/gsilano/CrazyS/tree/master#readme) |
+| [`dev/gazebo9`](https://github.com/gsilano/CrazyS/tree/dev/gazebo9) | Ubuntu 16.04, ROS Kinetic, Gazebo 9 | 5.x | [![build](https://github.com/gsilano/CrazyS/actions/workflows/build-kinetic-gazebo9.yml/badge.svg?branch=dev/gazebo9)](https://github.com/gsilano/CrazyS/actions/workflows/build-kinetic-gazebo9.yml) | [README on `master`](https://github.com/gsilano/CrazyS/tree/master#readme) |
+| [`master`](https://github.com/gsilano/CrazyS/tree/master) | Ubuntu 16.04, ROS Kinetic, Gazebo 7 | 4.x | [![build](https://github.com/gsilano/CrazyS/actions/workflows/build-kinetic-gazebo7.yml/badge.svg?branch=master)](https://github.com/gsilano/CrazyS/actions/workflows/build-kinetic-gazebo7.yml) | [README on `master`](https://github.com/gsilano/CrazyS/tree/master#readme) |
+
+Each branch is built on every push and pull request to it, and the [weekly check](https://github.com/gsilano/CrazyS/actions/workflows/weekly.yml) builds all of them every Monday. When you open a pull request, choose the branch of the version you changed as the base.
+
+This branch (`dev/ros2-jazzy`) is the port of [CrazyS](https://github.com/gsilano/CrazyS) to **ROS 2 Jazzy** and **Gazebo Sim (Harmonic)** on Ubuntu 24.04. CrazyS simulates the [Crazyflie 2.x](https://www.bitcraze.io/) nano-quadcopter together with its flight controllers. The ROS 1 versions are on the other branches in the table above; their installation and usage instructions are in the [README on `master`](https://github.com/gsilano/CrazyS/tree/master#readme).
 
 The ROS 1 version is built on the RotorS Gazebo classic plugins. Gazebo Sim already ships a port of the RotorS motor model (`MulticopterMotorModel`), so the ROS 2 version uses the systems of Gazebo Sim and [ros_gz](https://github.com/gazebosim/ros_gz) instead of custom plugins. The dynamics are the same: with the same motor commands the drone moves as in the ROS 1 simulator.
 
