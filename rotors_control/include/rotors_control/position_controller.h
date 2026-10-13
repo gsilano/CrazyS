@@ -72,6 +72,11 @@ namespace rotors_control {
             double r_command_ki_;
             double delta_omega_ki_;
 
+            // Integration step [s]: the time between two odometry messages when the
+            // state estimator is off, SAMPLING_TIME otherwise.
+            double sampling_time_;
+            double last_odometry_time_;
+
             //Controller gains
 	          Eigen::Vector2f xy_gain_kp_, xy_gain_ki_;
             Eigen::Vector2f attitude_gain_kp_, attitude_gain_ki_;

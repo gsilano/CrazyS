@@ -55,7 +55,7 @@ A waypoint can be sent to the firmware position controller with
 $ ros2 run rotors_gazebo waypoint_publisher <x> <y> <z> <yaw_deg> --ros-args -r __ns:=/crazyflie2
 ```
 
-> **Note** The firmware position controller has the same limits as in the ROS 1 version: the altitude oscillates for about 30 s after take-off, lateral waypoints are not tracked well, and in long flights (more than 30-40 s) the position slowly drifts away. This happens with the ROS 1 version too (`dev/ros-noetic`), so it comes from the controller tuning and not from the port. For trajectories and long flights use the Lee geometric controller or the Internal Model Controller, which are stable.
+> **Note** The firmware position controller holds the hover well, also in long flights: after take-off the altitude overshoots by 10-15 cm and settles on the reference within about 40 s. It does not track lateral waypoints well, though: its attitude loop is too slow, so the drone overshoots the target and its yaw drifts. This is a tuning problem of the original controller and happens in ROS 1 too. For trajectories use the Lee geometric controller or the Internal Model Controller.
 
 To record a flight use `ros2 bag record /crazyflie2/odometry /crazyflie2/command/motor_speed` (the CSV logging of the ROS 1 version has been removed).
 
@@ -84,6 +84,7 @@ Differences from the ROS 1 version
 * The Mellinger controller is not ported: in ROS 1 it was a draft that never worked.
 * State estimator mode: in ROS 1 the ideal odometry overwrote the attitude estimated from the IMU, and in Noetic the drone flipped after a few seconds. Here only position and linear velocity come from the odometry, and the gyroscope bias is estimated on the ground before take-off, as the firmware does.
 * Position controller: fixed the lower saturation of the thrust correction (`+1718` instead of `-1718`).
+* Position controller without state estimator: the integrators now use the real time between two odometry messages (1 ms) instead of 10 ms. With the old value every integral gain was ten times too large, the altitude oscillated after take-off and in long flights the drone drifted away and crashed. The same fix is in the ROS 1 branches.
 * Lee controller: the control step is triggered by the time stamps of the odometry, and the dirty derivatives use the real time between samples. Under load (e.g. in the swarm), the ROS 2 timers drifted by up to ±20% with respect to the simulation time, and the fourth order derivatives made the drone unstable.
 * `waypoint_publisher_file` sends the waypoints one at a time (in ROS 1 they were sent in a single message, but the controller only used the first one).
 

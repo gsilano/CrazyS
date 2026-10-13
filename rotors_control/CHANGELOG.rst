@@ -9,6 +9,7 @@ Changelog for package rotors_control
 * Remove the RotorS controllers for the other multicopters and the Mellinger controller draft, which never worked
 * State estimator mode: the odometry no longer overwrites the attitude estimated from the IMU, and the gyroscope bias is estimated on the ground before take-off
 * Position controller: fix the lower saturation of the thrust correction, which gave +1718 instead of -1718
+* Position controller without state estimator: the integrators use the time between two odometry messages. The controller runs at every message (1 kHz) but integrated with a 10 ms step, so all the integral gains were ten times too large and the drone drifted away in long flights
 * Lee geometric controller: the control step is triggered by the time stamps of the odometry and the dirty derivatives use the real time between samples, so the controller stays stable when the computer is loaded (e.g. in the swarm example)
 * Remove the CSV logging of the position controller, use ros2 bag instead
 * Add unit tests of the control library

@@ -53,7 +53,9 @@ PositionController::PositionController()
     r_command_ki_(0),
     delta_psi_ki_(0),
     delta_omega_ki_(0),
-    hovering_gain_kd_(0){
+    hovering_gain_kd_(0),
+    sampling_time_(SAMPLING_TIME),
+    last_odometry_time_(-1.0){
 
       // The control variables are initialized to zero
       control_t_.roll = 0;
@@ -228,12 +230,12 @@ void PositionController::XYController(double* theta_command, double* phi_command
 
     double theta_command_kp;
     theta_command_kp = xy_gain_kp_.x() * e_vx;
-    theta_command_ki_ = theta_command_ki_ + (xy_gain_ki_.x() * e_vx * SAMPLING_TIME);
+    theta_command_ki_ = theta_command_ki_ + (xy_gain_ki_.x() * e_vx * sampling_time_);
     *theta_command  = theta_command_kp + theta_command_ki_;
 
     double phi_command_kp;
     phi_command_kp = xy_gain_kp_.y() * e_vy;
-    phi_command_ki_ = phi_command_ki_ + (xy_gain_ki_.y() * e_vy * SAMPLING_TIME);
+    phi_command_ki_ = phi_command_ki_ + (xy_gain_ki_.y() * e_vy * sampling_time_);
     *phi_command  = phi_command_kp + phi_command_ki_;
 
     // Theta command is saturated considering the aircraft physical constraints
@@ -265,7 +267,7 @@ void PositionController::YawPositionController(double* r_command) {
 
     double r_command_kp;
     r_command_kp = yaw_gain_kp_ * yaw_error;
-    r_command_ki_ = r_command_ki_ + (yaw_gain_ki_ * yaw_error * SAMPLING_TIME);
+    r_command_ki_ = r_command_ki_ + (yaw_gain_ki_ * yaw_error * sampling_time_);
     *r_command = r_command_ki_ + r_command_kp;
 
    // R command value is saturated considering the aircraft physical constraints
@@ -295,7 +297,7 @@ void PositionController::HoveringController(double* omega) {
 
     double delta_omega, delta_omega_kp, delta_omega_kd;
     delta_omega_kp = hovering_gain_kp_ * z_error;
-    delta_omega_ki_ = delta_omega_ki_ + (hovering_gain_ki_ * z_error * SAMPLING_TIME);
+    delta_omega_ki_ = delta_omega_ki_ + (hovering_gain_ki_ * z_error * sampling_time_);
     delta_omega_kd = hovering_gain_kd_ * -dot_zeta;
     delta_omega = delta_omega_kp + delta_omega_ki_ + delta_omega_kd;
 
@@ -342,6 +344,17 @@ void PositionController::ErrorBodyFrame(double* xe, double* ye) const {
 void PositionController::SetOdometryWithoutStateEstimator(const EigenOdometry& odometry) {
 
     odometry_ = odometry;
+
+    // Without the state estimator the whole control chain runs at every odometry
+    // message (about 1 kHz), so the integrators must use the time between two
+    // messages and not the 10 ms of the high level loop. Using SAMPLING_TIME here
+    // made every integral gain ten times larger, and the drone drifted away in long
+    // flights. Odd values (first message, lost or repeated messages) fall back to
+    // SAMPLING_TIME.
+    const double time = odometry_.timeStampSec + odometry_.timeStampNsec * 1e-9;
+    const double dt = time - last_odometry_time_;
+    sampling_time_ = (last_odometry_time_ < 0.0 || dt <= 0.0 || dt > SAMPLING_TIME) ? SAMPLING_TIME : dt;
+    last_odometry_time_ = time;
 
     // Such function is invoked when the ideal odometry sensor is employed
     SetSensorData();
@@ -399,7 +412,7 @@ void PositionController::RateController(double* delta_phi, double* delta_theta, 
     *delta_theta = delta_theta_kp;
 
     delta_psi_kp = rate_gain_kp_.z() * r_error;
-    delta_psi_ki_ = delta_psi_ki_ + (rate_gain_ki_.z() * r_error * SAMPLING_TIME);
+    delta_psi_ki_ = delta_psi_ki_ + (rate_gain_ki_.z() * r_error * sampling_time_);
     *delta_psi = delta_psi_kp + delta_psi_ki_;
 
 
@@ -421,11 +434,11 @@ void PositionController::AttitudeController(double* p_command, double* q_command
 
     double p_command_kp, q_command_kp;
     p_command_kp = attitude_gain_kp_.x() * phi_error;
-    p_command_ki_ = p_command_ki_ + (attitude_gain_ki_.x() * phi_error * SAMPLING_TIME);
+    p_command_ki_ = p_command_ki_ + (attitude_gain_ki_.x() * phi_error * sampling_time_);
     *p_command = p_command_kp + p_command_ki_;
 
     q_command_kp = attitude_gain_kp_.y() * theta_error;
-    q_command_ki_ = q_command_ki_ + (attitude_gain_ki_.y() * theta_error * SAMPLING_TIME);
+    q_command_ki_ = q_command_ki_ + (attitude_gain_ki_.y() * theta_error * sampling_time_);
     *q_command = q_command_kp + q_command_ki_;
 
 
