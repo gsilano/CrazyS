@@ -1,8 +1,9 @@
 # Weekly check of all the release branches. Each branch has its own build workflow,
 # which runs on every push and pull request to that branch; this one calls them all
 # once a week, so a breakage caused by the dependencies (apt packages, snapshots,
-# Docker images) shows up even when nobody pushes. Scheduled workflows only run on
-# the default branch, which is why this file lives on master.
+# Docker images) shows up even when nobody pushes. GitHub runs scheduled workflows
+# only on the default branch of the repository, so the same file is kept on master
+# and on dev/ros2-jazzy: the check keeps running whichever of the two is the default.
 
 name: Weekly check
 
