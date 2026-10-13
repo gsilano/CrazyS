@@ -415,7 +415,9 @@ By default the state estimator is off and the controller uses the ideal odometry
 $ roslaunch rotors_gazebo crazyflie2_hovering_example.launch enable_state_estimator:=true
 ```
 
-After 5 s the drone takes off and hovers one meter above the ground, keeping x and y close to zero.
+After 5 s the drone takes off and hovers one meter above the ground, keeping x and y close to zero. The altitude overshoots by 10-15 cm and settles on the reference within about 40 s.
+
+> **Note** Up to versions 4.0.x, 5.0.x, 6.0.x and 7.0.x the drone drifted away after 40-60 s of hovering. The controller runs at every odometry message (1 kHz), but its integrators assumed a 10 ms step, so all the integral gains were ten times too large. This is fixed in 4.1.0, 5.1.0, 6.1.0 and 7.1.0. Lateral waypoints, sent with `waypoint_publisher`, are still not tracked well: the attitude loop of this controller is too slow. For trajectories use Lee's controller or the Internal Model Controller.
 
 How it works: the `hovering_example` node publishes the reference (x_r, y_r, z_r and \psi_r) on `command/trajectory`. The `position_controller` node, i.e., the Crazyflie controller, reads it together with the drone state (`odometry_sensor1/odometry`) and computes the motor speeds (\omega_1, \omega_2, \omega_3 and \omega_4), which are sent to Gazebo on `command/motor_speed`. With the state estimator off, attitude (\phi_k, \theta_k and \psi_k) and angular velocity (p_k, q_k and r_k) come straight from the ideal odometry sensor.
 
@@ -512,7 +514,7 @@ $ ros2 run rotors_gazebo waypoint_publisher <x> <y> <z> <yaw_deg> --ros-args -r 
 
 with x, y, z in meters and the yaw in degrees. To record a flight use `ros2 bag record /crazyflie2/odometry /crazyflie2/command/motor_speed`; the CSV logging of the ROS 1 version is not available.
 
-> **Note** The firmware position controller has the same limits in ROS 2 as in ROS 1: the altitude oscillates for about 30 s after take-off, lateral waypoints are tracked poorly and in long flights the position slowly drifts. For trajectories and long flights use Lee's controller or the Internal Model Controller.
+> **Note** The firmware position controller behaves the same in ROS 2 as in ROS 1. It holds the hover well, also in long flights, but it does not track lateral waypoints well: its attitude loop is too slow, so the drone overshoots the target and its yaw drifts. For trajectories use Lee's controller or the Internal Model Controller.
 
 Gazebo Version
 --------------
