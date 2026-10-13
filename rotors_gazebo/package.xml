@@ -41,6 +41,9 @@
   <exec_depend>xacro</exec_depend>
   <exec_depend>rotors_control</exec_depend>
   <exec_depend>actuator_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

@@ -58,3 +58,69 @@ jobs:
           colcon build --event-handlers console_cohesion+
           colcon test --event-handlers console_cohesion+
           colcon test-result --verbose
+
+  # Builds the Debian packages the way the ROS buildfarm does after a bloom
+  # release: bloom-generate writes the debian/ directory of each package, then
+  # the package is built with debhelper and installed, in dependency order. A
+  # failure here means a missing dependency in a package.xml, an install rule
+  # that forgets a file, or a CHANGELOG that bloom cannot read.
+  debian:
+    name: Debian packages (dev/ros2-jazzy)
+    runs-on: ubuntu-latest
+    container: ros:jazzy-ros-base
+    env:
+      DEBIAN_FRONTEND: noninteractive
+    steps:
+      - name: Install bloom
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq --no-install-recommends git python3-bloom \
+            python3-colcon-common-extensions fakeroot debhelper dh-python
+
+      - name: Get the code
+        shell: bash
+        run: |
+          mkdir -p ~/src/CrazyS && cd ~/src/CrazyS
+          git init -q
+          git remote add origin https://github.com/${{ github.repository }}.git
+          git fetch -q --depth 1 origin "${{ inputs.ref || github.ref }}"
+          git checkout -q FETCH_HEAD
+          git log -1 --format='Packaging %H (%s)'
+
+      # The CrazyS packages depend on each other but are not in rosdistro yet, so
+      # rosdep is told how their Debian packages will be named.
+      - name: Teach rosdep the CrazyS package names
+        shell: bash
+        run: |
+          cd ~/src/CrazyS
+          for name in $(colcon list --names-only); do
+            echo "$name: {ubuntu: [ros-jazzy-${name//_/-}]}"
+          done > /tmp/crazys-rosdep.yaml
+          cat /tmp/crazys-rosdep.yaml
+          echo "yaml file:///tmp/crazys-rosdep.yaml" > /etc/ros/rosdep/sources.list.d/10-crazys.list
+          rosdep update --rosdistro jazzy -q
+
+      - name: Generate, build and install the packages
+        shell: bash
+        run: |
+          cd ~/src/CrazyS
+          colcon list --topological-order | while read -r name path type; do
+            echo "::group::$name"
+            cd ~/src/CrazyS/$path
+            rosdep install --from-paths . --rosdistro jazzy -y -q
+            bloom-generate rosdebian --ros-distro jazzy
+            fakeroot debian/rules binary
+            deb=$(ls ../ros-jazzy-${name//_/-}_*.deb)
+            apt-get install -y -qq "$(realpath $deb)"
+            echo "::endgroup::"
+          done
+          ls -1 ~/src/CrazyS/*.deb
+
+      - name: Check the installed packages
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          ros2 pkg list | grep -E '^rotors_'
+          ros2 pkg executables rotors_gazebo
+          ros2 interface show rotors_comm/msg/DroneState > /dev/null
+          ls /opt/ros/jazzy/share/rotors_gazebo/launch

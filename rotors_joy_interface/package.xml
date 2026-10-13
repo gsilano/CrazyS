@@ -26,6 +26,9 @@
   <depend>rotors_comm</depend>
 
   <exec_depend>joy</exec_depend>
+  <!-- key_joystick.py (virtual joystick driven by the keyboard) also needs the
+       python-uinput module, which has no rosdep key: pip install python-uinput -->
+  <exec_depend>python3-pygame</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
